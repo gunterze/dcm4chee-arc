@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_2_0.xsd"
+  version="2.0">
+  <persistence-unit-metadata>
+    <persistence-unit-defaults>
+      <entity-listeners>
+        <entity-listener class="org.dcm4chee.archive.entity.EntityLogger">
+          <pre-persist method-name="onPrePersist" />
+          <post-persist method-name="onPostPersist" />
+          <pre-remove method-name="onPreRemove" />
+          <post-remove method-name="onPostRemove" />
+          <pre-update method-name="onPreUpdate" />
+          <post-update method-name="onPostUpdate" />
+          <post-load method-name="onPostLoad" />
+        </entity-listener>
+      </entity-listeners>
+    </persistence-unit-defaults>
+  </persistence-unit-metadata>
+  
+  <package>org.dcm4chee.archive.entity</package>
+  
+  <access>FIELD</access>
+
+  <entity class="Code">
+    <table name="code" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="IDENTITY" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="Issuer">
+    <table name="issuer" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="IDENTITY" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="Patient">
+    <table name="patient" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="IDENTITY" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="pat_attrs" column-definition="image" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="Study">
+    <table name="study" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="IDENTITY" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="study_attrs" column-definition="image" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="Series">
+    <table name="series" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="IDENTITY" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="series_attrs" column-definition="image" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="Instance">
+    <table name="instance" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="IDENTITY" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="inst_attrs" column-definition="image" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="VerifyingObserver">
+    <table name="verify_observer" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="IDENTITY" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="FileRef">
+    <table name="file_ref" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="IDENTITY" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="FileSystem">
+    <table name="filesystem" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="IDENTITY" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="StudyPermission">
+    <table name="study_permission" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="IDENTITY" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="Visit">
+    <table name="visit" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="IDENTITY" />
+      </id>
+      <basic name="encodedAttributes">
+        <column name="visit_attrs" column-definition="image" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="ServiceRequest">
+    <table name="request" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="IDENTITY" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="request_attrs" column-definition="image" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="RequestedProcedure">
+    <table name="req_proc" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="IDENTITY" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="req_proc_attrs" column-definition="image" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="ScheduledProcedureStep">
+    <table name="sps" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="IDENTITY" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="sps_attrs" column-definition="image" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="ScheduledStationAETitle">
+    <table name="sps_aet" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="IDENTITY" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="PerformedProcedureStep">
+    <table name="pps" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="IDENTITY" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="pps_attrs" column-definition="image" />
+      </basic>
+    </attributes>
+  </entity>
+
+</entity-mappings>

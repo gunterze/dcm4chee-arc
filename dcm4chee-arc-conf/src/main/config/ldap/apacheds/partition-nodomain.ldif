@@ -1,0 +1,175 @@
+version: 1
+
+dn: ads-partitionId=nodomain,ou=partitions,ads-directoryServiceId=default,ou=
+ config
+objectclass: top
+objectclass: ads-base
+objectclass: ads-partition
+objectclass: ads-jdbmPartition
+ads-partitionid: nodomain
+ads-partitionsuffix: dc=nodomain
+ads-enabled: TRUE
+ads-jdbmpartitionoptimizerenabled: TRUE
+ads-partitioncachesize: 100
+ads-partitionsynconwrite: TRUE
+ads-indexes: apacheRdn
+ads-indexes: apacheSubLevel
+ads-indexes: apachePresence
+ads-indexes: apacheOneLevel
+ads-indexes: apacheOneAlias
+ads-indexes: apacheSubAlias
+ads-indexes: apacheAlias
+ads-indexes: entryUUID
+ads-indexes: entryCSN
+ads-indexes: dc
+ads-indexes: krb5PrincipalName
+ads-indexes: objectClass
+ads-indexes: ou
+ads-indexes: uid
+
+dn: ou=indexes,ads-partitionId=nodomain,ou=partitions,ads-directoryServiceId=
+ default,ou=config
+objectclass: organizationalUnit
+objectclass: top
+ou: indexes
+
+dn: ads-indexAttributeId=apacheRdn,ou=indexes,ads-partitionId=nodomain,ou=par
+ titions,ads-directoryServiceId=default,ou=config
+objectclass: ads-index
+objectclass: ads-jdbmIndex
+objectclass: ads-base
+objectclass: top
+ads-indexattributeid: apacheRdn
+ads-enabled: TRUE
+ads-indexcachesize: 100
+
+dn: ads-indexAttributeId=apacheSubLevel,ou=indexes,ads-partitionId=nodomain,o
+ u=partitions,ads-directoryServiceId=default,ou=config
+objectclass: ads-index
+objectclass: ads-jdbmIndex
+objectclass: ads-base
+objectclass: top
+ads-indexattributeid: apacheSubLevel
+ads-enabled: TRUE
+ads-indexcachesize: 100
+
+dn: ads-indexAttributeId=apachePresence,ou=indexes,ads-partitionId=nodomain,o
+ u=partitions,ads-directoryServiceId=default,ou=config
+objectclass: ads-index
+objectclass: ads-jdbmIndex
+objectclass: ads-base
+objectclass: top
+ads-indexattributeid: apachePresence
+ads-enabled: TRUE
+ads-indexcachesize: 100
+
+dn: ads-indexAttributeId=apacheOneLevel,ou=indexes,ads-partitionId=nodomain,o
+ u=partitions,ads-directoryServiceId=default,ou=config
+objectclass: ads-index
+objectclass: ads-jdbmIndex
+objectclass: ads-base
+objectclass: top
+ads-indexattributeid: apacheOneLevel
+ads-enabled: TRUE
+ads-indexcachesize: 100
+
+dn: ads-indexAttributeId=apacheOneAlias,ou=indexes,ads-partitionId=nodomain,o
+ u=partitions,ads-directoryServiceId=default,ou=config
+objectclass: ads-index
+objectclass: ads-jdbmIndex
+objectclass: ads-base
+objectclass: top
+ads-indexattributeid: apacheOneAlias
+ads-enabled: TRUE
+ads-indexcachesize: 100
+
+dn: ads-indexAttributeId=apacheSubAlias,ou=indexes,ads-partitionId=nodomain,o
+ u=partitions,ads-directoryServiceId=default,ou=config
+objectclass: ads-index
+objectclass: ads-jdbmIndex
+objectclass: ads-base
+objectclass: top
+ads-indexattributeid: apacheSubAlias
+ads-enabled: TRUE
+ads-indexcachesize: 100
+
+dn: ads-indexAttributeId=apacheAlias,ou=indexes,ads-partitionId=nodomain,ou=p
+ artitions,ads-directoryServiceId=default,ou=config
+objectclass: ads-index
+objectclass: ads-jdbmIndex
+objectclass: ads-base
+objectclass: top
+ads-indexattributeid: apacheAlias
+ads-enabled: TRUE
+ads-indexcachesize: 100
+
+dn: ads-indexAttributeId=dc,ou=indexes,ads-partitionId=nodomain,ou=partitions
+ ,ads-directoryServiceId=default,ou=config
+objectclass: ads-index
+objectclass: ads-jdbmIndex
+objectclass: ads-base
+objectclass: top
+ads-indexattributeid: dc
+ads-enabled: TRUE
+ads-indexcachesize: 100
+
+dn: ads-indexAttributeId=krb5PrincipalName,ou=indexes,ads-partitionId=nodomain
+ ,ou=partitions,ads-directoryServiceId=default,ou=config
+objectclass: ads-index
+objectclass: ads-jdbmIndex
+objectclass: ads-base
+objectclass: top
+ads-indexattributeid: krb5PrincipalName
+ads-enabled: TRUE
+ads-indexcachesize: 100
+
+dn: ads-indexAttributeId=objectClass,ou=indexes,ads-partitionId=nodomain,ou=p
+ artitions,ads-directoryServiceId=default,ou=config
+objectclass: ads-index
+objectclass: ads-jdbmIndex
+objectclass: ads-base
+objectclass: top
+ads-indexattributeid: objectClass
+ads-enabled: TRUE
+ads-indexcachesize: 100
+
+dn: ads-indexAttributeId=entryUUID,ou=indexes,ads-partitionId=nodomain,ou=par
+ titions,ads-directoryServiceId=default,ou=config
+objectclass: ads-index
+objectclass: ads-jdbmIndex
+objectclass: ads-base
+objectclass: top
+ads-indexattributeid: entryUUID
+ads-enabled: TRUE
+ads-indexcachesize: 100
+
+dn: ads-indexAttributeId=entryCSN,ou=indexes,ads-partitionId=nodomain,ou=part
+ itions,ads-directoryServiceId=default,ou=config
+objectclass: ads-index
+objectclass: ads-jdbmIndex
+objectclass: ads-base
+objectclass: top
+ads-indexattributeid: entryCSN
+ads-enabled: TRUE
+ads-indexcachesize: 100
+
+dn: ads-indexAttributeId=ou,ou=indexes,ads-partitionId=nodomain,ou=partitions
+ ,ads-directoryServiceId=default,ou=config
+objectclass: ads-index
+objectclass: ads-jdbmIndex
+objectclass: ads-base
+objectclass: top
+ads-indexattributeid: ou
+ads-enabled: TRUE
+ads-indexcachesize: 100
+
+dn: ads-indexAttributeId=uid,ou=indexes,ads-partitionId=nodomain,ou=partition
+ s,ads-directoryServiceId=default,ou=config
+objectclass: ads-index
+objectclass: ads-jdbmIndex
+objectclass: ads-base
+objectclass: top
+ads-indexattributeid: uid
+ads-enabled: TRUE
+ads-indexcachesize: 100
+

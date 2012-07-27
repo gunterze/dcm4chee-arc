@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_2_0.xsd"
+  version="2.0">
+  <persistence-unit-metadata>
+    <persistence-unit-defaults>
+      <entity-listeners>
+        <entity-listener class="org.dcm4chee.archive.entity.EntityLogger">
+          <pre-persist method-name="onPrePersist" />
+          <post-persist method-name="onPostPersist" />
+          <pre-remove method-name="onPreRemove" />
+          <post-remove method-name="onPostRemove" />
+          <pre-update method-name="onPreUpdate" />
+          <post-update method-name="onPostUpdate" />
+          <post-load method-name="onPostLoad" />
+        </entity-listener>
+      </entity-listeners>
+    </persistence-unit-defaults>
+  </persistence-unit-metadata>
+  
+  <package>org.dcm4chee.archive.entity</package>
+  
+  <access>FIELD</access>
+
+  <entity class="Code">
+    <table name="code" />
+    <sequence-generator name="seq" sequence-name="code_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="SEQUENCE" generator="seq" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="Issuer">
+    <table name="issuer" />
+    <sequence-generator name="seq" sequence-name="issuer_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="SEQUENCE" generator="seq" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="Patient">
+    <table name="patient" />
+    <sequence-generator name="seq" sequence-name="patient_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="SEQUENCE" generator="seq" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="pat_attrs" column-definition="bytea" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="Study">
+    <table name="study" />
+    <sequence-generator name="seq" sequence-name="study_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="SEQUENCE" generator="seq" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="study_attrs" column-definition="bytea" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="Series">
+    <table name="series" />
+    <sequence-generator name="seq" sequence-name="series_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="SEQUENCE" generator="seq" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="series_attrs" column-definition="bytea" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="Instance">
+    <table name="instance" />
+    <sequence-generator name="seq" sequence-name="instance_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="SEQUENCE" generator="seq" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="inst_attrs" column-definition="bytea" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="VerifyingObserver">
+    <table name="verify_observer" />
+    <sequence-generator name="seq" sequence-name="verify_observer_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="SEQUENCE" generator="seq" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="FileRef">
+    <table name="file_ref" />
+    <sequence-generator name="seq" sequence-name="files_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="SEQUENCE" generator="seq" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="FileSystem">
+    <table name="filesystem" />
+    <sequence-generator name="seq" sequence-name="filesystem_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="SEQUENCE" generator="seq" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="StudyPermission">
+    <table name="study_permission" />
+    <sequence-generator name="seq" sequence-name="study_permission_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="SEQUENCE" generator="seq" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="Visit">
+    <table name="visit" />
+    <sequence-generator name="seq" sequence-name="visit_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="SEQUENCE" generator="seq" />
+      </id>
+      <basic name="encodedAttributes">
+        <column name="visit_attrs" column-definition="bytea" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="ServiceRequest">
+    <table name="request" />
+    <sequence-generator name="seq" sequence-name="request_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="SEQUENCE" generator="seq" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="request_attrs" column-definition="bytea" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="RequestedProcedure">
+    <table name="req_proc" />
+    <sequence-generator name="seq" sequence-name="req_proc_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="SEQUENCE" generator="seq" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="req_proc_attrs" column-definition="bytea" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="ScheduledProcedureStep">
+    <table name="sps" />
+    <sequence-generator name="seq" sequence-name="sps_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="SEQUENCE" generator="seq" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="sps_attrs" column-definition="bytea" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="ScheduledStationAETitle">
+    <table name="sps_aet" />
+    <sequence-generator name="seq" sequence-name="sps_aet_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="SEQUENCE" generator="seq" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="PerformedProcedureStep">
+    <table name="pps" />
+    <sequence-generator name="seq" sequence-name="pps_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="SEQUENCE" generator="seq" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="pps_attrs" column-definition="bytea" />
+      </basic>
+    </attributes>
+  </entity>
+
+</entity-mappings>
