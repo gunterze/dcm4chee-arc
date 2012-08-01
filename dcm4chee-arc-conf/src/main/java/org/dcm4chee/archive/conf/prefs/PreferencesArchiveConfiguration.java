@@ -69,7 +69,10 @@ import org.dcm4chee.archive.conf.StoreDuplicate;
 public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration {
 
     public PreferencesArchiveConfiguration() {
-        setConfigurationRoot("org/dcm4chee/archive");
+    }
+
+    public PreferencesArchiveConfiguration(Preferences rootPrefs) {
+        super(rootPrefs);
     }
 
     @Override
@@ -123,21 +126,13 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
 
     private void storeRejectionNotes(List<RejectionNote> rns, Preferences aeNode) {
         Preferences rnsNode = aeNode.node("dcmRejectionNote");
-        int index = 1;
         for (RejectionNote rn : rns)
-            storeTo(rn, rnsNode.node("" + index ++));
+            storeTo(rn, rnsNode.node(rn.getCommonName()));
     }
 
     private void storeTo(RejectionNote rn, Preferences prefs) {
-        storeTo(rn.getCode(), prefs);
+        storeNotNull(prefs, "dcmRejectionCode", rn.getCode());
         storeNotEmpty(prefs, "dcmRejectionAction", rn.getActions().toArray());
-    }
-
-    protected void storeTo(Code code, Preferences prefs) {
-        storeNotNull(prefs, "dcmCodeValue", code.getCodeValue());
-        storeNotNull(prefs, "dcmCodingSchemeDesignator", code.getCodingSchemeDesignator());
-        storeNotNull(prefs, "dcmCodingSchemeVersion", code.getCodingSchemeVersion());
-        storeNotNull(prefs, "dcmCodeMeaning", code.getCodeMeaning());
     }
 
     private static void storeTo(AttributeFilter filter, Preferences prefs) {
@@ -336,22 +331,15 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
     private void loadRejectionNotes(List<RejectionNote> rns, Preferences aeNode)
             throws BackingStoreException {
         Preferences rnsNode = aeNode.node("dcmRejectionNote");
-        for (String index : rnsNode.childrenNames())
-            rns.add(loadRejectionNoteFrom(rnsNode.node(index)));
+        for (String cn : rnsNode.childrenNames())
+            rns.add(loadRejectionNoteFrom(rnsNode.node(cn)));
     }
 
     private RejectionNote loadRejectionNoteFrom(Preferences prefs) {
-        RejectionNote rn = new RejectionNote(loadCodeFrom(prefs));
+        RejectionNote rn = new RejectionNote(prefs.name(),
+                new Code(prefs.get("dcmRejectionCode", null)));
         loadRejectionActionsFrom(rn, "dcmRejectionAction", prefs);
         return rn;
-    }
-
-    private Code loadCodeFrom(Preferences prefs) {
-        return new Code(
-                prefs.get("dcmCodeValue", null),
-                prefs.get("dcmCodingSchemeDesignator", null),
-                prefs.get("dcmCodingSchemeVersion", null),
-                prefs.get("dcmCodeMeaning", null));
     }
 
     private void loadRejectionActionsFrom(RejectionNote rn, String key,
@@ -636,23 +624,12 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
     }
 
     private void storeDiffs(Preferences prefs, RejectionNote a, RejectionNote b) {
-        storeDiff(prefs, a.getCode(), b.getCode());
+        storeDiff(prefs, "dcmRejectionCode",
+                a.getCode(),
+                b.getCode());
         storeDiff(prefs, "dcmRejectionAction",
                 a.getActions().toArray(),
                 b.getActions().toArray());
-    }
-
-    private void storeDiff(Preferences prefs, Code a, Code b) {
-        storeDiff(prefs, "dcmCodeValue", a.getCodeValue(), a.getCodeValue());
-        storeDiff(prefs, "dcmCodingSchemeDesignator", 
-                a.getCodingSchemeDesignator(),
-                b.getCodingSchemeDesignator());
-        storeDiff(prefs, "dcmCodingSchemeVersion",
-                a.getCodingSchemeVersion(),
-                b.getCodingSchemeVersion());
-        storeDiff(prefs, "dcmCodeMeaning",
-                a.getCodeMeaning(),
-                b.getCodeMeaning());
     }
 
 }

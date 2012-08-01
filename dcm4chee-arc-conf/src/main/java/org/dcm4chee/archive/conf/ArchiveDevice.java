@@ -127,13 +127,6 @@ public class ArchiveDevice extends HL7Device {
         return attributeFilters;
     }
 
-//    public StoreParam getStoreParam() {
-//        StoreParam storeParam = new StoreParam();
-//        storeParam.setFuzzyStr(fuzzyStr);
-//        storeParam.setAttributeFilters(attributeFilters);
-//        return storeParam;
-//    }
-
     @Override
     protected void setDeviceAttributes(Device from) {
         super.setDeviceAttributes(from);

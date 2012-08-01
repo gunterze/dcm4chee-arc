@@ -23,25 +23,22 @@
   
   <access>FIELD</access>
 
-  <entity class="Code">
-    <table name="code" />
+  <mapped-superclass class="org.dcm4che.data.Code">
     <attributes>
-      <id name="pk">
-        <column name="pk" />
-        <generated-value strategy="IDENTITY" />
-      </id>
+      <basic name="codeValue" optional="false">
+        <column name="code_value"/>
+      </basic>
+      <basic name="codingSchemeDesignator" optional="false">
+        <column name="code_designator"/>
+      </basic>
+      <basic name="codingSchemeVersion" optional="true">
+        <column name="code_version"/>
+      </basic>
+      <basic name="codeMeaning" optional="false">
+        <column name="code_meaning"/>
+      </basic>
     </attributes>
-  </entity>
-
-  <entity class="Issuer">
-    <table name="issuer" />
-    <attributes>
-      <id name="pk">
-        <column name="pk" />
-        <generated-value strategy="IDENTITY" />
-      </id>
-    </attributes>
-  </entity>
+  </mapped-superclass>
 
   <entity class="Patient">
     <table name="patient" />
@@ -95,46 +92,6 @@
     </attributes>
   </entity>
 
-  <entity class="VerifyingObserver">
-    <table name="verify_observer" />
-    <attributes>
-      <id name="pk">
-        <column name="pk" />
-        <generated-value strategy="IDENTITY" />
-      </id>
-    </attributes>
-  </entity>
-
-  <entity class="FileRef">
-    <table name="file_ref" />
-    <attributes>
-      <id name="pk">
-        <column name="pk" />
-        <generated-value strategy="IDENTITY" />
-      </id>
-    </attributes>
-  </entity>
-
-  <entity class="FileSystem">
-    <table name="filesystem" />
-    <attributes>
-      <id name="pk">
-        <column name="pk" />
-        <generated-value strategy="IDENTITY" />
-      </id>
-    </attributes>
-  </entity>
-
-  <entity class="StudyPermission">
-    <table name="study_permission" />
-    <attributes>
-      <id name="pk">
-        <column name="pk" />
-        <generated-value strategy="IDENTITY" />
-      </id>
-    </attributes>
-  </entity>
-
   <entity class="Visit">
     <table name="visit" />
     <attributes>
@@ -184,16 +141,6 @@
       <basic name="encodedAttributes" optional="false">
         <column name="sps_attrs" column-definition="image" />
       </basic>
-    </attributes>
-  </entity>
-
-  <entity class="ScheduledStationAETitle">
-    <table name="sps_aet" />
-    <attributes>
-      <id name="pk">
-        <column name="pk" />
-        <generated-value strategy="IDENTITY" />
-      </id>
     </attributes>
   </entity>
 

@@ -492,24 +492,29 @@ public class ArchiveDeviceTest {
     };
 
     private static final RejectionNote INCORRECT_WORKLIST_ENTRY_SELECTED =
-            new RejectionNote(new Code("110514", "DCM", null, "Incorrect worklist entry selected"))
+            new RejectionNote("Incorrect worklist entry selected",
+                    new Code("110514", "DCM", null, "Incorrect worklist entry selected"))
                 .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
                 .addAction(RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE);
     private static final RejectionNote REJECTED_FOR_QUALITY_REASONS =
-            new RejectionNote(new Code("113001", "DCM", null, "Rejected for Quality Reasons"))
+            new RejectionNote("Rejected for Quality Reasons",
+                    new Code("113001", "DCM", null, "Rejected for Quality Reasons"))
                 .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES);
     private static final RejectionNote REJECT_FOR_PATIENT_SAFETY_REASONS =
-            new RejectionNote(new Code("113037", "DCM", null, "Rejected for Patient Safety Reasons"))
+            new RejectionNote("Rejected for Patient Safety Reasons",
+                    new Code("113037", "DCM", null, "Rejected for Patient Safety Reasons"))
                 .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
                 .addAction(RejectionNote.Action.HIDE_REJECTION_NOTE)
                 .addAction(RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE);
     private static final RejectionNote INCORRECT_MODALITY_WORKLIST_ENTRY =
-            new RejectionNote(new Code("XXXXXX11", "99IHEIOCM", null, "Incorrect Modality Worklist Entry"))
+            new RejectionNote("Incorrect Modality Worklist Entry",
+                    new Code("XXXXXX11", "99IHEIOCM", null, "Incorrect Modality Worklist Entry"))
                 .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
                 .addAction(RejectionNote.Action.HIDE_REJECTION_NOTE)
                 .addAction(RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE);
     private static final RejectionNote DATA_RETENTION_PERIOD_EXPIRED =
-            new RejectionNote(new Code("XXXXXX22", "99IHEIOCM", null, "Data Retention Period Expired"))
+            new RejectionNote("Data Retention Period Expired",
+                    new Code("XXXXXX22", "99IHEIOCM", null, "Data Retention Period Expired"))
                 .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
                 .addAction(RejectionNote.Action.HIDE_REJECTION_NOTE)
                 .addAction(RejectionNote.Action.NOT_REJECT_SUBSEQUENT_OCCURRENCE);
@@ -603,7 +608,7 @@ public class ArchiveDeviceTest {
     public void setUp() throws Exception {
         keystore = SSLManagerFactory.loadKeyStore("JKS", "resource:cacerts.jks", "secret");
         config = System.getProperty("ldap") == null
-                ? new PreferencesArchiveConfiguration()
+                ? new PreferencesArchiveConfiguration(Preferences.userRoot())
                 : new LdapArchiveConfiguration();
         cleanUp();
     }
@@ -659,9 +664,8 @@ public class ArchiveDeviceTest {
 
         OutputStream os = new FileOutputStream(name);
         try {
-            Preferences.userRoot().node(
-                    ((PreferencesArchiveConfiguration) config)
-                    .getConfigurationRoot()).exportSubtree(os);
+            ((PreferencesArchiveConfiguration) config)
+                    .getDicomConfigurationRoot().exportSubtree(os);
         } finally {
             SafeClose.close(os);
         }
@@ -728,6 +732,9 @@ public class ArchiveDeviceTest {
         device.setFuzzyAlgorithmClass("org.dcm4che.soundex.ESoundex");
         device.setConfigurationStaleTimeout(CONFIGURATION_STALE_TIMEOUT);
         setAttributeFilters(device);
+        device.setKeyStoreURL("resource:dcm4chee-arc-key.jks");
+        device.setKeyStoreType("JKS");
+        device.setKeyStorePin("secret");
         device.setThisNodeCertificates(config.deviceRef(name),
                 (X509Certificate) keystore.getCertificate(name));
         for (String other : OTHER_DEVICES)

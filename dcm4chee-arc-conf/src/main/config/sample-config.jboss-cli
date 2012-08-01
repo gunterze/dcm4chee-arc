@@ -1,3 +1,2 @@
-/system-property="org.dcm4che.conf.prefs.configurationRoot":add(value="org/dcm4chee/archive")
 /system-property="org.dcm4chee.archive.deviceName":add(value="dcm4chee-arc")
 /system-property="org.dcm4chee.archive.jmxName":add(value="dcm4chee:service=dcm4chee-arc")

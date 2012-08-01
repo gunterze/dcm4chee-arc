@@ -51,7 +51,6 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
-import javax.net.ssl.KeyManager;
 
 import org.dcm4che.conf.api.ApplicationEntityCache;
 import org.dcm4che.conf.api.hl7.HL7ApplicationCache;
@@ -60,7 +59,6 @@ import org.dcm4che.data.UID;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.DeviceService;
-import org.dcm4che.net.SSLManagerFactory;
 import org.dcm4che.net.service.DicomServiceRegistry;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.conf.ArchiveDevice;
@@ -84,10 +82,6 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
 
     static final String DEVICE_NAME = "org.dcm4chee.archive.deviceName";
     static final String JMX_NAME = "org.dcm4chee.archive.jmxName";
-    static final String KS_TYPE = "org.dcm4chee.archive.keyStoreType";
-    static final String KS_URL = "org.dcm4chee.archive.keyStoreURL";
-    static final String KS_PASSWORD = "org.dcm4chee.archive.storePassword";
-    static final String KEY_PASSWORD = "org.dcm4chee.archive.keyPassword";
 
     static final String PATIENT = "PATIENT";
     static final String STUDY = "STUDY";
@@ -150,14 +144,6 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         device.reconfigure(dicomConfiguration.findDevice(device.getDeviceName()));
         setConfigurationStaleTimeout();
         loadRejectionNoteCodes();
-    }
-
-    protected KeyManager keyManager() throws Exception {
-        String url = System.getProperty(KS_URL, "resource:dcm4chee-arc-key.jks");
-        String kstype = System.getProperty(KS_TYPE, "JKS");
-        String kspw = System.getProperty(KS_PASSWORD, "secret");
-        String keypw = System.getProperty(KEY_PASSWORD, kspw);
-        return SSLManagerFactory.createKeyManager(kstype, url, kspw, keypw);
     }
 
     private void setConfigurationStaleTimeout() {

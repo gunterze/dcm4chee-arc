@@ -408,40 +408,6 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         this.pixConsumerApplication = appName;
     }
 
-//    public StoreParam getStoreParam() {
-//        StoreParam storeParam = getArchiveDevice().getStoreParam();
-//        storeParam.setStoreOriginalAttributes(storeOriginalAttributes);
-//        storeParam.setModifyingSystem(getEffectiveModifyingSystem());
-//        storeParam.setRetrieveAETs(retrieveAETs);
-//        storeParam.setExternalRetrieveAET(externalRetrieveAET);
-//        storeParam.setStoreDuplicates(storeDuplicates);
-//        storeParam.setRejectionNotes(rejectionNotes);
-//        return storeParam;
-//    }
-
-//    public QueryParam getQueryParam(CodeManager codeManager,
-//            EnumSet<QueryOption> queryOpts, String... roles) {
-//        QueryParam queryParam = new QueryParam();
-//        ArchiveDevice dev = getArchiveDevice();
-//        List<RejectionNote> rns = getRejectionNotes();
-//        queryParam.setFuzzyStr(dev.getFuzzyStr());
-//        queryParam.setAttributeFilters(dev.getAttributeFilters());
-//        queryParam.setCombinedDatetimeMatching(queryOpts.contains(QueryOption.DATETIME));
-//        queryParam.setFuzzySemanticMatching(queryOpts.contains(QueryOption.FUZZY));
-//        queryParam.setMatchUnknown(matchUnknown);
-//        queryParam.setRoles(roles);
-//        queryParam.setHideConceptNameCodes(codeManager.createCodes(
-//                RejectionNote.selectByAction(rns,
-//                        RejectionNote.Action.HIDE_REJECTION_NOTE)));
-//        queryParam.setHideRejectionCodes(codeManager.createCodes(
-//                RejectionNote.selectByAction(rns,
-//                        RejectionNote.Action.HIDE_REJECTED_INSTANCES)));
-//        queryParam.setShowEmptySeries(showEmptySeries);
-//        queryParam.setShowEmptyStudy(showEmptyStudy);
-//        queryParam.setReturnOtherPatientIDs(returnOtherPatientIDs);
-//        return queryParam;
-//    }
-
     @Override
     protected void setApplicationEntityAttributes(ApplicationEntity from) {
         super.setApplicationEntityAttributes(from);

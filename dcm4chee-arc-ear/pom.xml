@@ -20,6 +20,12 @@
       <artifactId>dcm4chee-arc-service</artifactId>
       <type>ejb</type>
       <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.dcm4che.dcm4chee-arc</groupId>
+          <artifactId>dcm4chee-arc-entity</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.dcm4che.dcm4chee-arc</groupId>
@@ -38,6 +44,7 @@
           <generateApplicationXml>false</generateApplicationXml>
           <version>6</version>
           <defaultLibBundleDir>lib</defaultLibBundleDir>
+          <workDirectory>${project.build.directory}/${project.build.finalName}-${db}</workDirectory>
         </configuration>
       </plugin>
     </plugins>

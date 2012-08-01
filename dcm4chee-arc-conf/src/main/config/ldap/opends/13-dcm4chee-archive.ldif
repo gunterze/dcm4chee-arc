@@ -136,30 +136,12 @@ attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.27 NAME 'dcmIanRetryInterval'
   EQUALITY integerMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.28 NAME 'dcmCodeValue'
-  DESC 'Code Value (0008,0100)'
-  EQUALITY caseIgnoreMatch
-  SUBSTR caseIgnoreSubstringsMatch
-  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
-  SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.29 NAME 'dcmCodingSchemeDesignator'
-  DESC 'Coding Scheme Designator (0008,0102)'
-  EQUALITY caseIgnoreMatch
-  SUBSTR caseIgnoreSubstringsMatch
-  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
-  SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.30 NAME 'dcmCodingSchemeVersion'
-  DESC 'Coding Scheme Version (0008,0103)'
-  EQUALITY caseIgnoreMatch
-  SUBSTR caseIgnoreSubstringsMatch
-  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
-  SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.31 NAME 'dcmCodeMeaning'
-  DESC 'Code Meaning (0008,0104)'
-  EQUALITY caseIgnoreMatch
-  SUBSTR caseIgnoreSubstringsMatch
-  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
-  SINGLE-VALUE )
+attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.31 NAME 'dcmRejectionCode'
+   DESC 'Rejection Note code. Format: (CV, CSD, "CM") or (CV, CSD [CSV], "CM")'
+   EQUALITY caseExactMatch
+   SUBSTR caseExactSubstringsMatch
+   SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+   SINGLE-VALUE )
 attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.32 NAME 'dcmRejectionAction'
   DESC 'Specify Action associated with Rejection Note: ("HIDE_REJECTED_INSTANCES", "HIDE_REJECTION_NOTE", "NOT_ACCEPT_SUBSEQUENT_OCCURRENCE", "STICKY_ON_SUBSEQUENT_OCCURRENCE")'
   EQUALITY caseExactIA5Match
@@ -269,12 +251,9 @@ objectClasses: ( 1.2.40.0.13.1.1.15.0.4.12 NAME 'dcmRejectionNote'
   DESC 'Key Object Selection Document Title of Rejection Note with associated Actions'
   SUP top STRUCTURAL
   MUST (
-    dcmCodeValue $
-    dcmCodingSchemeDesignator $
-    dcmCodeMeaning $
-    dcmRejectionAction )
-  MAY (
-    dcmCodingSchemeVersion ) )
+    cn $
+    dcmRejectionCode $
+    dcmRejectionAction ) )
 objectClasses: ( 1.2.40.0.13.1.1.15.0.4.13 NAME 'dcmStoreDuplicate'
   DESC 'Specifies behavior on receive of objects with existing SOP Instance UID'
   SUP top STRUCTURAL

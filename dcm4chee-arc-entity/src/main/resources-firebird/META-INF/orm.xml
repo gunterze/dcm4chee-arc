@@ -23,9 +23,37 @@
   
   <access>FIELD</access>
 
+  <mapped-superclass class="org.dcm4che.data.Code">
+    <attributes>
+      <basic name="codeValue" optional="false">
+        <column name="code_value"/>
+      </basic>
+      <basic name="codingSchemeDesignator" optional="false">
+        <column name="code_designator"/>
+      </basic>
+      <basic name="codingSchemeVersion" optional="true">
+        <column name="code_version"/>
+      </basic>
+      <basic name="codeMeaning" optional="false">
+        <column name="code_meaning"/>
+      </basic>
+    </attributes>
+  </mapped-superclass>
+
   <entity class="Code">
     <table name="code" />
     <sequence-generator name="seq" sequence-name="code_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="SEQUENCE" generator="seq" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="ContentItem">
+    <table name="content_item" />
+    <sequence-generator name="seq" sequence-name="content_itemr_pk_seq" />
     <attributes>
       <id name="pk">
         <column name="pk" />

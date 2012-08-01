@@ -159,7 +159,7 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         for (StoreDuplicate sd : arcAE.getStoreDuplicates())
             createSubcontext(dnOf(sd, aeDN), storeTo(sd, new BasicAttributes(true)));
         for (RejectionNote rn : arcAE.getRejectionNotes())
-            createSubcontext(dnOf(rn.getCode(), aeDN), storeTo(rn, new BasicAttributes(true)));
+            createSubcontext(dnOf(rn, aeDN), storeTo(rn, new BasicAttributes(true)));
     }
 
     private String dnOf(StoreDuplicate sd, String aeDN) {
@@ -176,28 +176,16 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         return attrs;
     }
 
-    private static String dnOf(Code code, String parentDN) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dcmCodeValue=").append(code.getCodeValue());
-        sb.append("+dcmCodingSchemeDesignator=").append(code.getCodingSchemeDesignator());
-        if (code.getCodingSchemeVersion() != null)
-            sb.append("+dcmCodingSchemeVersion=").append(code.getCodingSchemeVersion());
-        sb.append(',').append(parentDN);
-        return sb.toString();
+    private static String dnOf(RejectionNote rn, String parentDN) {
+        return "cn=" + rn.getCommonName() + ',' + parentDN;
     }
 
     private static Attributes storeTo(RejectionNote ac, BasicAttributes attrs) {
         attrs.put("objectclass", "dcmRejectionNote");
-        storeTo(ac.getCode(), attrs);
+        attrs.put("cn", ac.getCommonName());
+        storeNotNull(attrs, "dcmRejectionCode", ac.getCode());
         storeNotEmpty(attrs, "dcmRejectionAction", ac.getActions().toArray());
         return attrs;
-    }
-
-    private static void storeTo(Code code, BasicAttributes attrs) {
-        storeNotNull(attrs, "dcmCodeValue", code.getCodeValue());
-        storeNotNull(attrs, "dcmCodingSchemeDesignator", code.getCodingSchemeDesignator());
-        storeNotNull(attrs, "dcmCodingSchemeVersion", code.getCodingSchemeVersion());
-        storeNotNull(attrs, "dcmCodeMeaning", code.getCodeMeaning());
     }
 
     private static Attributes storeTo(AttributeFilter filter, Entity entity, BasicAttributes attrs) {
@@ -415,17 +403,10 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
 
     private RejectionNote loadRejectionNoteFrom(Attributes attrs)
             throws NamingException {
-        RejectionNote rn = new RejectionNote(loadCodeFrom(attrs));
+        RejectionNote rn = new RejectionNote(stringValue(attrs.get("cn")),
+                new Code(stringValue(attrs.get("dcmRejectionCode"))));
         loadRejectionActionsFrom(rn, attrs.get("dcmRejectionAction"));
         return rn;
-    }
-
-    private Code loadCodeFrom(Attributes attrs) throws NamingException {
-        return new Code(
-                stringValue(attrs.get("dcmCodeValue")),
-                stringValue(attrs.get("dcmCodingSchemeDesignator")),
-                stringValue(attrs.get("dcmCodingSchemeVersion")),
-                stringValue(attrs.get("dcmCodeMeaning")));
     }
 
     private void loadRejectionActionsFrom(RejectionNote rn, Attribute attr)
@@ -657,13 +638,13 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
     private void mergeRejectionNotes(List<RejectionNote> prevs, List<RejectionNote> rns, String parentDN)
             throws NamingException {
         for (RejectionNote prev : prevs) {
-            Code code = prev.getCode();
-            if (findByCode(rns, code) == null)
-                destroySubcontext(dnOf(code, parentDN));
+            String cn = prev.getCommonName();
+            if (findByCommonName(rns, cn) == null)
+                destroySubcontext(dnOf(prev, parentDN));
         }
         for (RejectionNote rn : rns) {
-            String dn = dnOf(rn.getCode(), parentDN);
-            RejectionNote prev = findByCode(prevs, rn.getCode());
+            String dn = dnOf(rn, parentDN);
+            RejectionNote prev = findByCommonName(prevs, rn.getCommonName());
             if (prev == null)
                 createSubcontext(dn, storeTo(rn, new BasicAttributes(true)));
             else
@@ -671,18 +652,18 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         }
     }
 
-    private RejectionNote findByCode(List<RejectionNote> rns, Code code) {
+    private RejectionNote findByCommonName(List<RejectionNote> rns, String cn) {
         for (RejectionNote other : rns)
-            if (other.getCode().equalsIgnoreMeaning(code))
+            if (other.getCommonName().equals(cn))
                 return other;
         return null;
     }
 
     private List<ModificationItem> storeDiffs(RejectionNote prev,
             RejectionNote rn, ArrayList<ModificationItem> mods) {
-        storeDiff(mods, "dcmCodeMeaning",
-                prev.getCode().getCodeMeaning(),
-                rn.getCode().getCodeMeaning());
+        storeDiff(mods, "dcmRejectionCode",
+                prev.getCode(),
+                rn.getCode());
         storeDiff(mods, "dcmRejectionAction",
                 prev.getActions().toArray(),
                 rn.getActions().toArray());

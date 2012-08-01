@@ -57,11 +57,17 @@ public class RejectionNote implements Serializable {
         NOT_REJECT_SUBSEQUENT_OCCURRENCE
     }
 
+    private final String commonName;
     private Code code;
     private final EnumSet<Action> actions = EnumSet.noneOf(Action.class);
 
-    public RejectionNote(Code code) {
+    public RejectionNote(String commonName, Code code) {
+        this.commonName = commonName;
         this.code = code;
+    }
+
+    public final String getCommonName() {
+        return commonName;
     }
 
     public final Code getCode() {
