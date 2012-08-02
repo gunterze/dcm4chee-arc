@@ -5,7 +5,7 @@
     <artifactId>dcm4chee-arc-parent</artifactId>
     <version>4.1.0-SNAPSHOT</version>
   </parent>
-  <artifactId>dcm4chee-arc</artifactId>
+  <artifactId>dcm4chee-arc-ear</artifactId>
   <packaging>ear</packaging>
   <name>dcm4chee-arc-ear</name>
   <dependencies>
@@ -41,10 +41,11 @@
         <version>2.7</version>
         <configuration>
           <classifier>${db}</classifier>
-          <generateApplicationXml>false</generateApplicationXml>
           <version>6</version>
           <defaultLibBundleDir>lib</defaultLibBundleDir>
-          <workDirectory>${project.build.directory}/${project.build.finalName}-${db}</workDirectory>
+          <finalName>dcm4chee-arc-${project.version}</finalName>
+          <workDirectory>${project.build.directory}/dcm4chee-arc-${project.version}-${db}</workDirectory>
+          <applicationName>dcm4chee-arc</applicationName>
         </configuration>
       </plugin>
     </plugins>

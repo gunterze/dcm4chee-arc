@@ -38,13 +38,8 @@
 
 package org.dcm4chee.archive.util;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-
-import org.dcm4che.util.SafeClose;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -52,21 +47,7 @@ import org.dcm4che.util.SafeClose;
  */
 public class BeanLocator {
 
-    private static final String GLOBAL_JNDI = read("/META-INF/global.jndi");
-
-    private static String read(String name) {
-        InputStream in = null;
-        try {
-            in = BeanLocator.class.getResourceAsStream(name);
-            byte[] b = new byte[in.available()];
-            in.read(b);
-            return new String(b, "UTF-8");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            SafeClose.close(in);
-        }
-    }
+    private static final String GLOBAL_JNDI = "java:global/dcm4chee-arc/service/";
 
     public static <T> T lookup(Class<T> beanClass) {
         return lookup(beanClass, GLOBAL_JNDI + beanClass.getSimpleName());
