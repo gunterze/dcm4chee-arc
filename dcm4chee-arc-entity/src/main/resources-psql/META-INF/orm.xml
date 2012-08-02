@@ -42,7 +42,7 @@
 
   <entity class="Code">
     <table name="code" />
-    <sequence-generator name="seq" sequence-name="code_pk_seq" />
+    <sequence-generator name="seq" sequence-name="code_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -53,7 +53,7 @@
 
   <entity class="ContentItem">
     <table name="content_item" />
-    <sequence-generator name="seq" sequence-name="content_itemr_pk_seq" />
+    <sequence-generator name="seq" sequence-name="content_itemr_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -64,7 +64,7 @@
 
   <entity class="Issuer">
     <table name="issuer" />
-    <sequence-generator name="seq" sequence-name="issuer_pk_seq" />
+    <sequence-generator name="seq" sequence-name="issuer_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -75,7 +75,7 @@
 
   <entity class="Patient">
     <table name="patient" />
-    <sequence-generator name="seq" sequence-name="patient_pk_seq" />
+    <sequence-generator name="seq" sequence-name="patient_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -89,7 +89,7 @@
 
   <entity class="Study">
     <table name="study" />
-    <sequence-generator name="seq" sequence-name="study_pk_seq" />
+    <sequence-generator name="seq" sequence-name="study_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -103,7 +103,7 @@
 
   <entity class="Series">
     <table name="series" />
-    <sequence-generator name="seq" sequence-name="series_pk_seq" />
+    <sequence-generator name="seq" sequence-name="series_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -117,7 +117,7 @@
 
   <entity class="Instance">
     <table name="instance" />
-    <sequence-generator name="seq" sequence-name="instance_pk_seq" />
+    <sequence-generator name="seq" sequence-name="instance_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -131,7 +131,7 @@
 
   <entity class="VerifyingObserver">
     <table name="verify_observer" />
-    <sequence-generator name="seq" sequence-name="verify_observer_pk_seq" />
+    <sequence-generator name="seq" sequence-name="verify_observer_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -142,7 +142,7 @@
 
   <entity class="FileRef">
     <table name="file_ref" />
-    <sequence-generator name="seq" sequence-name="files_pk_seq" />
+    <sequence-generator name="seq" sequence-name="files_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -153,7 +153,7 @@
 
   <entity class="FileSystem">
     <table name="filesystem" />
-    <sequence-generator name="seq" sequence-name="filesystem_pk_seq" />
+    <sequence-generator name="seq" sequence-name="filesystem_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -164,7 +164,7 @@
 
   <entity class="StudyPermission">
     <table name="study_permission" />
-    <sequence-generator name="seq" sequence-name="study_permission_pk_seq" />
+    <sequence-generator name="seq" sequence-name="study_permission_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -175,7 +175,7 @@
 
   <entity class="Visit">
     <table name="visit" />
-    <sequence-generator name="seq" sequence-name="visit_pk_seq" />
+    <sequence-generator name="seq" sequence-name="visit_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -189,7 +189,7 @@
 
   <entity class="ServiceRequest">
     <table name="request" />
-    <sequence-generator name="seq" sequence-name="request_pk_seq" />
+    <sequence-generator name="seq" sequence-name="request_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -203,7 +203,7 @@
 
   <entity class="RequestedProcedure">
     <table name="req_proc" />
-    <sequence-generator name="seq" sequence-name="req_proc_pk_seq" />
+    <sequence-generator name="seq" sequence-name="req_proc_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -217,7 +217,7 @@
 
   <entity class="ScheduledProcedureStep">
     <table name="sps" />
-    <sequence-generator name="seq" sequence-name="sps_pk_seq" />
+    <sequence-generator name="seq" sequence-name="sps_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -231,7 +231,7 @@
 
   <entity class="ScheduledStationAETitle">
     <table name="sps_aet" />
-    <sequence-generator name="seq" sequence-name="sps_aet_pk_seq" />
+    <sequence-generator name="seq" sequence-name="sps_aet_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -242,7 +242,7 @@
 
   <entity class="PerformedProcedureStep">
     <table name="pps" />
-    <sequence-generator name="seq" sequence-name="pps_pk_seq" />
+    <sequence-generator name="seq" sequence-name="pps_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />
