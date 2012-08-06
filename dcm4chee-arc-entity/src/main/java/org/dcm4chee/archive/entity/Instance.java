@@ -65,7 +65,7 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.DateUtils;
 import org.dcm4che.util.StringUtils;
-import org.dcm4chee.archive.common.AttributeFilter;
+import org.dcm4chee.archive.conf.AttributeFilter;
 import org.hibernate.annotations.Index;
 
 /**

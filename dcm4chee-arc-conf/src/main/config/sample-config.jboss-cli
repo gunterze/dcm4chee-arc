@@ -1,2 +1,0 @@
-/system-property="org.dcm4chee.archive.deviceName":add(value="dcm4chee-arc")
-/system-property="org.dcm4chee.archive.jmxName":add(value="dcm4chee:service=dcm4chee-arc")

@@ -45,7 +45,6 @@ import org.dcm4che.io.TemplatesCache;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.hl7.HL7Device;
 import org.dcm4che.soundex.FuzzyStr;
-import org.dcm4chee.archive.common.AttributeFilter;
 
 
 /**

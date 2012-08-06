@@ -1,7 +1,8 @@
 # dcm4chee-arc extensions of the DICOM Application Configuration Data Model Hierarchy LDAP Schema
-dn: cn=dcm4chee-arc,cn=schema,cn=config
-objectClass: olcSchemaConfig
-cn: dcm4chee-arc
+dn: cn=schema
+objectClass: top
+objectClass: ldapSubentry
+objectClass: subschema
 attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.1 NAME 'dcmFileSystemGroupID'
   DESC 'ID of File System Group where received objects are stored'
   EQUALITY caseIgnoreMatch
@@ -194,7 +195,15 @@ attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.41 NAME 'dcmReturnOtherPatientNames'
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 
   SINGLE-VALUE )
 attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.42 NAME 'dcmSpoolFilePathFormat'
+  DESC 'Specifies File Path of spool file for received objects'
+  EQUALITY caseExactIA5Match
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+  SINGLE-VALUE )
 attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.43 NAME 'dcmPreserveSpoolFileOnFailure'
+  DESC 'Specifies to preserve spool file with received composite object if the storage failed; disable if absent'
+  EQUALITY booleanMatch
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 
+  SINGLE-VALUE )
 objectClasses: ( 1.2.40.0.13.1.1.15.0.4.4 NAME 'dcmArchiveDevice'
   DESC 'DICOM Archive Device related information'
   SUP top AUXILIARY

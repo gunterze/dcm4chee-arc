@@ -57,7 +57,7 @@ import javax.persistence.Transient;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
-import org.dcm4chee.archive.common.AttributeFilter;
+import org.dcm4chee.archive.conf.AttributeFilter;
 import org.hibernate.annotations.Index;
 
 /**

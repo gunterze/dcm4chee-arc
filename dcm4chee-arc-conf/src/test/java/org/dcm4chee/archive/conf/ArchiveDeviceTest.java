@@ -66,7 +66,6 @@ import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.net.hl7.HL7Device;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.SafeClose;
-import org.dcm4chee.archive.common.AttributeFilter;
 import org.dcm4chee.archive.conf.ldap.LdapArchiveConfiguration;
 import org.dcm4chee.archive.conf.prefs.PreferencesArchiveConfiguration;
 import org.junit.After;

@@ -38,26 +38,12 @@
 
 package org.dcm4chee.archive;
 
-import java.lang.management.ManagementFactory;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.DependsOn;
-import javax.ejb.EJB;
-import javax.ejb.LocalBean;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.management.ObjectInstance;
-import javax.management.ObjectName;
-
 import org.dcm4che.conf.api.ApplicationEntityCache;
+import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.conf.api.hl7.HL7ApplicationCache;
 import org.dcm4che.conf.api.hl7.HL7Configuration;
 import org.dcm4che.data.UID;
 import org.dcm4che.net.ApplicationEntity;
-import org.dcm4che.net.Device;
 import org.dcm4che.net.DeviceService;
 import org.dcm4che.net.service.DicomServiceRegistry;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
@@ -73,11 +59,6 @@ import org.dcm4chee.archive.query.MWLCFindSCPImpl;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-@Singleton
-@LocalBean
-@DependsOn("DicomConfiguration")
-@Startup
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBean {
 
     static final String DEVICE_NAME = "org.dcm4chee.archive.deviceName";
@@ -88,56 +69,24 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
     static final String SERIES = "SERIES";
     static final String IMAGE = "IMAGE";
 
-    @EJB(name="DicomConfiguration")
-    HL7Configuration dicomConfiguration;
+    private final HL7Configuration dicomConfiguration;
+    private final CodeService codeService;
+    private final ApplicationEntityCache aeCache;
+    private final HL7ApplicationCache hl7AppCache;
+    private final PIXConsumer pixConsumer;
 
-    @EJB
-    CodeService codeService;
-
-    private ObjectInstance mbean;
-    private ApplicationEntityCache aeCache;
-    private HL7ApplicationCache hl7AppCache;
-    private PIXConsumer pixConsumer;
-
-    @PostConstruct
-    void init() {
-        try {
-            aeCache = new ApplicationEntityCache(dicomConfiguration);
-            hl7AppCache = new HL7ApplicationCache(dicomConfiguration);
-            pixConsumer = new PIXConsumer(hl7AppCache);
-            super.init((ArchiveDevice) dicomConfiguration.findDevice(
-                    System.getProperty(DEVICE_NAME, "dcm4chee-arc")));
-            setConfigurationStaleTimeout();
-            loadRejectionNoteCodes();
-            mbean = ManagementFactory.getPlatformMBeanServer()
-                    .registerMBean(this, new ObjectName(
-                            System.getProperty(JMX_NAME, "dcm4chee:service=dcm4chee-arc")));
-            start();
-        } catch (Exception e) {
-            destroy();
-            throw new RuntimeException(e);
-        }
-        
-    }
-
-    @PreDestroy
-    void destroy() {
-        stop();
-        if (mbean != null)
-            try {
-                ManagementFactory.getPlatformMBeanServer()
-                    .unregisterMBean(mbean.getObjectName());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        mbean = null;
-        device = null;
-    }
-
-    @Override
-    public Device unwrapDevice() {
-        return device;
-    }
+    public Archive(HL7Configuration dicomConfiguration, String deviceName,
+            CodeService codeService)
+            throws ConfigurationException, Exception {
+        this.dicomConfiguration = dicomConfiguration;
+        this.codeService = codeService;
+        this.aeCache = new ApplicationEntityCache(dicomConfiguration);
+        this.hl7AppCache = new HL7ApplicationCache(dicomConfiguration);
+        this.pixConsumer = new PIXConsumer(hl7AppCache);
+        init((ArchiveDevice) dicomConfiguration.findDevice(deviceName));
+        setConfigurationStaleTimeout();
+        loadRejectionNoteCodes();
+   }
 
     @Override
     public void reloadConfiguration() throws Exception {

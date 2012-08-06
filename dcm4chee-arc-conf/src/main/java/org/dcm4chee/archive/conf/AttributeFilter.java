@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.common;
+package org.dcm4chee.archive.conf;
 
 import java.io.Serializable;
 import java.util.Arrays;
