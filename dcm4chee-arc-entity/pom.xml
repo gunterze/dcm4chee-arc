@@ -15,7 +15,7 @@
   <dependencies>
     <dependency>
       <groupId>org.dcm4che.dcm4chee-arc</groupId>
-      <artifactId>dcm4chee-arc-commons</artifactId>
+      <artifactId>dcm4chee-arc-conf</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

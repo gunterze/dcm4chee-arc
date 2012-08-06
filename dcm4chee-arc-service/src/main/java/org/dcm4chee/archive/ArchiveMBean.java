@@ -38,7 +38,6 @@
 
 package org.dcm4chee.archive;
 
-import org.dcm4che.net.Device;
 
 public interface ArchiveMBean {
 
@@ -49,7 +48,5 @@ public interface ArchiveMBean {
     void stop();
 
     void reloadConfiguration() throws Exception;
-
-    Device unwrapDevice();
 
 }

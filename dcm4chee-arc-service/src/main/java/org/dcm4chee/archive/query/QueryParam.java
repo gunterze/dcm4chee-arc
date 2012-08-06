@@ -42,7 +42,7 @@ import java.util.List;
 
 import org.dcm4che.net.Issuer;
 import org.dcm4che.soundex.FuzzyStr;
-import org.dcm4chee.archive.common.AttributeFilter;
+import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.entity.Code;
 
 /**

@@ -36,44 +36,65 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.util;
+package org.dcm4chee.archive;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+import java.lang.management.ManagementFactory;
 
-/**
- * @author Gunter Zeilinger <gunterze@gmail.com>
- *
- */
-public class BeanLocator {
+import javax.ejb.EJB;
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 
-    private static final String GLOBAL_JNDI = "java:global/service/";
+import org.dcm4che.conf.api.hl7.HL7Configuration;
+import org.dcm4chee.archive.dao.CodeService;
 
-    public static <T> T lookup(Class<T> beanClass) {
-        return lookup(beanClass, GLOBAL_JNDI + beanClass.getSimpleName());
-    }
+@SuppressWarnings("serial")
+public class ArchiveServlet extends HttpServlet {
 
-    public static <T> T lookup(Class<T> beanClass, String jndiName) {
-        return beanClass.cast(lookup(jndiName));
-    }
+    private ObjectInstance mbean;
 
-    public static Object lookup(String jndiName) {
-        InitialContext ctx = null;
+    private Archive archive;
+
+    private HL7Configuration dicomConfig;
+
+    @EJB
+    CodeService codeService;
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
         try {
-            ctx = new InitialContext();
-            return ctx.lookup(jndiName);
-        } catch (NamingException e) {
-            throw new IllegalStateException(
-                    "Cannot connect to bean: " + jndiName + " Reason: " + e,
-                    e.getCause());
-        } finally {
-            try {
-                ctx.close();
-            } catch (NamingException e) {
-                throw new IllegalStateException(
-                        "Cannot close InitialContext. Reason: " + e,
-                        e.getCause());
-            }
+            dicomConfig = (HL7Configuration) Class.forName(
+                    config.getInitParameter("dicomConfigurationClass"), false,
+                    Thread.currentThread().getContextClassLoader()).newInstance();
+            archive = new Archive(dicomConfig,
+                    config.getInitParameter("deviceName"),
+                    codeService);
+            archive.start();
+            mbean = ManagementFactory.getPlatformMBeanServer()
+                    .registerMBean(archive, 
+                            new ObjectName(config.getInitParameter("jmxName")));
+        } catch (Exception e) {
+            destroy();
+            throw new ServletException(e);
         }
     }
+
+    @Override
+    public void destroy() {
+        if (mbean != null)
+            try {
+                ManagementFactory.getPlatformMBeanServer()
+                    .unregisterMBean(mbean.getObjectName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        if (archive != null)
+            archive.stop();
+        if (dicomConfig != null)
+            dicomConfig.close();
+    }
+
 }
