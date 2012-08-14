@@ -3913,9 +3913,7 @@ objectClass: dicomNetworkAE
 objectClass: dcmNetworkAE
 objectClass: dcmArchiveNetworkAE
 dcmSendPendingCMoveInterval: 5000
-dcmShowEmptyStudy: TRUE
 hl7PIXManagerApplication: HL7RCV^DCM4CHEE
-dcmShowEmptySeries: TRUE
 
 dn: cn=Composite Instance Retrieve Without Bulk Data - GET SCP,dicomAETitle=DCM4CHEE_ADMIN,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dicomSOPClass: 1.2.840.10008.5.1.4.1.2.5.3

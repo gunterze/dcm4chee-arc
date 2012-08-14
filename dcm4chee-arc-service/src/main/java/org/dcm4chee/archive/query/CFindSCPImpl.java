@@ -58,10 +58,8 @@ import org.dcm4che.net.service.QueryTask;
 import org.dcm4che.util.AttributesValidator;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.conf.ArchiveDevice;
-import org.dcm4chee.archive.conf.RejectionNote;
 import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.query.impl.QueryTaskImpl;
-import org.dcm4chee.archive.util.RejectionNotes;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -122,14 +120,7 @@ public class CFindSCPImpl extends BasicCFindSCP {
                 .contains(QueryOption.FUZZY));
         queryParam.setMatchUnknown(ae.isMatchUnknown());
         queryParam.setRoles(roles(as));
-        queryParam.setHideConceptNameCodes(RejectionNotes.codesForAction(
-                ae.getRejectionNotes(),
-                RejectionNote.Action.HIDE_REJECTION_NOTE));
-        queryParam.setHideRejectionCodes(RejectionNotes.codesForAction(
-                ae.getRejectionNotes(),
-                RejectionNote.Action.HIDE_REJECTED_INSTANCES));
-        queryParam.setShowEmptySeries(ae.isShowEmptySeries());
-        queryParam.setShowEmptyStudy(ae.isShowEmptyStudy());
+        queryParam.setRejectionNotes(ae.getRejectionNotes());
         queryParam.setReturnOtherPatientIDs(ae.isReturnOtherPatientIDs());
 
         ApplicationEntity sourceAE = aeCache.get(as.getRemoteAET());

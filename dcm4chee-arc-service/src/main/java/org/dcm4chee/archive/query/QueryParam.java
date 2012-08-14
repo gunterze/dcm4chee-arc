@@ -38,11 +38,13 @@
 
 package org.dcm4chee.archive.query;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import org.dcm4che.net.Issuer;
+import org.dcm4che.data.Issuer;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4chee.archive.conf.AttributeFilter;
+import org.dcm4chee.archive.conf.RejectionNote;
 import org.dcm4chee.archive.entity.Code;
 
 /**
@@ -59,8 +61,6 @@ public class QueryParam {
     private List<Code> hideConceptNameCodes;
     private List<Code> hideRejectionCodes;
     private String[] roles;
-    private boolean showEmptyStudy;
-    private boolean showEmptySeries;
     private boolean returnOtherPatientIDs;
     private Issuer defaultIssuerOfPatientID;
     private Issuer defaultIssuerOfAccessionNumber;
@@ -117,32 +117,25 @@ public class QueryParam {
         return hideConceptNameCodes;
     }
 
-    public void setHideConceptNameCodes(List<Code> hideConceptNameCodes) {
-        this.hideConceptNameCodes = hideConceptNameCodes;
-    }
-
     public List<Code> getHideRejectionCodes() {
         return hideRejectionCodes;
     }
 
-    public void setHideRejectionCodes(List<Code> hideRejectionCodes) {
-        this.hideRejectionCodes = hideRejectionCodes;
+    public void setRejectionNotes(List<RejectionNote> rejectionNotes) {
+        this.hideConceptNameCodes = codesForAction(
+                rejectionNotes, RejectionNote.Action.HIDE_REJECTION_NOTE);
+        this.hideRejectionCodes = codesForAction(
+                rejectionNotes, RejectionNote.Action.HIDE_REJECTED_INSTANCES);
     }
 
-    public boolean isShowEmptyStudy() {
-        return showEmptyStudy;
-    }
-
-    public void setShowEmptyStudy(boolean showEmptyStudy) {
-        this.showEmptyStudy = showEmptyStudy;
-    }
-
-    public boolean isShowEmptySeries() {
-        return showEmptySeries;
-    }
-
-    public void setShowEmptySeries(boolean showEmptySeries) {
-        this.showEmptySeries = showEmptySeries;
+    private List<Code> codesForAction(List<RejectionNote> rns,
+            RejectionNote.Action action) {
+        List<Code> codes = new ArrayList<Code>(rns.size());
+        for (RejectionNote rn : rns) {
+            if (rn.getActions().contains(action))
+                codes.add((Code) rn.getCode());
+        }
+        return codes ;
     }
 
     public boolean isReturnOtherPatientIDs() {

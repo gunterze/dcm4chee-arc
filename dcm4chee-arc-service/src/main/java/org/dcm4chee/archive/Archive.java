@@ -54,6 +54,7 @@ import org.dcm4chee.archive.entity.Code;
 import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.query.CFindSCPImpl;
 import org.dcm4chee.archive.query.MWLCFindSCPImpl;
+import org.dcm4chee.archive.store.CStoreSCPImpl;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -113,6 +114,8 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
     @Override
     protected DicomServiceRegistry serviceRegistry() {
         DicomServiceRegistry services = super.serviceRegistry();
+        services.addDicomService(
+                new CStoreSCPImpl(aeCache));
         services.addDicomService(
                 new CFindSCPImpl(
                         UID.PatientRootQueryRetrieveInformationModelFIND,

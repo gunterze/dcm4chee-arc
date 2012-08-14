@@ -40,6 +40,20 @@
     </attributes>
   </mapped-superclass>
 
+  <mapped-superclass class="org.dcm4che.data.Issuer">
+    <attributes>
+      <basic name="localNamespaceEntityID" optional="true">
+        <column name="entity_id"/>
+      </basic>
+      <basic name="universalEntityID" optional="true">
+        <column name="entity_uid"/>
+      </basic>
+      <basic name="universalEntityIDType" optional="true">
+        <column name="entity_uid_type"/>
+      </basic>
+    </attributes>
+  </mapped-superclass>
+
   <entity class="Code">
     <table name="code" />
     <sequence-generator name="seq" sequence-name="code_pk_seq" allocation-size="1" />

@@ -39,11 +39,11 @@
 package org.dcm4chee.archive.query.impl;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Issuer;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.net.Association;
-import org.dcm4che.net.Issuer;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicQueryTask;
@@ -76,13 +76,17 @@ public class QueryTaskImpl extends BasicQueryTask {
             throw e;
         }
         this.pids = pids;
-        this.issuerOfPatientID = keys.contains(Tag.IssuerOfPatientID)
-                || keys.contains(Tag.IssuerOfPatientIDQualifiersSequence)
-                    ? Issuer.issuerOfPatientIDOf(keys)
+        String iopid = keys.getString(Tag.IssuerOfPatientID);
+        Attributes qualifiers =
+                keys.getNestedDataset(Tag.IssuerOfPatientIDQualifiersSequence);
+        this.issuerOfPatientID = iopid != null
+                || qualifiers != null && !qualifiers.isEmpty()
+                    ? new Issuer(iopid, qualifiers)
                     : queryParam.getDefaultIssuerOfPatientID();
+        Attributes ioaccno = keys.getNestedDataset(Tag.IssuerOfAccessionNumberSequence);
         this.issuerOfAccessionNumber = 
-                keys.contains(Tag.IssuerOfAccessionNumberSequence)
-                    ? Issuer.valueOf(keys.getNestedDataset(Tag.IssuerOfAccessionNumberSequence))
+                ioaccno != null && !ioaccno.isEmpty()
+                    ? new Issuer(ioaccno)
                     : queryParam.getDefaultIssuerOfAccessionNumber();
         this.returnOtherPatientIDs = queryParam.isReturnOtherPatientIDs();
     }
@@ -132,13 +136,14 @@ public class QueryTaskImpl extends BasicQueryTask {
     }
 
     private void adjustAccessionNumber(Attributes match, Attributes keys) {
-        if (keys != null && !keys.contains(Tag.AccessionNumber)
+        if (issuerOfAccessionNumber == null
+                || keys != null && !keys.contains(Tag.AccessionNumber)
                 || !match.containsValue(Tag.AccessionNumber))
             return;
 
-        if (issuerOfAccessionNumber != null
-                && !issuerOfAccessionNumber.matches(Issuer.valueOf(
-                        match.getNestedDataset(Tag.IssuerOfAccessionNumberSequence)))) {
+        Attributes ioaccno = match.getNestedDataset(Tag.IssuerOfAccessionNumberSequence);
+        if (ioaccno != null && !ioaccno.isEmpty() &&
+                !issuerOfAccessionNumber.matches(new Issuer(ioaccno))) {
             match.setNull(Tag.AccessionNumber, VR.SH);
             match.remove(Tag.IssuerOfAccessionNumberSequence);
         }

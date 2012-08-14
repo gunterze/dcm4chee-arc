@@ -39,10 +39,10 @@
 package org.dcm4chee.archive.query;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Issuer;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
-import org.dcm4che.net.Issuer;
 import org.dcm4che.util.StringUtils;
 
 /**
@@ -98,7 +98,11 @@ public class IDWithIssuer {
         if (id == null)
             return null;
 
-        Issuer issuerOfPatientID = Issuer.issuerOfPatientIDOf(keys);
+        String issuer = keys.getString(Tag.IssuerOfPatientID);
+        Attributes qualifiers = keys.getNestedDataset(Tag.IssuerOfPatientIDQualifiersSequence);
+        Issuer issuerOfPatientID = issuer != null || qualifiers != null
+                ? new Issuer(issuer, qualifiers)
+                : null;
         return new IDWithIssuer(id,
                 issuerOfPatientID != null
                     ? issuerOfPatientID

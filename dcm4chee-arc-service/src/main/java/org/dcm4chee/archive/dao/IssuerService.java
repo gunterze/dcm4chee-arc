@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Agfa Healthcare.
- * Portions created by the Initial Developer are Copyright (C) 2012
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -44,36 +44,42 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
-import org.dcm4chee.archive.entity.Code;
+import org.dcm4chee.archive.entity.Issuer;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
- *
  */
 @Stateless
-public class CodeService {
+public class IssuerService {
 
     @PersistenceContext
     private EntityManager em;
 
-    public Code findOrCreate(Code code) {
+    public Issuer findOrCreate(Issuer issuer) {
         try {
-            String codingSchemeVersion = code.getCodingSchemeVersion();
-            TypedQuery<Code> query = em.createNamedQuery(
-                    codingSchemeVersion == null
-                            ? Code.FIND_BY_CODE_VALUE_WITHOUT_SCHEME_VERSION
-                            : Code.FIND_BY_CODE_VALUE_WITH_SCHEME_VERSION,
-                        Code.class)
-                    .setParameter(1, code.getCodeValue())
-                    .setParameter(2, code.getCodingSchemeDesignator());
-            if (codingSchemeVersion != null)
-                query.setParameter(3, codingSchemeVersion);
+            String entityID = issuer.getLocalNamespaceEntityID();
+            String entityUID = issuer.getUniversalEntityID();
+            String entityUIDType = issuer.getUniversalEntityIDType();
+            TypedQuery<Issuer> query;
+            if (entityID == null) {
+                query = em.createNamedQuery(Issuer.FIND_BY_ENTITY_UID, Issuer.class)
+                    .setParameter(1, entityUID)
+                    .setParameter(2, entityUIDType);
+            } else if (entityUID == null) {
+                query = em.createNamedQuery(Issuer.FIND_BY_ENTITY_ID, Issuer.class)
+                    .setParameter(1, entityID);
+            } else {
+                query = em.createNamedQuery(Issuer.FIND_BY_ENTITY_ID_OR_UID, Issuer.class)
+                    .setParameter(1, entityID)
+                    .setParameter(2, entityUID)
+                    .setParameter(3, entityUIDType);
+            }
             return query.getSingleResult();
         } catch (NoResultException e) {
-            em.persist(code);
+            em.persist(issuer);
             em.flush();
-            em.refresh(code);
-            return code;
+            em.refresh(issuer);
+            return issuer;
         }
     }
 }

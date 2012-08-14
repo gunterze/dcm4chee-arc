@@ -88,8 +88,6 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     private final List<StoreDuplicate> storeDuplicates  = new ArrayList<StoreDuplicate>();
     private final List<RejectionNote> rejectionNotes = new ArrayList<RejectionNote>();
     private final AttributeCoercions attributeCoercions = new AttributeCoercions();
-    private boolean showEmptyStudy;
-    private boolean showEmptySeries;
     private boolean returnOtherPatientIDs;
     private boolean returnOtherPatientNames;
     private String pixManagerApplication;
@@ -360,22 +358,6 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         return rejectionNotes.remove(rn);
     }
 
-    public boolean isShowEmptyStudy() {
-        return showEmptyStudy;
-    }
-
-    public void setShowEmptyStudy(boolean showEmptyStudy) {
-        this.showEmptyStudy = showEmptyStudy;
-    }
-
-    public boolean isShowEmptySeries() {
-        return showEmptySeries;
-    }
-
-    public void setShowEmptySeries(boolean showEmptySeries) {
-        this.showEmptySeries = showEmptySeries;
-    }
-
     public boolean isReturnOtherPatientIDs() {
         return returnOtherPatientIDs;
     }
@@ -435,8 +417,6 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         setIANDestinations(arcae.ianDestinations);
         setIANMaxRetries(arcae.ianMaxRetries);
         setIANRetryInterval(arcae.ianRetryInterval);
-        setShowEmptyStudy(arcae.showEmptyStudy);
-        setShowEmptySeries(arcae.showEmptySeries);
         setReturnOtherPatientIDs(arcae.returnOtherPatientIDs);
         setReturnOtherPatientNames(arcae.returnOtherPatientNames);
         setRemotePIXManagerApplication(arcae.pixManagerApplication);

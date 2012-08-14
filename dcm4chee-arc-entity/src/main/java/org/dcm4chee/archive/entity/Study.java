@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.entity;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 
@@ -211,11 +212,9 @@ public class Study implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "num_instances")
-    @Index(name="study_num_instances_idx")
     private int numberOfStudyRelatedInstances;
 
     @Column(name = "mods_in_study")
-    @Index(name="mods_in_study_idx")
     private String modalitiesInStudy;
 
     @Column(name = "cuids_in_study")
@@ -380,12 +379,22 @@ public class Study implements Serializable {
         this.modalitiesInStudy = StringUtils.concat(modalitiesInStudy, '\\');
     }
 
+    public void addModalityInStudy(String modality) {
+        if (!Utils.contains(getModalitiesInStudy(), modality))
+            this.modalitiesInStudy = this.modalitiesInStudy + '\\' + modality;
+    }
+
     public String[] getSOPClassesInStudy() {
         return StringUtils.split(sopClassesInStudy, '\\');
     }
 
     public void setSOPClassesInStudy(String... sopClassesInStudy) {
         this.sopClassesInStudy = StringUtils.concat(sopClassesInStudy, '\\');
+    }
+
+    public void addSOPClassInStudy(String sopClass) {
+        if (!Utils.contains(getSOPClassesInStudy(), sopClass))
+            this.sopClassesInStudy = this.sopClassesInStudy + '\\' + sopClass;
     }
 
     public String[] getRetrieveAETs() {
@@ -396,6 +405,12 @@ public class Study implements Serializable {
         this.retrieveAETs = StringUtils.concat(retrieveAETs, '\\');
     }
 
+    public void retainRetrieveAETs(String[] retrieveAETs) {
+        String[] aets = getRetrieveAETs();
+        if (!Arrays.equals(aets, retrieveAETs))
+            setRetrieveAETs(Utils.intersection(aets, retrieveAETs));
+    }
+
     public String getExternalRetrieveAET() {
         return externalRetrieveAET;
     }
@@ -404,12 +419,23 @@ public class Study implements Serializable {
         this.externalRetrieveAET = externalRetrieveAET;
     }
 
+    public void retainExternalRetrieveAET(String retrieveAET) {
+        if (this.externalRetrieveAET!= null
+                && !this.externalRetrieveAET.equals(retrieveAET))
+            setExternalRetrieveAET(null);
+    }
+
     public Availability getAvailability() {
         return availability;
     }
 
     public void setAvailability(Availability availability) {
         this.availability = availability;
+    }
+
+    public void floorAvailability(Availability availability) {
+        if (this.availability.compareTo(availability) < 0)
+            this.availability = availability;
     }
 
     public byte[] getEncodedAttributes() {

@@ -41,9 +41,9 @@ package org.dcm4chee.archive.query.impl;
 import java.util.List;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Issuer;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
-import org.dcm4che.net.Issuer;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
 import org.dcm4chee.archive.entity.Code;
@@ -156,8 +156,6 @@ public abstract class Builder {
                 AttributeFilter.selectStringValue(keys, attrFilter.getCustomAttribute3(), "*"),
                 matchUnknown, true));
         builder.and(permission(queryParam.getRoles(), StudyPermissionAction.QUERY));
-        builder.and(queryParam.isShowEmptyStudy()
-                ? null : QStudy.study.numberOfStudyRelatedInstances.ne(0));
     }
 
     static void addSeriesLevelPredicates(BooleanBuilder builder, Attributes keys,
@@ -212,8 +210,6 @@ public abstract class Builder {
         builder.and(wildCard(QSeries.series.seriesCustomAttribute3,
                 AttributeFilter.selectStringValue(keys, attrFilter.getCustomAttribute3(), "*"),
                 matchUnknown, true));
-        builder.and(queryParam.isShowEmptySeries() 
-                ? null : QSeries.series.numberOfSeriesRelatedInstances.ne(0));
     }
 
     static void addInstanceLevelPredicates(BooleanBuilder builder, Attributes keys,
@@ -441,10 +437,10 @@ public abstract class Builder {
     private static Predicate issuer(QIssuer path, String entityID,
             String entityUID, String entityUIDType, boolean matchUnknown) {
         Predicate predicate = ExpressionUtils.anyOf(
-                wildCard(QIssuer.issuer.entityID, entityID, false, false),
+                wildCard(QIssuer.issuer.localNamespaceEntityID, entityID, false, false),
                 ExpressionUtils.allOf(
-                        wildCard(QIssuer.issuer.entityUID, entityUID, false, false),
-                        wildCard(QIssuer.issuer.entityUIDType, entityUIDType, false, false))
+                        wildCard(QIssuer.issuer.universalEntityID, entityUID, false, false),
+                        wildCard(QIssuer.issuer.universalEntityIDType, entityUIDType, false, false))
                 );
 
         if (predicate == null)

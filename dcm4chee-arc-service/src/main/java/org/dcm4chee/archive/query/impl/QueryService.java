@@ -38,18 +38,13 @@
 
 package org.dcm4chee.archive.query.impl;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
 import javax.annotation.PostConstruct;
-import javax.ejb.EJBException;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
-import javax.sql.DataSource;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.service.QueryRetrieveLevel;
@@ -66,13 +61,8 @@ import org.hibernate.ejb.HibernateEntityManagerFactory;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class QueryService {
 
-    // injection specified in META-INF/ejb-jar.xml
-    private DataSource dataSource;
-
     @PersistenceUnit
     private EntityManagerFactory emf;
-
-    private Connection connection;
 
     private StatelessSession session;
 
@@ -81,12 +71,7 @@ public class QueryService {
     @PostConstruct
     protected void init() {
         SessionFactory sessionFactory = ((HibernateEntityManagerFactory) emf).getSessionFactory();
-        try {
-            connection = dataSource.getConnection();
-        } catch (SQLException e) {
-            throw new EJBException(e);
-        }
-        session = sessionFactory.openStatelessSession(connection);
+        session = sessionFactory.openStatelessSession();
     }
 
     public void find(QueryRetrieveLevel qrlevel, IDWithIssuer[] pids,
@@ -152,15 +137,8 @@ public class QueryService {
     @Remove
     public void close() {
         StatelessSession s = session;
-        Connection c = connection;
-        connection = null;
         session = null;
         query = null;
         s.close();
-        try {
-            c.close();
-        } catch (SQLException e) {
-            throw new EJBException(e);
-        }
     }
 }

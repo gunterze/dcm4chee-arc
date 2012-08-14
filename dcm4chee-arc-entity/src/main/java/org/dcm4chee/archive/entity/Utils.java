@@ -41,6 +41,7 @@ package org.dcm4chee.archive.entity;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
@@ -139,5 +140,20 @@ public class Utils {
     public static String toFuzzy(FuzzyStr fuzzyStr, String s) {
         String fuzzy = fuzzyStr.toFuzzy(s);
         return fuzzy.length() == 0 ? "*" : fuzzy;
+    }
+
+    public static String[] intersection(String[] ss1, String[] ss2) {
+        int l = 0;
+        for (int i = 0; i < ss1.length; i++)
+            if (contains(ss2, ss1[i]))
+                ss1[l++] = ss1[i];
+        return l == ss1.length ? ss1 : Arrays.copyOf(ss1, l);
+    }
+
+    public static boolean contains(String[] ss, String s0) {
+        for (String s : ss)
+            if (s0.equals(s))
+                return true;
+        return false;
     }
 }

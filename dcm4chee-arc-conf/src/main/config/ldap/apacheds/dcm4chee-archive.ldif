@@ -439,34 +439,6 @@ m-syntax: 1.3.6.1.4.1.1466.115.121.1.26
 m-length: 0
 m-singleValue: TRUE
 
-dn: m-oid=1.2.40.0.13.1.1.15.0.3.35, ou=attributetypes, cn=dcm4chee-archive, ou=
- schema
-objectclass: metaAttributeType
-objectclass: metaTop
-objectclass: top
-m-oid: 1.2.40.0.13.1.1.15.0.3.35
-m-name: dcmShowEmptyStudy
-m-description: Specifies to hide study without series from a query result; disab
- led if absent
-m-equality: booleanMatch
-m-syntax: 1.3.6.1.4.1.1466.115.121.1.7
-m-length: 0
-m-singleValue: TRUE
-
-dn: m-oid=1.2.40.0.13.1.1.15.0.3.36, ou=attributetypes, cn=dcm4chee-archive, ou=
- schema
-objectclass: metaAttributeType
-objectclass: metaTop
-objectclass: top
-m-oid: 1.2.40.0.13.1.1.15.0.3.36
-m-name: dcmShowEmptySeries
-m-description: Specifies to hide series without instances from a query result; d
- isabled if absent
-m-equality: booleanMatch
-m-syntax: 1.3.6.1.4.1.1466.115.121.1.7
-m-length: 0
-m-singleValue: TRUE
-
 dn: m-oid=1.2.40.0.13.1.1.15.0.3.37, ou=attributetypes, cn=dcm4chee-archive, ou=
  schema
 objectclass: metaAttributeType
@@ -649,8 +621,6 @@ m-may: dcmFwdMppsRetryInterval
 m-may: dcmIanDestination
 m-may: dcmIanMaxRetries
 m-may: dcmIanRetryInterval
-m-may: dcmShowEmptyStudy
-m-may: dcmShowEmptySeries
 m-may: dcmReturnOtherPatientIDs
 m-may: dcmReturnOtherPatientNames
 m-may: hl7PIXManagerApplication

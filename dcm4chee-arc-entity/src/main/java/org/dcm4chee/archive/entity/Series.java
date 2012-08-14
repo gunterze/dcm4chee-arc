@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.entity;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 
@@ -238,7 +239,6 @@ public class Series implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "num_instances")
-    @Index(name="series_num_instances_idx")
     private int numberOfSeriesRelatedInstances;
 
     @Column(name = "src_aet")
@@ -253,10 +253,6 @@ public class Series implements Serializable {
     @Basic(optional = false)
     @Column(name = "availability")
     private Availability availability;
-
-    @Basic(optional = false)
-    @Column(name = "dirty")
-    private boolean dirty;
 
     @Basic(optional = false)
     @Column(name = "series_attrs")
@@ -434,12 +430,24 @@ public class Series implements Serializable {
         this.retrieveAETs = StringUtils.concat(retrieveAETs, '\\');
     }
 
+    public void retainRetrieveAETs(String[] retrieveAETs) {
+        String[] aets = getRetrieveAETs();
+        if (!Arrays.equals(aets, retrieveAETs))
+            setRetrieveAETs(Utils.intersection(aets, retrieveAETs));
+    }
+
     public String getExternalRetrieveAET() {
         return externalRetrieveAET;
     }
 
     public void setExternalRetrieveAET(String externalRetrieveAET) {
         this.externalRetrieveAET = externalRetrieveAET;
+    }
+
+    public void retainExternalRetrieveAET(String retrieveAET) {
+        if (this.externalRetrieveAET != null
+                && !this.externalRetrieveAET.equals(retrieveAET))
+            setExternalRetrieveAET(null);
     }
 
     public Availability getAvailability() {
@@ -450,12 +458,9 @@ public class Series implements Serializable {
         this.availability = availability;
     }
 
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    public void setDirty(boolean dirty) {
-        this.dirty = dirty;
+    public void floorAvailability(Availability availability) {
+        if (this.availability.compareTo(availability) < 0)
+            this.availability = availability;
     }
 
     public byte[] getEncodedAttributes() {

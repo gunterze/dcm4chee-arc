@@ -188,8 +188,6 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         storeNotDef(prefs, "dcmIanMaxRetries", arcAE.getIANMaxRetries(), 0);
         storeNotDef(prefs, "dcmIanRetryInterval", arcAE.getIANRetryInterval(),
                     ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
-        storeNotDef(prefs, "dcmShowEmptySeries", arcAE.isShowEmptySeries(), false);
-        storeNotDef(prefs, "dcmShowEmptyStudy", arcAE.isShowEmptyStudy(), false);
         storeNotDef(prefs, "dcmReturnOtherPatientIDs", arcAE.isReturnOtherPatientIDs(), false);
         storeNotDef(prefs, "dcmReturnOtherPatientNames", arcAE.isReturnOtherPatientNames(), false);
         storeNotNull(prefs, "hl7PIXConsumerApplication", arcAE.getLocalPIXConsumerApplication());
@@ -293,8 +291,6 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         arcae.setIANMaxRetries(prefs.getInt("dcmIanMaxRetries", 0));
         arcae.setIANRetryInterval(prefs.getInt("dcmIanRetryInterval",
                 ArchiveApplicationEntity.DEF_RETRY_INTERVAL));
-        arcae.setShowEmptySeries(prefs.getBoolean("dcmShowEmptySeries", false));
-        arcae.setShowEmptyStudy(prefs.getBoolean("dcmShowEmptyStudy", false));
         arcae.setReturnOtherPatientIDs(
                 prefs.getBoolean("dcmReturnOtherPatientIDs", false));
         arcae.setReturnOtherPatientNames(
@@ -490,14 +486,6 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
                  aa.getIANRetryInterval(),
                  bb.getIANRetryInterval(),
                  ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
-         storeDiff(prefs, "dcmShowEmptySeries",
-                 aa.isShowEmptySeries(),
-                 bb.isShowEmptySeries(),
-                 false);
-         storeDiff(prefs, "dcmShowEmptyStudy",
-                 aa.isShowEmptyStudy(),
-                 bb.isShowEmptyStudy(),
-                 false);
          storeDiff(prefs, "dcmReturnOtherPatientIDs",
                  aa.isReturnOtherPatientIDs(),
                  bb.isReturnOtherPatientIDs(),

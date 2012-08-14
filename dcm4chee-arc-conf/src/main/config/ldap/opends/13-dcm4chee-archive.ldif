@@ -157,16 +157,6 @@ attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.34 NAME 'dcmStoreDuplicateAction'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.35 NAME 'dcmShowEmptyStudy'
-  DESC 'Specifies to hide study without series from a query result; disabled if absent'
-  EQUALITY booleanMatch
-  SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 
-  SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.36 NAME 'dcmShowEmptySeries'
-  DESC 'Specifies to hide series without instances from a query result; disabled if absent'
-  EQUALITY booleanMatch
-  SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 
-  SINGLE-VALUE )
 attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.37 NAME 'dcmConfigurationStaleTimeout'
   DESC 'Stale timeout of cached configuration in s. 0 (=never invalidate cached configuration) if absent'
   EQUALITY integerMatch
@@ -235,8 +225,6 @@ objectClasses: ( 1.2.40.0.13.1.1.15.0.4.5 NAME 'dcmArchiveNetworkAE'
     dcmIanDestination $
     dcmIanMaxRetries $
     dcmIanRetryInterval $
-    dcmShowEmptyStudy $
-    dcmShowEmptySeries $
     dcmReturnOtherPatientIDs $
     dcmReturnOtherPatientNames $
     hl7PIXManagerApplication $

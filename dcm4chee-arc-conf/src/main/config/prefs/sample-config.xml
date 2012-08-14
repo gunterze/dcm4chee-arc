@@ -3982,8 +3982,6 @@
                 <entry key="dcmReturnOtherPatientNames" value="true"/>
                 <entry key="dcmSendPendingCGet" value="true"/>
                 <entry key="dcmSendPendingCMoveInterval" value="5000"/>
-                <entry key="dcmShowEmptySeries" value="true"/>
-                <entry key="dcmShowEmptyStudy" value="true"/>
                 <entry key="dicomAssociationAcceptor" value="true"/>
                 <entry key="dicomAssociationInitiator" value="true"/>
                 <entry key="dicomNetworkConnectionReference.#" value="2"/>

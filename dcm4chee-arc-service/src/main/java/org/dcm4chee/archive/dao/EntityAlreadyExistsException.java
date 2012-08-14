@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Agfa Healthcare.
- * Portions created by the Initial Developer are Copyright (C) 2012
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -38,42 +38,15 @@
 
 package org.dcm4chee.archive.dao;
 
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-
-import org.dcm4chee.archive.entity.Code;
-
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
- *
  */
-@Stateless
-public class CodeService {
+public class EntityAlreadyExistsException extends RuntimeException {
 
-    @PersistenceContext
-    private EntityManager em;
+    private static final long serialVersionUID = 8766498222010631052L;
 
-    public Code findOrCreate(Code code) {
-        try {
-            String codingSchemeVersion = code.getCodingSchemeVersion();
-            TypedQuery<Code> query = em.createNamedQuery(
-                    codingSchemeVersion == null
-                            ? Code.FIND_BY_CODE_VALUE_WITHOUT_SCHEME_VERSION
-                            : Code.FIND_BY_CODE_VALUE_WITH_SCHEME_VERSION,
-                        Code.class)
-                    .setParameter(1, code.getCodeValue())
-                    .setParameter(2, code.getCodingSchemeDesignator());
-            if (codingSchemeVersion != null)
-                query.setParameter(3, codingSchemeVersion);
-            return query.getSingleResult();
-        } catch (NoResultException e) {
-            em.persist(code);
-            em.flush();
-            em.refresh(code);
-            return code;
-        }
+    public EntityAlreadyExistsException(String message) {
+        super(message);
     }
+
 }

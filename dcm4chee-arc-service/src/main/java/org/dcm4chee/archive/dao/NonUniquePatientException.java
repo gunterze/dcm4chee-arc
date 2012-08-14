@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Agfa Healthcare.
- * Portions created by the Initial Developer are Copyright (C) 2012
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,27 +36,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.util;
+package org.dcm4chee.archive.dao;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.dcm4chee.archive.conf.RejectionNote;
-import org.dcm4chee.archive.entity.Code;
+import org.dcm4chee.archive.entity.Issuer;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
- *
  */
-public class RejectionNotes {
+public class NonUniquePatientException extends RuntimeException {
 
-    public static List<Code> codesForAction(List<RejectionNote> rns,
-            RejectionNote.Action action) {
-        List<Code> codes = new ArrayList<Code>(rns.size());
-        for (RejectionNote rn : rns) {
-            if (rn.getActions().contains(action))
-                codes.add((Code) rn.getCode());
-        }
-        return codes ;
+    private static final long serialVersionUID = -770538934731527268L;
+
+    public NonUniquePatientException(String pid, Issuer issuer) {
+        super("Patient[id=" + pid + ", issuer=" + issuer + "]");
     }
+
 }
