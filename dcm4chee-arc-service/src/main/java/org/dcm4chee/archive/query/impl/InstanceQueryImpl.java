@@ -61,6 +61,7 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
 public class InstanceQueryImpl extends QueryImpl {
 
     private static final String QUERY_SERIES_ATTRS = "select "
+            + "s.study.pk, "
             + "s.study.numberOfStudyRelatedSeries, "
             + "s.study.numberOfStudyRelatedInstances, "
             + "s.numberOfSeriesRelatedInstances, "
@@ -71,14 +72,14 @@ public class InstanceQueryImpl extends QueryImpl {
             + "s.study.patient.encodedAttributes "
             + "from Series s "
             + "where s.pk = ?";
-    private long seriesPk = -1L;
+    private Long seriesPk;
     private Attributes seriesAttrs;
     private Query seriesQuery;
 
-    public InstanceQueryImpl(StatelessSession session, IDWithIssuer[] pids, Attributes keys,
-            QueryParam queryParam) {
-        super(query(session, pids, keys, queryParam), false);
-        seriesQuery = session.createQuery(QUERY_SERIES_ATTRS);
+    public InstanceQueryImpl(QueryService service, IDWithIssuer[] pids,
+            Attributes keys, QueryParam queryParam) {
+        super(service, query(service.session(), pids, keys, queryParam), queryParam, false);
+        seriesQuery = service.session().createQuery(QUERY_SERIES_ATTRS);
     }
 
     private static ScrollableResults query(StatelessSession session, IDWithIssuer[] pids,
@@ -104,12 +105,12 @@ public class InstanceQueryImpl extends QueryImpl {
 
     @Override
     protected Attributes toAttributes(ScrollableResults results) {
-        long seriesPk = results.getLong(0);
+        Long seriesPk = results.getLong(0);
         String retrieveAETs = results.getString(1);
         String externalRetrieveAET = results.getString(2);
         Availability availability = (Availability) results.get(3);
         byte[] instAttributes = results.getBinary(4);
-        if (this.seriesPk != seriesPk) {
+        if (!seriesPk.equals(this.seriesPk)) {
             this.seriesAttrs = querySeriesAttrs(seriesPk);
             this.seriesPk = seriesPk;
         }
@@ -120,26 +121,27 @@ public class InstanceQueryImpl extends QueryImpl {
         return attrs;
     }
 
-    private Attributes querySeriesAttrs(long seriesPk) {
+    private Attributes querySeriesAttrs(Long seriesPk) {
         Object[] tuple = (Object[]) seriesQuery.setParameter(0, seriesPk).uniqueResult();
-        int numberOfStudyRelatedSeries = (Integer) tuple[0];
-        int numberOfStudyRelatedInstances = (Integer) tuple[1];
-        int numberOfSeriesRelatedInstances = (Integer) tuple[2];
-        String modalitiesInStudy = (String) tuple[3];
-        String sopClassesInStudy = (String) tuple[4];
-        byte[] seriesAttributes = (byte[]) tuple[5];
-        byte[] studyAttributes = (byte[]) tuple[6];
-        byte[] patientAttributes = (byte[]) tuple[7];
+        Long studyPk = (Long) tuple[0];
+        int numberOfStudyRelatedSeries = (Integer) tuple[1];
+        int numberOfStudyRelatedInstances = (Integer) tuple[2];
+        int numberOfSeriesRelatedInstances = (Integer) tuple[3];
+        String modalitiesInStudy = (String) tuple[4];
+        String sopClassesInStudy = (String) tuple[5];
+        byte[] seriesAttributes = (byte[]) tuple[6];
+        byte[] studyAttributes = (byte[]) tuple[7];
+        byte[] patientAttributes = (byte[]) tuple[8];
         Attributes attrs = new Attributes();
         Utils.decodeAttributes(attrs, patientAttributes);
         Utils.decodeAttributes(attrs, studyAttributes);
         Utils.decodeAttributes(attrs, seriesAttributes);
-        Utils.setStudyQueryAttributes(attrs,
+        super.setStudyQueryAttributes(studyPk, attrs,
                 numberOfStudyRelatedSeries,
                 numberOfStudyRelatedInstances,
                 modalitiesInStudy,
                 sopClassesInStudy);
-        Utils.setSeriesQueryAttributes(attrs, numberOfSeriesRelatedInstances);
+        super.setSeriesQueryAttributes(seriesPk, attrs, numberOfSeriesRelatedInstances);
         return attrs;
     }
 }

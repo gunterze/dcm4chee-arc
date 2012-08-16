@@ -38,13 +38,19 @@
 
 package org.dcm4chee.archive.query.impl;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
 import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
+import javax.ejb.EJBException;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
+import javax.ejb.TransactionManagement;
+import javax.ejb.TransactionManagementType;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
+import javax.sql.DataSource;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.service.QueryRetrieveLevel;
@@ -58,20 +64,42 @@ import org.hibernate.ejb.HibernateEntityManagerFactory;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @Stateful
-@TransactionAttribute(TransactionAttributeType.NEVER)
+@TransactionManagement(TransactionManagementType.BEAN)
 public class QueryService {
+
+    // injection specified in META-INF/ejb-jar.xml
+    private DataSource dataSource;
 
     @PersistenceUnit
     private EntityManagerFactory emf;
 
     private StatelessSession session;
 
+    private Connection connection;
+
     private QueryImpl query;
+    
+    @EJB
+    private DerivedFieldsService derivedFieldService;
 
     @PostConstruct
     protected void init() {
-        SessionFactory sessionFactory = ((HibernateEntityManagerFactory) emf).getSessionFactory();
-        session = sessionFactory.openStatelessSession();
+        SessionFactory sessionFactory = 
+                ((HibernateEntityManagerFactory) emf).getSessionFactory();
+        try {
+            connection = dataSource.getConnection();
+        } catch (SQLException e) {
+            throw new EJBException(e);
+        }
+        session = sessionFactory.openStatelessSession(connection);
+    }
+
+    final StatelessSession session() {
+        return session;
+    }
+
+    final DerivedFieldsService derivedFieldService() {
+        return derivedFieldService;
     }
 
     public void find(QueryRetrieveLevel qrlevel, IDWithIssuer[] pids,
@@ -89,29 +117,29 @@ public class QueryService {
         case IMAGE:
             findInstances(pids, keys, queryParam);
             break;
-       default:
+        default:
             assert true;
         }
     }
 
     public void findPatients(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        query = new PatientQueryImpl(session, pids, keys, queryParam);
+        query = new PatientQueryImpl(this, pids, keys, queryParam);
     }
 
     public void findStudies(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        query = new StudyQueryImpl(session, pids, keys, queryParam);
+        query = new StudyQueryImpl(this, pids, keys, queryParam);
     }
 
     public void findSeries(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        query = new SeriesQueryImpl(session, pids, keys, queryParam);
+        query = new SeriesQueryImpl(this, pids, keys, queryParam);
     }
 
     public void findInstances(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        query = new InstanceQueryImpl(session, pids, keys, queryParam);
+        query = new InstanceQueryImpl(this, pids, keys, queryParam);
     }
 
     public boolean optionalKeyNotSupported() {
@@ -137,8 +165,15 @@ public class QueryService {
     @Remove
     public void close() {
         StatelessSession s = session;
+        Connection c = connection;
+        connection = null;
         session = null;
         query = null;
         s.close();
+        try {
+            c.close();
+        } catch (SQLException e) {
+            throw new EJBException(e);
+        }
     }
 }

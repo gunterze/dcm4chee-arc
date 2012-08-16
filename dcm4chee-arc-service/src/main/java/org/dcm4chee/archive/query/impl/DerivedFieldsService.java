@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Agfa Healthcare.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -38,46 +38,34 @@
 
 package org.dcm4chee.archive.query.impl;
 
-import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.entity.QPatient;
-import org.dcm4chee.archive.entity.Utils;
-import org.dcm4chee.archive.query.IDWithIssuer;
-import org.dcm4chee.archive.query.QueryParam;
-import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
-import org.hibernate.StatelessSession;
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
-import com.mysema.query.BooleanBuilder;
-import com.mysema.query.jpa.hibernate.HibernateQuery;
+import org.dcm4chee.archive.entity.Series;
+import org.dcm4chee.archive.entity.Study;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ *
  */
-public class PatientQueryImpl extends QueryImpl {
+@Stateless
+public class DerivedFieldsService {
 
-    public PatientQueryImpl(QueryService service, IDWithIssuer[] pids,
-            Attributes keys, QueryParam queryParam) {
-        super(service, query(service.session(), pids, keys, queryParam),
-                queryParam, false);
+    @PersistenceContext
+    private EntityManager em;
+
+    public void updateSeriesQueryAttributes(Long seriesPk,
+            int numberOfSeriesRelatedInstances) {
+        Series series = em.getReference(Series.class, seriesPk);
+        series.setNumberOfSeriesRelatedInstances(numberOfSeriesRelatedInstances);
     }
 
-    private static ScrollableResults query(StatelessSession session, IDWithIssuer[] pids,
-            Attributes keys, QueryParam queryParam) {
-        BooleanBuilder builder = new BooleanBuilder();
-        Builder.addPatientLevelPredicates(builder, pids, keys, queryParam);
-        return new HibernateQuery(session)
-            .from(QPatient.patient)
-            .where(builder)
-            .scroll(ScrollMode.FORWARD_ONLY,
-                QPatient.patient.pk,
-                QPatient.patient.encodedAttributes);
-    }
-
-    @Override
-    protected Attributes toAttributes(ScrollableResults results) {
-        Attributes attrs = new Attributes();
-        Utils.decodeAttributes(attrs, results.getBinary(1));
-        return attrs;
+    public void updateStudyQueryAttributes(Long studyPk,
+            int numberOfStudyRelatedSeries, int numberOfStudyRelatedInstances) {
+        Study series = em.getReference(Study.class, studyPk);
+        series.setNumberOfStudyRelatedSeries(numberOfStudyRelatedSeries);
+        series.setNumberOfStudyRelatedInstances(numberOfStudyRelatedInstances);
     }
 
 }

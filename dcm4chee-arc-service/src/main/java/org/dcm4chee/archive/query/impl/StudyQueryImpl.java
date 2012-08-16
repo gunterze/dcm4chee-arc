@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.query.impl;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.entity.Availability;
 import org.dcm4chee.archive.entity.QPatient;
 import org.dcm4chee.archive.entity.QStudy;
@@ -57,9 +58,10 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
  */
 public class StudyQueryImpl extends QueryImpl {
 
-    public StudyQueryImpl(StatelessSession session, IDWithIssuer[] pids, Attributes keys,
-            QueryParam queryParam) {
-        super(query(session, pids, keys, queryParam), false);
+    public StudyQueryImpl(QueryService service, IDWithIssuer[] pids,
+            Attributes keys, QueryParam queryParam) {
+        super(service, query(service.session(), pids, keys, queryParam),
+                queryParam, false);
     }
 
     private static ScrollableResults query(StatelessSession session, IDWithIssuer[] pids,
@@ -72,6 +74,7 @@ public class StudyQueryImpl extends QueryImpl {
             .innerJoin(QStudy.study.patient, QPatient.patient)
             .where(builder)
             .scroll(ScrollMode.FORWARD_ONLY,
+                QStudy.study.pk,
                 QStudy.study.numberOfStudyRelatedSeries,
                 QStudy.study.numberOfStudyRelatedInstances,
                 QStudy.study.modalitiesInStudy,
@@ -85,25 +88,31 @@ public class StudyQueryImpl extends QueryImpl {
 
     @Override
     protected Attributes toAttributes(ScrollableResults results) {
-        int numberOfStudyRelatedSeries = results.getInteger(0);
-        int numberOfStudyRelatedInstances = results.getInteger(1);
-        String modalitiesInStudy = results.getString(2);
-        String sopClassesInStudy = results.getString(3);
-        String retrieveAETs = results.getString(4);
-        String externalRetrieveAET = results.getString(5);
-        Availability availability = (Availability) results.get(6);
-        byte[] studyAttributes = results.getBinary(7);
-        byte[] patientAttributes = results.getBinary(8);
+        Long studyPk = results.getLong(0);
+        int numberOfStudyRelatedSeries = results.getInteger(1);
+        int numberOfStudyRelatedInstances = results.getInteger(2);
+        String modalitiesInStudy = results.getString(3);
+        String sopClassesInStudy = results.getString(4);
+        String retrieveAETs = results.getString(5);
+        String externalRetrieveAET = results.getString(6);
+        Availability availability = (Availability) results.get(7);
+        byte[] studyAttributes = results.getBinary(8);
+        byte[] patientAttributes = results.getBinary(9);
         Attributes attrs = new Attributes();
         Utils.decodeAttributes(attrs, patientAttributes);
         Utils.decodeAttributes(attrs, studyAttributes);
-        Utils.setStudyQueryAttributes(attrs,
+        super.setStudyQueryAttributes(studyPk, attrs,
                 numberOfStudyRelatedSeries,
                 numberOfStudyRelatedInstances,
                 modalitiesInStudy,
                 sopClassesInStudy);
         Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
         Utils.setAvailability(attrs, availability);
+
+        // skip match for empty Study
+        if (attrs.getInt(Tag.NumberOfStudyRelatedInstances, 0) == 0)
+            return null;
+
         return attrs;
     }
 

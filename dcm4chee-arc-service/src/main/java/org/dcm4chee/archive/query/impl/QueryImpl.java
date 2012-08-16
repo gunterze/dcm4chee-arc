@@ -41,21 +41,50 @@ package org.dcm4chee.archive.query.impl;
 import java.util.NoSuchElementException;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4chee.archive.entity.QInstance;
+import org.dcm4chee.archive.entity.QSeries;
+import org.dcm4chee.archive.entity.Utils;
+import org.dcm4chee.archive.query.QueryParam;
 import org.hibernate.ScrollableResults;
+import com.mysema.query.BooleanBuilder;
+import com.mysema.query.jpa.hibernate.HibernateQuery;
+import com.mysema.query.jpa.hibernate.HibernateSubQuery;
+import com.mysema.query.types.Predicate;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 public abstract class QueryImpl {
 
+    private static class CachedNumber {
+        final long pk;
+        final int n;
+        public CachedNumber(long pk, int n) {
+            this.pk = pk;
+            this.n = n;
+        }
+     }
+
+    protected final QueryService service;
+
     private final ScrollableResults results;
+
+    private final QueryParam queryParam;
 
     private final boolean optionalKeyNotSupported;
 
+    private CachedNumber numberOfStudyRelatedSeries;
+    private CachedNumber numberOfStudyRelatedInstances;
+    private CachedNumber numberOfSeriesRelatedInstances;
+
     private boolean hasNext;
 
-    protected QueryImpl(ScrollableResults results, boolean optionalKeyNotSupported) {
+
+    protected QueryImpl(QueryService service, ScrollableResults results,
+            QueryParam queryParam, boolean optionalKeyNotSupported) {
+        this.service = service;
         this.results = results;
+        this.queryParam = queryParam;
         this.optionalKeyNotSupported = optionalKeyNotSupported;
         hasNext = results.next();
     }
@@ -77,4 +106,142 @@ public abstract class QueryImpl {
     }
 
     protected abstract  Attributes toAttributes(ScrollableResults results);
+
+    protected void setStudyQueryAttributes(Long studyPk, Attributes attrs,
+            int numberOfStudyRelatedSeries,
+            int numberOfStudyRelatedInstances,
+            String modalitiesInStudy,
+            String sopClassesInStudy) {
+        Boolean rejectedInstances = null;
+        if (numberOfStudyRelatedSeries == -1) {
+            if (this.numberOfStudyRelatedSeries != null
+                    && this.numberOfStudyRelatedSeries.pk == studyPk)
+                numberOfStudyRelatedSeries = this.numberOfStudyRelatedSeries.n;
+            else {
+                rejectedInstances = hasStudyRejectedInstances(studyPk);
+                numberOfStudyRelatedSeries =
+                        (int) countStudyRelatedSeriesOf(studyPk, rejectedInstances);
+                this.numberOfStudyRelatedSeries =
+                        new CachedNumber(studyPk, numberOfStudyRelatedSeries);
+            }
+        }
+        if (numberOfStudyRelatedInstances == -1) {
+            if (this.numberOfStudyRelatedInstances != null
+                    && this.numberOfStudyRelatedInstances.pk == studyPk)
+                numberOfStudyRelatedInstances = this.numberOfStudyRelatedInstances.n;
+            else {
+                if (rejectedInstances == null)
+                    rejectedInstances = hasStudyRejectedInstances(studyPk);
+                numberOfStudyRelatedInstances =
+                        (int) countStudyRelatedInstancesOf(studyPk, rejectedInstances);
+                this.numberOfStudyRelatedInstances =
+                        new CachedNumber(studyPk, numberOfStudyRelatedInstances);
+            }
+        }
+        if (rejectedInstances != null && !rejectedInstances)
+            service.derivedFieldService().updateStudyQueryAttributes(studyPk,
+                    numberOfStudyRelatedSeries,
+                    numberOfStudyRelatedInstances);
+        Utils.setStudyQueryAttributes(attrs,
+                numberOfStudyRelatedSeries,
+                numberOfStudyRelatedInstances,
+                modalitiesInStudy,
+                sopClassesInStudy);
+    }
+
+    protected void setSeriesQueryAttributes(Long seriesPk, Attributes attrs,
+            int numberOfSeriesRelatedInstances) {
+        if (numberOfSeriesRelatedInstances == -1) {
+            if (this.numberOfSeriesRelatedInstances != null
+                    && this.numberOfSeriesRelatedInstances.pk == seriesPk)
+                numberOfSeriesRelatedInstances = this.numberOfSeriesRelatedInstances.n;
+            else {
+                boolean rejectedInstances = hasSeriesRejectedInstancesOf(seriesPk);
+                numberOfSeriesRelatedInstances =
+                        (int) countSeriesRelatedInstancesOf(seriesPk, rejectedInstances);
+                this.numberOfSeriesRelatedInstances =
+                        new CachedNumber(seriesPk, numberOfSeriesRelatedInstances);
+                if (!rejectedInstances)
+                    service.derivedFieldService()
+                        .updateSeriesQueryAttributes(seriesPk, numberOfSeriesRelatedInstances);
+            }
+        }
+        Utils.setSeriesQueryAttributes(attrs, numberOfSeriesRelatedInstances);
+    }
+
+    private boolean hasStudyRejectedInstances(Long studyPk) {
+        BooleanBuilder builder = new BooleanBuilder(QSeries.series.study.pk.eq(studyPk));
+        builder.and(QInstance.instance.replaced.isFalse());
+        builder.and(QInstance.instance.rejectionCode.isNotNull());
+        return new HibernateQuery(service.session())
+            .from(QInstance.instance)
+            .innerJoin(QInstance.instance.series, QSeries.series)
+            .where(builder)
+            .count() > 0;
+    }
+
+    private boolean hasSeriesRejectedInstancesOf(Long seriesPk) {
+        BooleanBuilder builder = new BooleanBuilder(QInstance.instance.series.pk.eq(seriesPk));
+        builder.and(QInstance.instance.replaced.isFalse());
+        builder.and(QInstance.instance.rejectionCode.isNotNull());
+        return new HibernateQuery(service.session())
+            .from(QInstance.instance)
+            .where(builder)
+            .count() > 0;
+    }
+
+    private long countStudyRelatedInstancesOf(Long studyPk, boolean rejectedInstances) {
+        BooleanBuilder builder = new BooleanBuilder(QSeries.series.study.pk.eq(studyPk));
+        builder.and(QInstance.instance.replaced.isFalse());
+        if (rejectedInstances) {
+            Builder.andNotInCodes(builder, QInstance.instance.conceptNameCode,
+                    queryParam.getHideConceptNameCodes());
+            Builder.andNotInCodes(builder, QInstance.instance.rejectionCode,
+                    queryParam.getHideRejectionCodes());
+        }
+        return new HibernateQuery(service.session())
+            .from(QInstance.instance)
+            .innerJoin(QInstance.instance.series, QSeries.series)
+            .where(builder)
+            .count();
+    }
+
+    private long countStudyRelatedSeriesOf(Long studyPk, boolean rejectedInstances) {
+        return new HibernateQuery(service.session())
+            .from(QSeries.series)
+            .where(QSeries.series.study.pk.eq(studyPk),
+                    instancesExists(QSeries.series, rejectedInstances))
+            .count();
+    }
+
+    private Predicate instancesExists(QSeries series, boolean rejectedInstances) {
+        BooleanBuilder builder = new BooleanBuilder(QInstance.instance.series.eq(series));
+        builder.and(QInstance.instance.replaced.isFalse());
+        if (rejectedInstances) {
+            Builder.andNotInCodes(builder, QInstance.instance.conceptNameCode,
+                    queryParam.getHideConceptNameCodes());
+            Builder.andNotInCodes(builder, QInstance.instance.rejectionCode,
+                    queryParam.getHideRejectionCodes());
+        }
+        return new HibernateSubQuery()
+            .from(QInstance.instance)
+            .where(builder)
+            .exists();
+    }
+
+    private long countSeriesRelatedInstancesOf(Long seriesPk, boolean rejectedInstances) {
+        BooleanBuilder builder = new BooleanBuilder(QInstance.instance.series.pk.eq(seriesPk));
+        builder.and(QInstance.instance.replaced.isFalse());
+        if (rejectedInstances) {
+            Builder.andNotInCodes(builder, QInstance.instance.conceptNameCode,
+                    queryParam.getHideConceptNameCodes());
+            Builder.andNotInCodes(builder, QInstance.instance.rejectionCode,
+                    queryParam.getHideRejectionCodes());
+        }
+        return new HibernateQuery(service.session())
+            .from(QInstance.instance)
+            .where(builder)
+            .count();
+    }
+
 }
