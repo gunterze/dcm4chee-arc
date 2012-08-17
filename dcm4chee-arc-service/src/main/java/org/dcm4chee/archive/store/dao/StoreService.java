@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.store.impl;
+package org.dcm4chee.archive.store.dao;
 
 import static org.dcm4chee.archive.conf.RejectionNote.Action.*;
 

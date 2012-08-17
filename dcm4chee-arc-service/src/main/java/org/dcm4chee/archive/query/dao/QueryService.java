@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.query.impl;
+package org.dcm4chee.archive.query.dao;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -53,8 +53,8 @@ import javax.sql.DataSource;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.service.QueryRetrieveLevel;
-import org.dcm4chee.archive.query.IDWithIssuer;
-import org.dcm4chee.archive.query.QueryParam;
+import org.dcm4chee.archive.query.util.IDWithIssuer;
+import org.dcm4chee.archive.query.util.QueryParam;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.ejb.HibernateEntityManagerFactory;

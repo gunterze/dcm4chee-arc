@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.query.impl;
+package org.dcm4chee.archive.query.util;
 
 import java.util.List;
 
@@ -61,8 +61,6 @@ import org.dcm4chee.archive.entity.QStudy;
 import org.dcm4chee.archive.entity.QStudyPermission;
 import org.dcm4chee.archive.entity.QVerifyingObserver;
 import org.dcm4chee.archive.entity.StudyPermissionAction;
-import org.dcm4chee.archive.query.IDWithIssuer;
-import org.dcm4chee.archive.query.QueryParam;
 
 import com.mysema.query.BooleanBuilder;
 import com.mysema.query.jpa.hibernate.HibernateSubQuery;
@@ -113,7 +111,7 @@ public abstract class Builder {
                 matchUnknown, true));
     }
 
-    static void addStudyLevelPredicates(BooleanBuilder builder, Attributes keys,
+    public static void addStudyLevelPredicates(BooleanBuilder builder, Attributes keys,
             QueryParam queryParam) {
         if (keys == null)
             return;
@@ -158,7 +156,7 @@ public abstract class Builder {
         builder.and(permission(queryParam.getRoles(), StudyPermissionAction.QUERY));
     }
 
-    static void addSeriesLevelPredicates(BooleanBuilder builder, Attributes keys,
+    public static void addSeriesLevelPredicates(BooleanBuilder builder, Attributes keys,
             QueryParam queryParam) {
         if (keys == null)
             return;
@@ -212,7 +210,7 @@ public abstract class Builder {
                 matchUnknown, true));
     }
 
-    static void addInstanceLevelPredicates(BooleanBuilder builder, Attributes keys,
+    public static void addInstanceLevelPredicates(BooleanBuilder builder, Attributes keys,
             QueryParam queryParam) {
         if (keys == null)
             return;

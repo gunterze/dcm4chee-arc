@@ -62,7 +62,7 @@ import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.conf.ArchiveDevice;
 import org.dcm4chee.archive.entity.FileSystem;
-import org.dcm4chee.archive.store.impl.StoreService;
+import org.dcm4chee.archive.store.dao.StoreService;
 import org.dcm4chee.archive.util.BeanLocator;
 
 /**

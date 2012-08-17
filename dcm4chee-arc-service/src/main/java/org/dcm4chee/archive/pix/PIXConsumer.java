@@ -53,7 +53,7 @@ import org.dcm4che.net.IncompatibleConnectionException;
 import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.conf.ArchiveDevice;
-import org.dcm4chee.archive.query.IDWithIssuer;
+import org.dcm4chee.archive.query.util.IDWithIssuer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

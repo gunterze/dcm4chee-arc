@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.retrieve.impl;
+package org.dcm4chee.archive.retrieve;
 
 import java.io.IOException;
 import java.util.List;
@@ -62,7 +62,8 @@ import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.util.SafeClose;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.pix.PIXConsumer;
-import org.dcm4chee.archive.query.IDWithIssuer;
+import org.dcm4chee.archive.query.util.IDWithIssuer;
+import org.dcm4chee.archive.retrieve.dao.RetrieveService;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>

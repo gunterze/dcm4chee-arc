@@ -60,10 +60,9 @@ import org.dcm4che.net.service.RetrieveTask;
 import org.dcm4che.util.AttributesValidator;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.pix.PIXConsumer;
-import org.dcm4chee.archive.query.IDWithIssuer;
-import org.dcm4chee.archive.query.QueryParam;
-import org.dcm4chee.archive.retrieve.impl.RetrieveService;
-import org.dcm4chee.archive.retrieve.impl.RetrieveTaskImpl;
+import org.dcm4chee.archive.query.util.IDWithIssuer;
+import org.dcm4chee.archive.query.util.QueryParam;
+import org.dcm4chee.archive.retrieve.dao.RetrieveService;
 import org.dcm4chee.archive.util.BeanLocator;
 
 /**

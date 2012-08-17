@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.mwl.impl;
+package org.dcm4chee.archive.mwl;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.Association;
@@ -44,8 +44,9 @@ import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicQueryTask;
 import org.dcm4che.net.service.DicomServiceException;
-import org.dcm4chee.archive.query.IDWithIssuer;
-import org.dcm4chee.archive.query.QueryParam;
+import org.dcm4chee.archive.mwl.dao.MWLQueryService;
+import org.dcm4chee.archive.query.util.IDWithIssuer;
+import org.dcm4chee.archive.query.util.QueryParam;
 import org.dcm4chee.archive.util.BeanLocator;
 
 /**

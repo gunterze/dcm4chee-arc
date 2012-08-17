@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.retrieve.impl;
+package org.dcm4chee.archive.retrieve.dao;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -60,9 +60,9 @@ import org.dcm4chee.archive.entity.QPatient;
 import org.dcm4chee.archive.entity.QSeries;
 import org.dcm4chee.archive.entity.QStudy;
 import org.dcm4chee.archive.entity.Utils;
-import org.dcm4chee.archive.query.IDWithIssuer;
-import org.dcm4chee.archive.query.QueryParam;
-import org.dcm4chee.archive.query.impl.Builder;
+import org.dcm4chee.archive.query.util.Builder;
+import org.dcm4chee.archive.query.util.IDWithIssuer;
+import org.dcm4chee.archive.query.util.QueryParam;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
