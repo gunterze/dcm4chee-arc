@@ -54,7 +54,10 @@ import org.dcm4chee.archive.entity.Code;
 import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.query.CFindSCPImpl;
 import org.dcm4chee.archive.query.MWLCFindSCPImpl;
+import org.dcm4chee.archive.retrieve.CGetSCPImpl;
+import org.dcm4chee.archive.retrieve.CMoveSCPImpl;
 import org.dcm4chee.archive.store.CStoreSCPImpl;
+import org.dcm4chee.archive.util.BeanLocator;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -76,11 +79,10 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
     private final HL7ApplicationCache hl7AppCache;
     private final PIXConsumer pixConsumer;
 
-    public Archive(HL7Configuration dicomConfiguration, String deviceName,
-            CodeService codeService)
+    public Archive(HL7Configuration dicomConfiguration, String deviceName)
             throws ConfigurationException, Exception {
         this.dicomConfiguration = dicomConfiguration;
-        this.codeService = codeService;
+        this.codeService = BeanLocator.lookup(CodeService.class);
         this.aeCache = new ApplicationEntityCache(dicomConfiguration);
         this.hl7AppCache = new HL7ApplicationCache(dicomConfiguration);
         this.pixConsumer = new PIXConsumer(hl7AppCache);
@@ -119,23 +121,50 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         services.addDicomService(
                 new CFindSCPImpl(
                         UID.PatientRootQueryRetrieveInformationModelFIND,
-                        aeCache, pixConsumer,
-                        PATIENT, STUDY, SERIES, IMAGE));
+                        aeCache, pixConsumer, PATIENT, STUDY, SERIES, IMAGE));
         services.addDicomService(
                 new CFindSCPImpl(
                         UID.StudyRootQueryRetrieveInformationModelFIND,
-                        aeCache, pixConsumer,
-                        STUDY, SERIES, IMAGE));
+                        aeCache, pixConsumer, STUDY, SERIES, IMAGE));
         services.addDicomService(
                 new CFindSCPImpl(
                         UID.PatientStudyOnlyQueryRetrieveInformationModelFINDRetired,
+                        aeCache, pixConsumer, PATIENT, STUDY));
+        services.addDicomService(
+                new CMoveSCPImpl(
+                        UID.PatientRootQueryRetrieveInformationModelMOVE,
+                        aeCache, pixConsumer, PATIENT, STUDY, SERIES, IMAGE));
+        services.addDicomService(
+                new CMoveSCPImpl(
+                        UID.StudyRootQueryRetrieveInformationModelMOVE,
+                        aeCache, pixConsumer, STUDY, SERIES, IMAGE));
+        services.addDicomService(
+                new CMoveSCPImpl(
+                        UID.PatientStudyOnlyQueryRetrieveInformationModelMOVERetired,
+                        aeCache, pixConsumer, PATIENT, STUDY));
+        services.addDicomService(
+                new CGetSCPImpl(
+                        UID.PatientRootQueryRetrieveInformationModelGET,
+                        aeCache, pixConsumer, PATIENT, STUDY, SERIES, IMAGE));
+        services.addDicomService(
+                new CGetSCPImpl(
+                        UID.StudyRootQueryRetrieveInformationModelGET,
+                        aeCache, pixConsumer, STUDY, SERIES, IMAGE));
+        services.addDicomService(
+                new CGetSCPImpl(
+                        UID.PatientStudyOnlyQueryRetrieveInformationModelGETRetired,
                         aeCache, pixConsumer,
                         PATIENT, STUDY));
+        services.addDicomService(
+                new CGetSCPImpl(
+                        UID.CompositeInstanceRetrieveWithoutBulkDataGET,
+                        aeCache, pixConsumer, IMAGE)
+                .withoutBulkData(true));
         services.addDicomService(
                 new MWLCFindSCPImpl(
                         UID.ModalityWorklistInformationModelFIND,
                         aeCache, pixConsumer));
-       return services;
+        return services;
     }
 
 }

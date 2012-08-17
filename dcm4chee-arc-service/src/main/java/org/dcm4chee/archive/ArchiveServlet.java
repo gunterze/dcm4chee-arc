@@ -40,7 +40,6 @@ package org.dcm4chee.archive;
 
 import java.lang.management.ManagementFactory;
 
-import javax.ejb.EJB;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.servlet.ServletConfig;
@@ -48,7 +47,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
 import org.dcm4che.conf.api.hl7.HL7Configuration;
-import org.dcm4chee.archive.dao.CodeService;
 
 @SuppressWarnings("serial")
 public class ArchiveServlet extends HttpServlet {
@@ -59,9 +57,6 @@ public class ArchiveServlet extends HttpServlet {
 
     private HL7Configuration dicomConfig;
 
-    @EJB
-    CodeService codeService;
-
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -70,8 +65,7 @@ public class ArchiveServlet extends HttpServlet {
                     config.getInitParameter("dicomConfigurationClass"), false,
                     Thread.currentThread().getContextClassLoader()).newInstance();
             archive = new Archive(dicomConfig,
-                    config.getInitParameter("deviceName"),
-                    codeService);
+                    config.getInitParameter("deviceName"));
             archive.start();
             mbean = ManagementFactory.getPlatformMBeanServer()
                     .registerMBean(archive, 

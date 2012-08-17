@@ -255,7 +255,7 @@ public abstract class Builder {
         andNotInCodes(builder, QInstance.instance.rejectionCode, queryParam.getHideRejectionCodes());
     }
 
-    static Predicate pids(IDWithIssuer[] pids, boolean matchUnknown) {
+    public static Predicate pids(IDWithIssuer[] pids, boolean matchUnknown) {
         if (pids == null || pids.length == 0)
             return null;
 
@@ -336,7 +336,7 @@ public abstract class Builder {
         return like.toString();
     }
 
-    static Predicate uids(StringPath path, String[] values, boolean matchUnknown) {
+    public static Predicate uids(StringPath path, String[] values, boolean matchUnknown) {
         if (values == null || values.length == 0 || values[0].equals("*"))
             return null;
 

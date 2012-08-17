@@ -44,9 +44,7 @@ import java.util.EnumSet;
 import org.dcm4che.conf.api.ApplicationEntityCache;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
-import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
-import org.dcm4che.net.Device;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.ExtendedNegotiation;
@@ -55,7 +53,6 @@ import org.dcm4che.net.service.BasicCFindSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.net.service.QueryTask;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
-import org.dcm4chee.archive.conf.ArchiveDevice;
 import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.query.impl.MWLQueryTaskImpl;
 
@@ -84,7 +81,8 @@ public class MWLCFindSCPImpl extends BasicCFindSCP {
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity)
                 as.getApplicationEntity();
         try {
-            QueryParam queryParam = queryParam(as, ae, queryOpts);
+            QueryParam queryParam = QueryParam.valueOf(ae, queryOpts,
+                    aeCache.get(as.getRemoteAET()), roles(as));
             IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys,
                     queryParam.getDefaultIssuerOfPatientID());
             IDWithIssuer[] pids = pid == null 
@@ -98,23 +96,8 @@ public class MWLCFindSCPImpl extends BasicCFindSCP {
         }
     }
 
-    private QueryParam queryParam(Association as, ArchiveApplicationEntity ae,
-            EnumSet<QueryOption> queryOpts) throws Exception {
-        ArchiveDevice dev = ae.getArchiveDevice();
-        QueryParam queryParam = new QueryParam();
-        queryParam.setFuzzyStr(dev.getFuzzyStr());
-        queryParam.setAttributeFilters(dev.getAttributeFilters());
-        queryParam.setFuzzySemanticMatching(queryOpts
-                .contains(QueryOption.FUZZY));
-
-        ApplicationEntity sourceAE = aeCache.get(as.getRemoteAET());
-        if (sourceAE != null) {
-            Device sourcDevice = sourceAE.getDevice();
-            queryParam.setDefaultIssuerOfPatientID(sourcDevice
-                    .getIssuerOfPatientID());
-            queryParam.setDefaultIssuerOfAccessionNumber(sourcDevice
-                    .getIssuerOfAccessionNumber());
-        }
-        return queryParam;
+    private String[] roles(Association as) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

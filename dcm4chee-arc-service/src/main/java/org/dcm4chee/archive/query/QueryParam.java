@@ -39,10 +39,16 @@
 package org.dcm4chee.archive.query;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.dcm4che.data.Issuer;
+import org.dcm4che.net.ApplicationEntity;
+import org.dcm4che.net.Device;
+import org.dcm4che.net.QueryOption;
 import org.dcm4che.soundex.FuzzyStr;
+import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
+import org.dcm4chee.archive.conf.ArchiveDevice;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.RejectionNote;
 import org.dcm4chee.archive.entity.Code;
@@ -160,6 +166,32 @@ public class QueryParam {
 
     public void setDefaultIssuerOfAccessionNumber(Issuer issuer) {
         this.defaultIssuerOfAccessionNumber = issuer;
+    }
+
+    public static QueryParam valueOf(ArchiveApplicationEntity ae,
+            EnumSet<QueryOption> queryOpts, ApplicationEntity sourceAE,
+            String[] roles) throws Exception {
+        ArchiveDevice dev = ae.getArchiveDevice();
+        QueryParam queryParam = new QueryParam();
+        queryParam.setFuzzyStr(dev.getFuzzyStr());
+        queryParam.setAttributeFilters(dev.getAttributeFilters());
+        queryParam.setCombinedDatetimeMatching(queryOpts
+                .contains(QueryOption.DATETIME));
+        queryParam.setFuzzySemanticMatching(queryOpts
+                .contains(QueryOption.FUZZY));
+        queryParam.setMatchUnknown(ae.isMatchUnknown());
+        queryParam.setRoles(roles);
+        queryParam.setRejectionNotes(ae.getRejectionNotes());
+        queryParam.setReturnOtherPatientIDs(ae.isReturnOtherPatientIDs());
+
+        if (sourceAE != null) {
+            Device sourceDevice = sourceAE.getDevice();
+            queryParam.setDefaultIssuerOfPatientID(sourceDevice
+                    .getIssuerOfPatientID());
+            queryParam.setDefaultIssuerOfAccessionNumber(sourceDevice
+                    .getIssuerOfAccessionNumber());
+        }
+        return queryParam;
     }
 
 }
