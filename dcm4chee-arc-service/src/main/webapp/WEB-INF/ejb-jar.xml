@@ -7,26 +7,26 @@
   <enterprise-beans>
     <session>
       <ejb-name>QueryService</ejb-name>
-      <ejb-class>org.dcm4chee.archive.query.impl.QueryService</ejb-class>
+      <ejb-class>org.dcm4chee.archive.query.dao.QueryService</ejb-class>
       <resource-ref>
         <res-ref-name>jdbc/dataSource</res-ref-name>
         <res-type>javax.sql.DataSource</res-type>
         <mapped-name>${ds}</mapped-name>
         <injection-target>
-          <injection-target-class>org.dcm4chee.archive.query.impl.QueryService</injection-target-class>
+          <injection-target-class>org.dcm4chee.archive.query.dao.QueryService</injection-target-class>
           <injection-target-name>dataSource</injection-target-name>
         </injection-target>
       </resource-ref>
     </session>
     <session>
       <ejb-name>MWLQueryService</ejb-name>
-      <ejb-class>org.dcm4chee.archive.query.impl.MWLQueryService</ejb-class>
+      <ejb-class>org.dcm4chee.archive.mwl.dao.MWLQueryService</ejb-class>
       <resource-ref>
         <res-ref-name>jdbc/dataSource</res-ref-name>
         <res-type>javax.sql.DataSource</res-type>
         <mapped-name>${ds}</mapped-name>
         <injection-target>
-          <injection-target-class>org.dcm4chee.archive.query.impl.MWLQueryService</injection-target-class>
+          <injection-target-class>org.dcm4chee.archive.mwl.dao.MWLQueryService</injection-target-class>
           <injection-target-name>dataSource</injection-target-name>
         </injection-target>
       </resource-ref>
