@@ -58,9 +58,9 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
  */
 public class StudyQueryImpl extends QueryImpl {
 
-    public StudyQueryImpl(QueryService service, IDWithIssuer[] pids,
+    public StudyQueryImpl(StatelessSession session, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {
-        super(service, query(service.session(), pids, keys, queryParam),
+        super(session, query(session, pids, keys, queryParam),
                 queryParam, false);
     }
 

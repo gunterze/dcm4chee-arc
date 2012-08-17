@@ -76,10 +76,10 @@ public class InstanceQueryImpl extends QueryImpl {
     private Attributes seriesAttrs;
     private Query seriesQuery;
 
-    public InstanceQueryImpl(QueryService service, IDWithIssuer[] pids,
+    public InstanceQueryImpl(StatelessSession session, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {
-        super(service, query(service.session(), pids, keys, queryParam), queryParam, false);
-        seriesQuery = service.session().createQuery(QUERY_SERIES_ATTRS);
+        super(session, query(session, pids, keys, queryParam), queryParam, false);
+        seriesQuery = session.createQuery(QUERY_SERIES_ATTRS);
     }
 
     private static ScrollableResults query(StatelessSession session, IDWithIssuer[] pids,

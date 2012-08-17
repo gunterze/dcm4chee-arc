@@ -42,7 +42,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
@@ -79,9 +78,6 @@ public class QueryService {
 
     private QueryImpl query;
     
-    @EJB
-    private DerivedFieldsService derivedFieldService;
-
     @PostConstruct
     protected void init() {
         SessionFactory sessionFactory = 
@@ -96,10 +92,6 @@ public class QueryService {
 
     final StatelessSession session() {
         return session;
-    }
-
-    final DerivedFieldsService derivedFieldService() {
-        return derivedFieldService;
     }
 
     public void find(QueryRetrieveLevel qrlevel, IDWithIssuer[] pids,
@@ -124,22 +116,22 @@ public class QueryService {
 
     public void findPatients(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        query = new PatientQueryImpl(this, pids, keys, queryParam);
+        query = new PatientQueryImpl(session, pids, keys, queryParam);
     }
 
     public void findStudies(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        query = new StudyQueryImpl(this, pids, keys, queryParam);
+        query = new StudyQueryImpl(session, pids, keys, queryParam);
     }
 
     public void findSeries(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        query = new SeriesQueryImpl(this, pids, keys, queryParam);
+        query = new SeriesQueryImpl(session, pids, keys, queryParam);
     }
 
     public void findInstances(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        query = new InstanceQueryImpl(this, pids, keys, queryParam);
+        query = new InstanceQueryImpl(session, pids, keys, queryParam);
     }
 
     public boolean optionalKeyNotSupported() {

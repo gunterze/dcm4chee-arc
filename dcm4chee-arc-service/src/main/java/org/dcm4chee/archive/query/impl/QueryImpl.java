@@ -45,7 +45,10 @@ import org.dcm4chee.archive.entity.QInstance;
 import org.dcm4chee.archive.entity.QSeries;
 import org.dcm4chee.archive.entity.Utils;
 import org.dcm4chee.archive.query.QueryParam;
+import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
+import org.hibernate.StatelessSession;
+
 import com.mysema.query.BooleanBuilder;
 import com.mysema.query.jpa.hibernate.HibernateQuery;
 import com.mysema.query.jpa.hibernate.HibernateSubQuery;
@@ -56,33 +59,32 @@ import com.mysema.query.types.Predicate;
  */
 public abstract class QueryImpl {
 
-    private static class CachedNumber {
-        final long pk;
-        final int n;
-        public CachedNumber(long pk, int n) {
-            this.pk = pk;
-            this.n = n;
-        }
-     }
+    private static final String UPDATE_STUDY = "update Study s "
+            + "set s.numberOfStudyRelatedSeries = ?, "
+                + "s.numberOfStudyRelatedInstances = ? "
+            + "where s.pk = ?";
 
-    protected final QueryService service;
+    private static final String UPDATE_SERIES = "update Series s "
+            + "set s.numberOfSeriesRelatedInstances = ? "
+            + "where s.pk = ?";
 
+    protected final StatelessSession session;
     private final ScrollableResults results;
-
     private final QueryParam queryParam;
-
     private final boolean optionalKeyNotSupported;
 
     private CachedNumber numberOfStudyRelatedSeries;
     private CachedNumber numberOfStudyRelatedInstances;
     private CachedNumber numberOfSeriesRelatedInstances;
+    private Query updateStudy;
+    private Query updateSeries;
 
     private boolean hasNext;
 
 
-    protected QueryImpl(QueryService service, ScrollableResults results,
+    protected QueryImpl(StatelessSession session, ScrollableResults results,
             QueryParam queryParam, boolean optionalKeyNotSupported) {
-        this.service = service;
+        this.session = session;
         this.results = results;
         this.queryParam = queryParam;
         this.optionalKeyNotSupported = optionalKeyNotSupported;
@@ -139,9 +141,11 @@ public abstract class QueryImpl {
             }
         }
         if (rejectedInstances != null && !rejectedInstances)
-            service.derivedFieldService().updateStudyQueryAttributes(studyPk,
-                    numberOfStudyRelatedSeries,
-                    numberOfStudyRelatedInstances);
+            updateStudy()
+                .setInteger(0, numberOfStudyRelatedSeries)
+                .setInteger(1, numberOfStudyRelatedInstances)
+                .setLong(2, studyPk)
+                .executeUpdate();
         Utils.setStudyQueryAttributes(attrs,
                 numberOfStudyRelatedSeries,
                 numberOfStudyRelatedInstances,
@@ -162,18 +166,32 @@ public abstract class QueryImpl {
                 this.numberOfSeriesRelatedInstances =
                         new CachedNumber(seriesPk, numberOfSeriesRelatedInstances);
                 if (!rejectedInstances)
-                    service.derivedFieldService()
-                        .updateSeriesQueryAttributes(seriesPk, numberOfSeriesRelatedInstances);
+                    updateSeries()
+                        .setInteger(0, numberOfSeriesRelatedInstances)
+                        .setLong(1, seriesPk)
+                        .executeUpdate();
             }
         }
         Utils.setSeriesQueryAttributes(attrs, numberOfSeriesRelatedInstances);
+    }
+
+    private Query updateStudy() {
+        if (updateStudy == null)
+            updateStudy= session.createQuery(UPDATE_STUDY);
+        return updateStudy;
+    }
+
+    private Query updateSeries() {
+        if (updateSeries== null)
+            updateSeries= session.createQuery(UPDATE_SERIES);
+        return updateSeries;
     }
 
     private boolean hasStudyRejectedInstances(Long studyPk) {
         BooleanBuilder builder = new BooleanBuilder(QSeries.series.study.pk.eq(studyPk));
         builder.and(QInstance.instance.replaced.isFalse());
         builder.and(QInstance.instance.rejectionCode.isNotNull());
-        return new HibernateQuery(service.session())
+        return new HibernateQuery(session)
             .from(QInstance.instance)
             .innerJoin(QInstance.instance.series, QSeries.series)
             .where(builder)
@@ -184,7 +202,7 @@ public abstract class QueryImpl {
         BooleanBuilder builder = new BooleanBuilder(QInstance.instance.series.pk.eq(seriesPk));
         builder.and(QInstance.instance.replaced.isFalse());
         builder.and(QInstance.instance.rejectionCode.isNotNull());
-        return new HibernateQuery(service.session())
+        return new HibernateQuery(session)
             .from(QInstance.instance)
             .where(builder)
             .count() > 0;
@@ -199,7 +217,7 @@ public abstract class QueryImpl {
             Builder.andNotInCodes(builder, QInstance.instance.rejectionCode,
                     queryParam.getHideRejectionCodes());
         }
-        return new HibernateQuery(service.session())
+        return new HibernateQuery(session)
             .from(QInstance.instance)
             .innerJoin(QInstance.instance.series, QSeries.series)
             .where(builder)
@@ -207,7 +225,7 @@ public abstract class QueryImpl {
     }
 
     private long countStudyRelatedSeriesOf(Long studyPk, boolean rejectedInstances) {
-        return new HibernateQuery(service.session())
+        return new HibernateQuery(session)
             .from(QSeries.series)
             .where(QSeries.series.study.pk.eq(studyPk),
                     instancesExists(QSeries.series, rejectedInstances))
@@ -238,10 +256,19 @@ public abstract class QueryImpl {
             Builder.andNotInCodes(builder, QInstance.instance.rejectionCode,
                     queryParam.getHideRejectionCodes());
         }
-        return new HibernateQuery(service.session())
+        return new HibernateQuery(session)
             .from(QInstance.instance)
             .where(builder)
             .count();
     }
+
+    private static class CachedNumber {
+        final long pk;
+        final int n;
+        public CachedNumber(long pk, int n) {
+            this.pk = pk;
+            this.n = n;
+        }
+     }
 
 }

@@ -59,9 +59,9 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
  */
 public class SeriesQueryImpl extends QueryImpl {
 
-    public SeriesQueryImpl(QueryService service, IDWithIssuer[] pids,
+    public SeriesQueryImpl(StatelessSession session, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {
-        super(service, query(service.session(), pids, keys, queryParam), queryParam, false);
+        super(session, query(session, pids, keys, queryParam), queryParam, false);
     }
 
     private static ScrollableResults query(StatelessSession session, IDWithIssuer[] pids,
