@@ -56,7 +56,7 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class StudyQueryImpl extends QueryImpl {
+class StudyQueryImpl extends QueryImpl {
 
     public StudyQueryImpl(StatelessSession session, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {

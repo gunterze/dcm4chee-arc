@@ -53,7 +53,7 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class PatientQueryImpl extends QueryImpl {
+class PatientQueryImpl extends QueryImpl {
 
     public PatientQueryImpl(StatelessSession session, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {

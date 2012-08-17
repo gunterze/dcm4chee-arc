@@ -58,7 +58,7 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class InstanceQueryImpl extends QueryImpl {
+class InstanceQueryImpl extends QueryImpl {
 
     private static final String QUERY_SERIES_ATTRS = "select "
             + "s.study.pk, "

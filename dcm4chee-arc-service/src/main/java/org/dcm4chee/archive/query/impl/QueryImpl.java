@@ -57,7 +57,7 @@ import com.mysema.query.types.Predicate;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public abstract class QueryImpl {
+abstract class QueryImpl {
 
     private static final String UPDATE_STUDY = "update Study s "
             + "set s.numberOfStudyRelatedSeries = ?, "
