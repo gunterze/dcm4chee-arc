@@ -80,7 +80,7 @@ import com.mysema.query.types.path.StringPath;
  */
 public abstract class Builder {
 
-    static void addPatientLevelPredicates(BooleanBuilder builder,
+    public static void addPatientLevelPredicates(BooleanBuilder builder,
             IDWithIssuer[] pids, Attributes keys, QueryParam queryParam) {
 
         boolean matchUnknown = queryParam.isMatchUnknown();
@@ -546,7 +546,7 @@ public abstract class Builder {
             .exists();
     }
 
-    static void addServiceRequestPredicates(BooleanBuilder builder,
+    public static void addServiceRequestPredicates(BooleanBuilder builder,
             Attributes item, QueryParam queryParam) {
 
         boolean matchUnknown = queryParam.isMatchUnknown();
@@ -572,7 +572,7 @@ public abstract class Builder {
 
     }
 
-    static void addRequestedProcedurePredicates(BooleanBuilder builder,
+    public static void addRequestedProcedurePredicates(BooleanBuilder builder,
             Attributes keys, QueryParam queryParam) {
         boolean matchUnknown = queryParam.isMatchUnknown();
         builder.and(wildCard(QRequestedProcedure.requestedProcedure.requestedProcedureID,
@@ -582,7 +582,7 @@ public abstract class Builder {
                 keys.getStrings(Tag.StudyInstanceUID), matchUnknown));
     }
 
-    static void addScheduledProcedureStepPredicates(BooleanBuilder builder,
+    public static void addScheduledProcedureStepPredicates(BooleanBuilder builder,
             Attributes item, QueryParam queryParam) {
         if (item == null || item.isEmpty())
             return;

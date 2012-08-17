@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.query.impl;
+package org.dcm4chee.archive.mwl.impl;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -62,6 +62,7 @@ import org.dcm4chee.archive.entity.QVisit;
 import org.dcm4chee.archive.entity.Utils;
 import org.dcm4chee.archive.query.IDWithIssuer;
 import org.dcm4chee.archive.query.QueryParam;
+import org.dcm4chee.archive.query.impl.Builder;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SessionFactory;

@@ -36,68 +36,63 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.query;
+package org.dcm4chee.archive.mwl.impl;
 
-
-import java.util.EnumSet;
-
-import org.dcm4che.conf.api.ApplicationEntityCache;
 import org.dcm4che.data.Attributes;
-import org.dcm4che.data.Tag;
 import org.dcm4che.net.Association;
-import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.Status;
-import org.dcm4che.net.pdu.ExtendedNegotiation;
 import org.dcm4che.net.pdu.PresentationContext;
-import org.dcm4che.net.service.BasicCFindSCP;
+import org.dcm4che.net.service.BasicQueryTask;
 import org.dcm4che.net.service.DicomServiceException;
-import org.dcm4che.net.service.QueryTask;
-import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
-import org.dcm4chee.archive.pix.PIXConsumer;
-import org.dcm4chee.archive.query.impl.MWLQueryTaskImpl;
+import org.dcm4chee.archive.query.IDWithIssuer;
+import org.dcm4chee.archive.query.QueryParam;
+import org.dcm4chee.archive.util.BeanLocator;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class MWLCFindSCPImpl extends BasicCFindSCP {
+public class MWLQueryTaskImpl extends BasicQueryTask {
 
-    private final ApplicationEntityCache aeCache;
-    private final PIXConsumer pixConsumer;
+    private final MWLQueryService query;
 
-    public MWLCFindSCPImpl(String sopClass, ApplicationEntityCache aeCache,
-            PIXConsumer pixConsumer) {
-        super(sopClass);
-        this.aeCache = aeCache;
-        this.pixConsumer = pixConsumer;
-    }
-
-    @Override
-    protected QueryTask calculateMatches(Association as, PresentationContext pc,
-            Attributes rq, Attributes keys) throws DicomServiceException {
-        String cuid = rq.getString(Tag.AffectedSOPClassUID);
-        ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
-        EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
-
-        ArchiveApplicationEntity ae = (ArchiveApplicationEntity)
-                as.getApplicationEntity();
+    public MWLQueryTaskImpl(Association as, PresentationContext pc, Attributes rq,
+            Attributes keys, IDWithIssuer[] pids, QueryParam queryParam)
+                    throws Exception {
+        super(as, pc, rq, keys);
+        this.query = BeanLocator.lookup(MWLQueryService.class);
         try {
-            QueryParam queryParam = QueryParam.valueOf(ae, queryOpts,
-                    aeCache.get(as.getRemoteAET()), roles(as));
-            IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys,
-                    queryParam.getDefaultIssuerOfPatientID());
-            IDWithIssuer[] pids = pid == null 
-                    ? IDWithIssuer.EMPTY
-                    : pixConsumer.pixQuery(ae, pid);
-            return new MWLQueryTaskImpl(as, pc, rq, keys, pids, queryParam);
-        } catch (DicomServiceException e) {
-            throw e;
+            query.findScheduledProcedureSteps(pids, keys, queryParam);
         } catch (Exception e) {
-            throw new DicomServiceException(Status.UnableToProcess, e);
+            query.close();
+            throw e;
         }
     }
 
-    private String[] roles(Association as) {
-        // TODO Auto-generated method stub
-        return null;
+    @Override
+    protected void close() {
+         query.close();
+    }
+
+    @Override
+    protected boolean hasMoreMatches() throws DicomServiceException {
+        try {
+            return query.hasMoreMatches();
+        }  catch (Exception e) {
+            throw wrapException(Status.UnableToProcess, e);
+        }
+    }
+
+    @Override
+    protected Attributes nextMatch() throws DicomServiceException {
+        try {
+            return query.nextMatch();
+        }  catch (Exception e) {
+            throw wrapException(Status.UnableToProcess, e);
+        }
+    }
+
+    @Override
+    protected boolean optionalKeyNotSupported(Attributes match) {
+        return query.optionalKeyNotSupported();
     }
 }
