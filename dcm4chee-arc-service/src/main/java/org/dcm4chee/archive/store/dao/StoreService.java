@@ -345,7 +345,9 @@ public class StoreService {
                             inst.setRejectionCode(rejectionCcode);
                         }
                     }
-//                    updateSeries(series);
+                    series.setNumberOfSeriesRelatedInstances(-1);
+                    study.setNumberOfStudyRelatedSeries(-1);
+                    study.setNumberOfStudyRelatedInstances(-1);
                 }
                 if (!iuid2cuid.isEmpty())
                     rejectionFailed("Rejection failed: No such referenced SOP Instances");

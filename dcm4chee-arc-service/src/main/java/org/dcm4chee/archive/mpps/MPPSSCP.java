@@ -38,8 +38,6 @@
 
 package org.dcm4chee.archive.mpps;
 
-import javax.ejb.EJB;
-
 import org.dcm4che.conf.api.ApplicationEntityCache;
 import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.data.Attributes;
@@ -59,35 +57,19 @@ import org.dcm4chee.archive.util.BeanLocator;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class MPPSSCPImpl extends BasicMPPSSCP {
+public class MPPSSCP extends BasicMPPSSCP {
 
-    private MPPSService mppsService;
-    
-    private ApplicationEntityCache aeCache;
-//    private MppsSCU mppsSCU;
+    private final ApplicationEntityCache aeCache;
+    private final MPPSSCU mppsSCU;
+    private final MPPSService mppsService;
 //    private IanSCU ianSCU;
 
-    public  MPPSSCPImpl(ApplicationEntityCache aeCache) {
+    public  MPPSSCP(ApplicationEntityCache aeCache, MPPSSCU mppsSCU) {
         this.aeCache = aeCache;
+        this.mppsSCU = mppsSCU;
         this.mppsService = BeanLocator.lookup(MPPSService.class);
     }
 
-//    public final MppsSCU getMppsSCU() {
-//        return mppsSCU;
-//    }
-//
-//    public final void setMppsSCU(MppsSCU mppsSCU) {
-//        this.mppsSCU = mppsSCU;
-//    }
-//
-//    public final IanSCU getIanSCU() {
-//        return ianSCU;
-//    }
-//
-//    public final void setIanSCU(IanSCU ianSCU) {
-//        this.ianSCU = ianSCU;
-//    }
-//
     @Override
     protected Attributes create(Association as, Attributes rq,
             Attributes rqAttrs, Attributes rsp) throws DicomServiceException {
@@ -105,14 +87,15 @@ public class MPPSSCPImpl extends BasicMPPSSCP {
         } catch (Exception e) {
             throw new DicomServiceException(Status.ProcessingFailure, e);
         }
-//        for (String remoteAET : ae.getForwardMPPSDestinations())
-//            if (matchIssuerOfPatientID(remoteAET, Issuer.issuerOfPatientIDOf(rqAttrs)))
-//                mppsSCU.scheduleForwardMPPS(localAET, remoteAET, iuid, rqAttrs, true, 0, 0);
+        for (String remoteAET : ae.getForwardMPPSDestinations())
+            if (matchIssuerOfPatientID(remoteAET, rqAttrs))
+                mppsSCU.scheduleForwardMPPS(localAET, remoteAET, iuid, rqAttrs, true, 0, 0);
         return null;
     }
 
-    private boolean matchIssuerOfPatientID(String remoteAET, Issuer issuer) {
-        if (issuer == null)
+    private boolean matchIssuerOfPatientID(String remoteAET, Attributes rqAttrs) {
+        String issuerOfPatientID = rqAttrs.getString(Tag.IssuerOfPatientID);
+        if (issuerOfPatientID == null)
             return true;
         ApplicationEntity remoteAE = null;
         try {
@@ -120,7 +103,9 @@ public class MPPSSCPImpl extends BasicMPPSSCP {
         } catch (ConfigurationException e) {
         }
         return remoteAE == null
-                || issuer.matches(remoteAE.getDevice().getIssuerOfPatientID());
+                || new Issuer(issuerOfPatientID,
+                        rqAttrs.getNestedDataset(Tag.IssuerOfPatientIDQualifiersSequence))
+                    .matches(remoteAE.getDevice().getIssuerOfPatientID());
     }
 
     @Override
@@ -138,10 +123,9 @@ public class MPPSSCPImpl extends BasicMPPSSCP {
         } catch (Exception e) {
             throw new DicomServiceException(Status.ProcessingFailure, e);
         }
-//        for (String remoteAET : ae.getForwardMPPSDestinations())
-//            if (matchIssuerOfPatientID(remoteAET,
-//                    Issuer.issuerOfPatientIDOf(ppsWithIAN.pps.getPatient().getAttributes())))
-//                mppsSCU.scheduleForwardMPPS(localAET, remoteAET, iuid, rqAttrs, false, 0, 0);
+        for (String remoteAET : ae.getForwardMPPSDestinations())
+            if (matchIssuerOfPatientID(remoteAET, ppsWithIAN.pps.getPatient().getAttributes()))
+                mppsSCU.scheduleForwardMPPS(localAET, remoteAET, iuid, rqAttrs, false, 0, 0);
 //        if (ppsWithIAN.ian != null)
 //            for (String remoteAET : ae.getIANDestinations())
 //                ianSCU.scheduleIAN(localAET, remoteAET, ppsWithIAN.ian, 0, 0);

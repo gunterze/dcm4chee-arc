@@ -38,6 +38,9 @@
 
 package org.dcm4chee.archive;
 
+import javax.jms.ConnectionFactory;
+import javax.jms.Queue;
+
 import org.dcm4che.conf.api.ApplicationEntityCache;
 import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.conf.api.hl7.HL7ApplicationCache;
@@ -51,7 +54,8 @@ import org.dcm4chee.archive.conf.ArchiveDevice;
 import org.dcm4chee.archive.conf.RejectionNote;
 import org.dcm4chee.archive.dao.CodeService;
 import org.dcm4chee.archive.entity.Code;
-import org.dcm4chee.archive.mpps.MPPSSCPImpl;
+import org.dcm4chee.archive.mpps.MPPSSCP;
+import org.dcm4chee.archive.mpps.MPPSSCU;
 import org.dcm4chee.archive.mwl.MWLCFindSCPImpl;
 import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.query.CFindSCPImpl;
@@ -59,6 +63,7 @@ import org.dcm4chee.archive.retrieve.CGetSCPImpl;
 import org.dcm4chee.archive.retrieve.CMoveSCPImpl;
 import org.dcm4chee.archive.store.CStoreSCPImpl;
 import org.dcm4chee.archive.util.BeanLocator;
+import org.dcm4chee.archive.util.JMSService;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -79,14 +84,19 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
     private final ApplicationEntityCache aeCache;
     private final HL7ApplicationCache hl7AppCache;
     private final PIXConsumer pixConsumer;
+    private final JMSService jmsService;
+    private final MPPSSCU mppsSCU;
 
-    public Archive(HL7Configuration dicomConfiguration, String deviceName)
+    public Archive(HL7Configuration dicomConfiguration, String deviceName,
+            ConnectionFactory connFactory, Queue mppsSCUQueue)
             throws ConfigurationException, Exception {
         this.dicomConfiguration = dicomConfiguration;
         this.codeService = BeanLocator.lookup(CodeService.class);
         this.aeCache = new ApplicationEntityCache(dicomConfiguration);
         this.hl7AppCache = new HL7ApplicationCache(dicomConfiguration);
         this.pixConsumer = new PIXConsumer(hl7AppCache);
+        this.jmsService = new JMSService(connFactory);
+        this.mppsSCU = new MPPSSCU(aeCache, jmsService, mppsSCUQueue);
         init((ArchiveDevice) dicomConfiguration.findDevice(deviceName));
         setConfigurationStaleTimeout();
         loadRejectionNoteCodes();
@@ -166,8 +176,22 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
                         UID.ModalityWorklistInformationModelFIND,
                         aeCache, pixConsumer));
         services.addDicomService(
-                new MPPSSCPImpl(aeCache));
+                new MPPSSCP(aeCache, mppsSCU));
         return services;
+    }
+
+    @Override
+    public void start() throws Exception {
+        super.start();
+        mppsSCU.start(device);
+        jmsService.start();
+    }
+
+    @Override
+    public void stop() {
+        super.stop();
+        jmsService.stop();
+        mppsSCU.stop();
     }
 
 }

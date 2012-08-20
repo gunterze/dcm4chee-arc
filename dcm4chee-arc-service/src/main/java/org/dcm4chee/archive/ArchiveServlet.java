@@ -40,6 +40,9 @@ package org.dcm4chee.archive;
 
 import java.lang.management.ManagementFactory;
 
+import javax.annotation.Resource;
+import javax.jms.ConnectionFactory;
+import javax.jms.Queue;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.servlet.ServletConfig;
@@ -56,6 +59,12 @@ public class ArchiveServlet extends HttpServlet {
     private Archive archive;
 
     private HL7Configuration dicomConfig;
+    
+    @Resource(mappedName="java:/ConnectionFactory")
+    private ConnectionFactory connFactory;
+
+    @Resource(mappedName="java:/queue/mppsscu")
+    private Queue mppsSCUQueue;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -65,7 +74,8 @@ public class ArchiveServlet extends HttpServlet {
                     config.getInitParameter("dicomConfigurationClass"), false,
                     Thread.currentThread().getContextClassLoader()).newInstance();
             archive = new Archive(dicomConfig,
-                    config.getInitParameter("deviceName"));
+                    config.getInitParameter("deviceName"),
+                    connFactory, mppsSCUQueue);
             archive.start();
             mbean = ManagementFactory.getPlatformMBeanServer()
                     .registerMBean(archive, 

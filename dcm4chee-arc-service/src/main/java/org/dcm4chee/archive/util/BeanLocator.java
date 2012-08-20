@@ -64,7 +64,7 @@ public class BeanLocator {
             return ctx.lookup(jndiName);
         } catch (NamingException e) {
             throw new IllegalStateException(
-                    "Cannot connect to bean: " + jndiName + " Reason: " + e,
+                    "Cannot lookup: " + jndiName + ". Reason: " + e,
                     e.getCause());
         } finally {
             try {
