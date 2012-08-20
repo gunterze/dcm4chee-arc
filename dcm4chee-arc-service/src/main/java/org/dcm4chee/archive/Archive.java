@@ -51,6 +51,7 @@ import org.dcm4chee.archive.conf.ArchiveDevice;
 import org.dcm4chee.archive.conf.RejectionNote;
 import org.dcm4chee.archive.dao.CodeService;
 import org.dcm4chee.archive.entity.Code;
+import org.dcm4chee.archive.mpps.MPPSSCPImpl;
 import org.dcm4chee.archive.mwl.MWLCFindSCPImpl;
 import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.query.CFindSCPImpl;
@@ -164,6 +165,8 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
                 new MWLCFindSCPImpl(
                         UID.ModalityWorklistInformationModelFIND,
                         aeCache, pixConsumer));
+        services.addDicomService(
+                new MPPSSCPImpl(aeCache));
         return services;
     }
 

@@ -49,7 +49,7 @@ import org.dcm4che.net.Device;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-class Supplements {
+public class Supplements {
 
     public static void supplementComposite(Attributes ds, Device device) {
         supplementValue(ds, Tag.Manufacturer, VR.LO, device.getManufacturer());

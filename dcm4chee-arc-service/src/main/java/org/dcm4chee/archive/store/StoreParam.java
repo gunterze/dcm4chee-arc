@@ -40,7 +40,10 @@ package org.dcm4chee.archive.store;
 
 import java.util.List;
 
+import org.dcm4che.data.Attributes;
 import org.dcm4che.soundex.FuzzyStr;
+import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
+import org.dcm4chee.archive.conf.ArchiveDevice;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
 import org.dcm4chee.archive.conf.RejectionNote;
@@ -148,9 +151,30 @@ public class StoreParam {
     public RejectionNote getRejectionNote(org.dcm4che.data.Code code) {
        if (code != null)
            for (RejectionNote rn : rejectionNotes) {
-                if (rn.getCode().equals(code))
+                if (rn.getCode().equalsIgnoreMeaning(code))
                    return rn;
            }
        return null;
     }
+
+    public RejectionNote getRejectionNote(Attributes codeItem) {
+        if (codeItem != null)
+            return getRejectionNote(new org.dcm4che.data.Code(codeItem));
+        return null;
+    }
+
+    public static StoreParam valueOf(ArchiveApplicationEntity ae) {
+        ArchiveDevice dev = ae.getArchiveDevice();
+        StoreParam storeParam = new StoreParam();
+        storeParam.setFuzzyStr(dev.getFuzzyStr());
+        storeParam.setAttributeFilters(dev.getAttributeFilters());
+        storeParam.setStoreOriginalAttributes(ae.isStoreOriginalAttributes());
+        storeParam.setModifyingSystem(ae.getEffectiveModifyingSystem());
+        storeParam.setRetrieveAETs(ae.getRetrieveAETs());
+        storeParam.setExternalRetrieveAET(ae.getExternalRetrieveAET());
+        storeParam.setStoreDuplicates(ae.getStoreDuplicates());
+        storeParam.setRejectionNotes(ae.getRejectionNotes());
+        return storeParam;
+    }
+
 }

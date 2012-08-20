@@ -60,7 +60,6 @@ import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
-import org.dcm4chee.archive.conf.ArchiveDevice;
 import org.dcm4chee.archive.entity.FileSystem;
 import org.dcm4chee.archive.store.dao.StoreService;
 import org.dcm4chee.archive.util.BeanLocator;
@@ -180,8 +179,7 @@ private static final String STORE_SERVICE_PROPERTY = "org.dcm4chee.archive.store
             StoreService store = (StoreService) as.getProperty(
                             STORE_SERVICE_PROPERTY);
             if (!store.addFileRef(sourceAET, ds, modified, file, 
-                    digest(digest), fmi.getString(Tag.TransferSyntaxUID),
-                    storeParam(ae))) {
+                    digest(digest), fmi.getString(Tag.TransferSyntaxUID))) {
                 delete(as, file);
             } else if (ae.hasIANDestinations()) {
                 scheduleIAN(ae, store.createIANforPreviousMPPS());
@@ -210,20 +208,6 @@ private static final String STORE_SERVICE_PROPERTY = "org.dcm4chee.archive.store
         }
     }
 
-    private StoreParam storeParam(ArchiveApplicationEntity ae) {
-        ArchiveDevice dev = ae.getArchiveDevice();
-        StoreParam storeParam = new StoreParam();
-        storeParam.setFuzzyStr(dev.getFuzzyStr());
-        storeParam.setAttributeFilters(dev.getAttributeFilters());
-        storeParam.setStoreOriginalAttributes(ae.isStoreOriginalAttributes());
-        storeParam.setModifyingSystem(ae.getEffectiveModifyingSystem());
-        storeParam.setRetrieveAETs(ae.getRetrieveAETs());
-        storeParam.setExternalRetrieveAET(ae.getExternalRetrieveAET());
-        storeParam.setStoreDuplicates(ae.getStoreDuplicates());
-        storeParam.setRejectionNotes(ae.getRejectionNotes());
-        return storeParam;
-    }
-
     private String digest(MessageDigest digest) {
         return digest != null ? TagUtils.toHexString(digest.digest()) : null;
     }
@@ -239,6 +223,7 @@ private static final String STORE_SERVICE_PROPERTY = "org.dcm4chee.archive.store
                 throw new IllegalStateException(
                         "No File System Group ID configured for " + ae.getAETitle());
             store = BeanLocator.lookup(StoreService.class);
+            store.setStoreParam(StoreParam.valueOf(ae));
             store.selectFileSystem(fsGroupID);
             as.setProperty(STORE_SERVICE_PROPERTY, store);
         }

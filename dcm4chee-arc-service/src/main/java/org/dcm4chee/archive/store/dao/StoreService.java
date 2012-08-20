@@ -91,6 +91,7 @@ import org.dcm4chee.archive.entity.ScheduledProcedureStep;
 import org.dcm4chee.archive.entity.Series;
 import org.dcm4chee.archive.entity.Study;
 import org.dcm4chee.archive.entity.VerifyingObserver;
+import org.dcm4chee.archive.mpps.dao.IANQueryService;
 import org.dcm4chee.archive.store.StoreParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,18 +119,21 @@ public class StoreService {
     @EJB
     private RequestService requestService;
 
-//    @EJB
-//    private IANQuery ianQuery;
+    @EJB
+    private IANQueryService ianQuery;
 
+    private StoreParam storeParam;
     private FileSystem curFileSystem;
     private Series cachedSeries;
     private PerformedProcedureStep prevMpps;
     private PerformedProcedureStep curMpps;
     private Code curRejectionCode;
-//    private List<Code> hideRejectionCodes;
-//    private List<Code> hideConceptNameCodes;
     private HashMap<String,HashSet<String>> rejectedInstances =
             new HashMap<String,HashSet<String>>();
+
+    public void setStoreParam(StoreParam storeParam) {
+        this.storeParam = storeParam;
+    }
 
     public FileSystem getCurrentFileSystem() {
         return curFileSystem;
@@ -143,7 +147,8 @@ public class StoreService {
         }
     }
 
-    public Attributes createIANforCurrentMPPS() throws DicomServiceException {
+    public Attributes createIANforCurrentMPPS()
+            throws DicomServiceException {
         try {
             return createIANforMPPS(curMpps, Collections.<String> emptySet());
         } finally {
@@ -153,15 +158,16 @@ public class StoreService {
 
     private Attributes createIANforMPPS(PerformedProcedureStep pps,
             Set<String> rejectedIUIDs) throws DicomServiceException {
-        return null;
-//        return (pps == null || pps.isInProgress())
-//                ? null
-//                : ianQuery.createIANforMPPS(pps, hideConceptNameCodes, rejectedIUIDs);
+        if (pps == null || pps.isInProgress())
+            return null;
+
+        return ianQuery.createIANforMPPS(pps,
+                storeParam.getHideConceptNameCodes(), rejectedIUIDs);
     }
 
     public boolean addFileRef(String sourceAET, Attributes data, Attributes modified,
-            File file, String digest, String tsuid, StoreParam storeParam)
-                    throws DicomServiceException {
+            File file, String digest, String tsuid)
+            throws DicomServiceException {
         FileSystem fs = curFileSystem;
         Instance inst;
         try {
@@ -185,13 +191,13 @@ public class StoreService {
                 break;
             case REPLACE:
                 inst.setReplaced(true);
-                inst = newInstance(sourceAET, data, modified, fs.getAvailability(), storeParam);
+                inst = newInstance(sourceAET, data, modified, fs.getAvailability());
                 if (!containsAction(rn, NOT_REJECT_SUBSEQUENT_OCCURRENCE))
                     inst.setRejectionCode(rnc);
                 break;
             }
         } catch (NoResultException e) {
-            inst = newInstance(sourceAET, data, modified, fs.getAvailability(), storeParam);
+            inst = newInstance(sourceAET, data, modified, fs.getAvailability());
         }
         String filePath = file.toURI().toString().substring(fs.getURI().length());
         FileRef fileRef = new FileRef(fs, filePath, tsuid, file.length(), digest);
@@ -247,7 +253,7 @@ public class StoreService {
     }
 
     public Instance newInstance(String sourceAET, Attributes data,
-            Attributes modified, Availability availability, StoreParam storeParam)
+            Attributes modified, Availability availability)
                     throws DicomServiceException {
         rejectedInstances.clear();
         Code conceptNameCode = singleCode(data, Tag.ConceptNameCodeSequence);
@@ -255,7 +261,7 @@ public class StoreService {
         if (rn != null) {
             rejectRefInstances(data, rn);
         }
-        Series series = findOrCreateSeries(sourceAET, data, availability, storeParam);
+        Series series = findOrCreateSeries(sourceAET, data, availability);
         coerceAttributes(series, data, modified);
         if (!modified.isEmpty() && storeParam.isStoreOriginalAttributes()) {
             Attributes item = new Attributes(4);
@@ -454,8 +460,7 @@ public class StoreService {
     }
 
     private Series findOrCreateSeries(String sourceAET, Attributes data,
-            Availability availability, StoreParam storeParam)
-            throws DicomServiceException {
+            Availability availability) throws DicomServiceException {
         String seriesIUID = data.getString(Tag.SeriesInstanceUID, null);
         Series series = cachedSeries;
         if (series == null || !series.getSeriesInstanceUID().equals(seriesIUID)) {
@@ -468,7 +473,7 @@ public class StoreService {
                 cachedSeries = series = findSeries(seriesIUID);
             } catch (NoResultException e) {
                 cachedSeries = series = new Series();
-                Study study = findOrCreateStudy(data, availability, storeParam);
+                Study study = findOrCreateStudy(data, availability);
                 series.setStudy(study);
                 series.setInstitutionCode(
                         singleCode(data, Tag.InstitutionCodeSequence));
@@ -490,13 +495,13 @@ public class StoreService {
         } else {
             checkRefPPS(data);
         }
-        StoreService.updateEntities(series, data, availability, storeParam);
+        updateEntities(series, data, availability);
         return series;
     }
 
-    private static void updateEntities(Series series,
-            Attributes data, Availability availability, StoreParam storeParam) {
-        StoreService.updateEntities(series.getStudy(), data, availability, storeParam);
+    private void updateEntities(Series series, Attributes data,
+            Availability availability) {
+        updateEntities(series.getStudy(), data, availability);
         series.retainRetrieveAETs(storeParam.getRetrieveAETs());
         series.retainExternalRetrieveAET(storeParam.getExternalRetrieveAET());
         series.floorAvailability(availability);
@@ -520,11 +525,11 @@ public class StoreService {
             curMpps = mpps = findPPS(mppsIUID);
             curRejectionCode = null;
             if (mpps != null && mpps.isDiscontinued()) {
-                Attributes codeItem = mpps.getAttributes()
-                        .getNestedDataset(Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence);
-                if (codeItem != null)
-                    curRejectionCode = (Code) storeParam.getRejectionNote(
-                            new org.dcm4che.data.Code(codeItem)).getCode();
+                Attributes reasonCode = mpps.getAttributes().getNestedDataset(
+                        Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence);
+                RejectionNote rn = storeParam.getRejectionNote(reasonCode);
+                if (rn != null)
+                    curRejectionCode = (Code) rn.getCode();
             }
         }
     }
@@ -613,9 +618,7 @@ public class StoreService {
 
     @Remove
     public void close() {
-//        if (cachedSeries != null) {
-//            updateSeries(cachedSeries);
-//        }
+        storeParam = null;
         curFileSystem = null;
         cachedSeries = null;
         prevMpps = null;
@@ -624,10 +627,6 @@ public class StoreService {
         rejectedInstances.clear();
     }
 
-//    private void updateSeries(Series series) {
-//        SeriesUpdate.updateSeries(em, series, hideConceptNameCodes, hideRejectionCodes);
-//    }
-
     private Issuer issuer(Attributes item) {
         if (item == null)
             return null;
@@ -635,12 +634,11 @@ public class StoreService {
         return issuerService.findOrCreate(new Issuer(item));
     }
 
-    private Study findOrCreateStudy(Attributes data, Availability availability,
-            StoreParam storeParam) {
+    private Study findOrCreateStudy(Attributes data, Availability availability) {
         Study study;
         try {
             study = findStudy(data.getString(Tag.StudyInstanceUID, null));
-            StoreService.updateEntities(study, data, availability, storeParam);
+            updateEntities(study, data, availability);
         } catch (NoResultException e) {
             study = new Study();
             Patient patient = patientService.findUniqueOrCreatePatient(data, storeParam);
@@ -663,8 +661,8 @@ public class StoreService {
         return study;
     }
 
-    private static void updateEntities(Study study, Attributes data,
-            Availability availability, StoreParam storeParam) {
+    private void updateEntities(Study study, Attributes data,
+            Availability availability) {
         PatientService.updatePatient(study.getPatient(), data, storeParam);
         study.addModalityInStudy(data.getString(Tag.Modality, null));
         study.addSOPClassInStudy(data.getString(Tag.SOPClassUID, null));
