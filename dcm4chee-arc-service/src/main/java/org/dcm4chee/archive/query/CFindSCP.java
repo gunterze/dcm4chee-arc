@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.mwl;
+package org.dcm4chee.archive.query;
 
 
 import java.util.EnumSet;
@@ -51,7 +51,9 @@ import org.dcm4che.net.pdu.ExtendedNegotiation;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicCFindSCP;
 import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.QueryTask;
+import org.dcm4che.util.AttributesValidator;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.query.util.IDWithIssuer;
@@ -60,24 +62,32 @@ import org.dcm4chee.archive.query.util.QueryParam;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class MWLCFindSCPImpl extends BasicCFindSCP {
+public class CFindSCP extends BasicCFindSCP {
 
+    private final String[] qrLevels;
+    private final QueryRetrieveLevel rootLevel;
     private final ApplicationEntityCache aeCache;
     private final PIXConsumer pixConsumer;
 
-    public MWLCFindSCPImpl(String sopClass, ApplicationEntityCache aeCache,
-            PIXConsumer pixConsumer) {
+    public CFindSCP(String sopClass, ApplicationEntityCache aeCache,
+            PIXConsumer pixConsumer, String... qrLevels) {
         super(sopClass);
         this.aeCache = aeCache;
         this.pixConsumer = pixConsumer;
+        this.qrLevels = qrLevels;
+        this.rootLevel = QueryRetrieveLevel.valueOf(qrLevels[0]);
     }
 
     @Override
     protected QueryTask calculateMatches(Association as, PresentationContext pc,
             Attributes rq, Attributes keys) throws DicomServiceException {
+        AttributesValidator validator = new AttributesValidator(keys);
+        QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(validator, qrLevels);
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
+        boolean relational = queryOpts.contains(QueryOption.RELATIONAL);
+        level.validateQueryKeys(validator, rootLevel, relational);
 
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity)
                 as.getApplicationEntity();
@@ -89,7 +99,7 @@ public class MWLCFindSCPImpl extends BasicCFindSCP {
             IDWithIssuer[] pids = pid == null 
                     ? IDWithIssuer.EMPTY
                     : pixConsumer.pixQuery(ae, pid);
-            return new MWLQueryTaskImpl(as, pc, rq, keys, pids, queryParam);
+            return new QueryTaskImpl(as, pc, rq, keys, level, pids, queryParam);
         } catch (DicomServiceException e) {
             throw e;
         } catch (Exception e) {

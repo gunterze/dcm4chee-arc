@@ -61,30 +61,24 @@ import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.entity.FileSystem;
+import org.dcm4chee.archive.mpps.IANSCU;
 import org.dcm4chee.archive.store.dao.StoreService;
 import org.dcm4chee.archive.util.BeanLocator;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class CStoreSCPImpl extends BasicCStoreSCP {
+public class CStoreSCP extends BasicCStoreSCP {
 
 private static final String STORE_SERVICE_PROPERTY = "org.dcm4chee.archive.store.impl.StoreService";
-    //    private IanSCU ianSCU;
     private final ApplicationEntityCache aeCache;
+    private final IANSCU ianSCU;
 
-    public CStoreSCPImpl(ApplicationEntityCache aeCache) {
+    public CStoreSCP(ApplicationEntityCache aeCache, IANSCU ianSCU) {
         super("*");
         this.aeCache = aeCache;
+        this.ianSCU = ianSCU;
     }
-
-//    public final IanSCU getIanSCU() {
-//        return ianSCU;
-//    }
-//
-//    public final void setIanSCU(IanSCU ianSCU) {
-//        this.ianSCU = ianSCU;
-//    }
 
     private static class LazyInitialization {
         static final SecureRandom random = new SecureRandom();
@@ -247,9 +241,9 @@ private static final String STORE_SERVICE_PROPERTY = "org.dcm4chee.archive.store
     }
 
     private void scheduleIAN(ArchiveApplicationEntity ae, Attributes ian) {
-//        if (ian != null)
-//            for (String remoteAET : ae.getIANDestinations())
-//                ianSCU.scheduleIAN(ae.getAETitle(), remoteAET, ian, 0, 0);
+        if (ian != null)
+            for (String remoteAET : ae.getIANDestinations())
+                ianSCU.scheduleIAN(ae.getAETitle(), remoteAET, ian, 0, 0);
     }
 
     @Override

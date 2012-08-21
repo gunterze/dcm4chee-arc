@@ -38,10 +38,8 @@
 
 package org.dcm4chee.archive.retrieve;
 
-import static org.dcm4che.net.service.BasicRetrieveTask.Service.C_MOVE;
+import static org.dcm4che.net.service.BasicRetrieveTask.Service.C_GET;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -50,12 +48,11 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
-import org.dcm4che.net.IncompatibleConnectionException;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.ExtendedNegotiation;
 import org.dcm4che.net.pdu.PresentationContext;
-import org.dcm4che.net.service.BasicCMoveSCP;
+import org.dcm4che.net.service.BasicCGetSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.net.service.QueryRetrieveLevel;
@@ -71,15 +68,16 @@ import org.dcm4chee.archive.util.BeanLocator;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class CMoveSCPImpl extends BasicCMoveSCP {
+public class CGetSCP extends BasicCGetSCP {
 
     private final String[] qrLevels;
     private final QueryRetrieveLevel rootLevel;
+    private boolean withoutBulkData;
     private final ApplicationEntityCache aeCache;
     private final PIXConsumer pixConsumer;
     private final RetrieveService retrieveService;
 
-    public CMoveSCPImpl(String sopClass,
+    public CGetSCP(String sopClass,
             ApplicationEntityCache aeCache,
             PIXConsumer pixConsumer,
             String... qrLevels) {
@@ -91,9 +89,14 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
         this.retrieveService = BeanLocator.lookup(RetrieveService.class);
     }
 
+    public CGetSCP withoutBulkData(boolean withoutBulkData) {
+        this.withoutBulkData = withoutBulkData;
+        return this;
+    }
+
     @Override
     protected RetrieveTask calculateMatches(Association as, PresentationContext pc,
-            final Attributes rq, Attributes keys) throws DicomServiceException {
+            Attributes rq, Attributes keys) throws DicomServiceException {
         AttributesValidator validator = new AttributesValidator(keys);
         QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(validator, qrLevels);
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
@@ -102,38 +105,17 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
         boolean relational = queryOpts.contains(QueryOption.RELATIONAL);
         level.validateRetrieveKeys(validator, rootLevel, relational);
 
+        ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
         try {
-            String dest = rq.getString(Tag.MoveDestination);
-            final ApplicationEntity destAE = aeCache.get(dest);
-            if (destAE == null)
-                throw new DicomServiceException(Status.MoveDestinationUnknown,
-                        "Unknown Move Destination: " + destAE);
-    
-            ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
-            ApplicationEntity sourceAE = aeCache.get(as.getRemoteAET());
+            final ApplicationEntity sourceAE = aeCache.get(as.getRemoteAET());
             QueryParam queryParam = QueryParam.valueOf(ae, queryOpts, sourceAE, roles());
             List<InstanceLocator> matches = calculateMatches(rq, keys, queryParam);
-            RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(C_MOVE, as,
-                    pc, rq, matches, pixConsumer, retrieveService, false) {
-    
-                @Override
-                protected Association getStoreAssociation() throws DicomServiceException {
-                    try {
-                        return as.getApplicationEntity().connect(destAE, makeAAssociateRQ());
-                    } catch (IOException e) {
-                        throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
-                    } catch (InterruptedException e) {
-                        throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
-                    } catch (IncompatibleConnectionException e) {
-                        throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
-                    } catch (GeneralSecurityException e) {
-                        throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
-                    }
-                }
-    
-            };
-            retrieveTask.setDestinationDevice(destAE.getDevice());
-            retrieveTask.setSendPendingRSPInterval(ae.getSendPendingCMoveInterval());
+            RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(
+                    C_GET, as, pc, rq, matches,
+                    pixConsumer, retrieveService, withoutBulkData);
+            if (sourceAE != null)
+                retrieveTask.setDestinationDevice(sourceAE.getDevice());
+            retrieveTask.setSendPendingRSP(ae.isSendPendingCGet());
             retrieveTask.setReturnOtherPatientIDs(ae.isReturnOtherPatientIDs());
             retrieveTask.setReturnOtherPatientNames(ae.isReturnOtherPatientNames());
             return retrieveTask;
@@ -145,8 +127,7 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
     }
 
     private List<InstanceLocator> calculateMatches(Attributes rq,
-            Attributes keys, QueryParam queryParam)
-            throws DicomServiceException {
+            Attributes keys, QueryParam queryParam) throws DicomServiceException {
         try {
             IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys,
                     queryParam.getDefaultIssuerOfPatientID());

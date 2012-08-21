@@ -57,7 +57,7 @@ import org.dcm4chee.archive.util.BeanLocator;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class QueryTaskImpl extends BasicQueryTask {
+class QueryTaskImpl extends BasicQueryTask {
 
     private final QueryService query;
     private final IDWithIssuer[] pids;

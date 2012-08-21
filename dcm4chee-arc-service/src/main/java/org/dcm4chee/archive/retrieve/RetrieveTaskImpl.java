@@ -68,7 +68,7 @@ import org.dcm4chee.archive.retrieve.dao.RetrieveService;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class RetrieveTaskImpl extends BasicRetrieveTask {
+class RetrieveTaskImpl extends BasicRetrieveTask {
 
     private final PIXConsumer pixConsumer;
     private final RetrieveService retrieveService;

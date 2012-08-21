@@ -66,6 +66,9 @@ public class ArchiveServlet extends HttpServlet {
     @Resource(mappedName="java:/queue/mppsscu")
     private Queue mppsSCUQueue;
 
+    @Resource(mappedName="java:/queue/ianscu")
+    private Queue ianSCUQueue;
+
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -75,7 +78,7 @@ public class ArchiveServlet extends HttpServlet {
                     Thread.currentThread().getContextClassLoader()).newInstance();
             archive = new Archive(dicomConfig,
                     config.getInitParameter("deviceName"),
-                    connFactory, mppsSCUQueue);
+                    connFactory, mppsSCUQueue, ianSCUQueue);
             archive.start();
             mbean = ManagementFactory.getPlatformMBeanServer()
                     .registerMBean(archive, 

@@ -54,14 +54,15 @@ import org.dcm4chee.archive.conf.ArchiveDevice;
 import org.dcm4chee.archive.conf.RejectionNote;
 import org.dcm4chee.archive.dao.CodeService;
 import org.dcm4chee.archive.entity.Code;
+import org.dcm4chee.archive.mpps.IANSCU;
 import org.dcm4chee.archive.mpps.MPPSSCP;
 import org.dcm4chee.archive.mpps.MPPSSCU;
-import org.dcm4chee.archive.mwl.MWLCFindSCPImpl;
+import org.dcm4chee.archive.mwl.MWLCFindSCP;
 import org.dcm4chee.archive.pix.PIXConsumer;
-import org.dcm4chee.archive.query.CFindSCPImpl;
-import org.dcm4chee.archive.retrieve.CGetSCPImpl;
-import org.dcm4chee.archive.retrieve.CMoveSCPImpl;
-import org.dcm4chee.archive.store.CStoreSCPImpl;
+import org.dcm4chee.archive.query.CFindSCP;
+import org.dcm4chee.archive.retrieve.CGetSCP;
+import org.dcm4chee.archive.retrieve.CMoveSCP;
+import org.dcm4chee.archive.store.CStoreSCP;
 import org.dcm4chee.archive.util.BeanLocator;
 import org.dcm4chee.archive.util.JMSService;
 
@@ -70,9 +71,6 @@ import org.dcm4chee.archive.util.JMSService;
  *
  */
 public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBean {
-
-    static final String DEVICE_NAME = "org.dcm4chee.archive.deviceName";
-    static final String JMX_NAME = "org.dcm4chee.archive.jmxName";
 
     static final String PATIENT = "PATIENT";
     static final String STUDY = "STUDY";
@@ -86,9 +84,12 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
     private final PIXConsumer pixConsumer;
     private final JMSService jmsService;
     private final MPPSSCU mppsSCU;
+    private final IANSCU ianSCU;
 
     public Archive(HL7Configuration dicomConfiguration, String deviceName,
-            ConnectionFactory connFactory, Queue mppsSCUQueue)
+            ConnectionFactory connFactory,
+            Queue mppsSCUQueue,
+            Queue ianSCUQueue)
             throws ConfigurationException, Exception {
         this.dicomConfiguration = dicomConfiguration;
         this.codeService = BeanLocator.lookup(CodeService.class);
@@ -97,6 +98,7 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         this.pixConsumer = new PIXConsumer(hl7AppCache);
         this.jmsService = new JMSService(connFactory);
         this.mppsSCU = new MPPSSCU(aeCache, jmsService, mppsSCUQueue);
+        this.ianSCU = new IANSCU(aeCache, jmsService, ianSCUQueue);
         init((ArchiveDevice) dicomConfiguration.findDevice(deviceName));
         setConfigurationStaleTimeout();
         loadRejectionNoteCodes();
@@ -128,55 +130,55 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
     protected DicomServiceRegistry serviceRegistry() {
         DicomServiceRegistry services = super.serviceRegistry();
         services.addDicomService(
-                new CStoreSCPImpl(aeCache));
+                new CStoreSCP(aeCache, ianSCU));
         services.addDicomService(
-                new CFindSCPImpl(
+                new CFindSCP(
                         UID.PatientRootQueryRetrieveInformationModelFIND,
                         aeCache, pixConsumer, PATIENT, STUDY, SERIES, IMAGE));
         services.addDicomService(
-                new CFindSCPImpl(
+                new CFindSCP(
                         UID.StudyRootQueryRetrieveInformationModelFIND,
                         aeCache, pixConsumer, STUDY, SERIES, IMAGE));
         services.addDicomService(
-                new CFindSCPImpl(
+                new CFindSCP(
                         UID.PatientStudyOnlyQueryRetrieveInformationModelFINDRetired,
                         aeCache, pixConsumer, PATIENT, STUDY));
         services.addDicomService(
-                new CMoveSCPImpl(
+                new CMoveSCP(
                         UID.PatientRootQueryRetrieveInformationModelMOVE,
                         aeCache, pixConsumer, PATIENT, STUDY, SERIES, IMAGE));
         services.addDicomService(
-                new CMoveSCPImpl(
+                new CMoveSCP(
                         UID.StudyRootQueryRetrieveInformationModelMOVE,
                         aeCache, pixConsumer, STUDY, SERIES, IMAGE));
         services.addDicomService(
-                new CMoveSCPImpl(
+                new CMoveSCP(
                         UID.PatientStudyOnlyQueryRetrieveInformationModelMOVERetired,
                         aeCache, pixConsumer, PATIENT, STUDY));
         services.addDicomService(
-                new CGetSCPImpl(
+                new CGetSCP(
                         UID.PatientRootQueryRetrieveInformationModelGET,
                         aeCache, pixConsumer, PATIENT, STUDY, SERIES, IMAGE));
         services.addDicomService(
-                new CGetSCPImpl(
+                new CGetSCP(
                         UID.StudyRootQueryRetrieveInformationModelGET,
                         aeCache, pixConsumer, STUDY, SERIES, IMAGE));
         services.addDicomService(
-                new CGetSCPImpl(
+                new CGetSCP(
                         UID.PatientStudyOnlyQueryRetrieveInformationModelGETRetired,
                         aeCache, pixConsumer,
                         PATIENT, STUDY));
         services.addDicomService(
-                new CGetSCPImpl(
+                new CGetSCP(
                         UID.CompositeInstanceRetrieveWithoutBulkDataGET,
                         aeCache, pixConsumer, IMAGE)
                 .withoutBulkData(true));
         services.addDicomService(
-                new MWLCFindSCPImpl(
+                new MWLCFindSCP(
                         UID.ModalityWorklistInformationModelFIND,
                         aeCache, pixConsumer));
         services.addDicomService(
-                new MPPSSCP(aeCache, mppsSCU));
+                new MPPSSCP(aeCache, mppsSCU, ianSCU));
         return services;
     }
 
@@ -184,6 +186,7 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
     public void start() throws Exception {
         super.start();
         mppsSCU.start(device);
+        ianSCU.start(device);
         jmsService.start();
     }
 
@@ -192,6 +195,7 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         super.stop();
         jmsService.stop();
         mppsSCU.stop();
+        ianSCU.stop();
     }
 
 }

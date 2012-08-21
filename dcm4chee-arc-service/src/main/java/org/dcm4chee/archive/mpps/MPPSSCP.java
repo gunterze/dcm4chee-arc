@@ -62,12 +62,14 @@ public class MPPSSCP extends BasicMPPSSCP {
     private final ApplicationEntityCache aeCache;
     private final MPPSSCU mppsSCU;
     private final MPPSService mppsService;
-//    private IanSCU ianSCU;
+    private final IANSCU ianSCU;
 
-    public  MPPSSCP(ApplicationEntityCache aeCache, MPPSSCU mppsSCU) {
-        this.aeCache = aeCache;
-        this.mppsSCU = mppsSCU;
-        this.mppsService = BeanLocator.lookup(MPPSService.class);
+    public  MPPSSCP(ApplicationEntityCache aeCache, MPPSSCU mppsSCU,
+            IANSCU ianSCU) {
+       this.aeCache = aeCache;
+       this.mppsSCU = mppsSCU;
+       this.ianSCU = ianSCU;
+       this.mppsService = BeanLocator.lookup(MPPSService.class);
     }
 
     @Override
@@ -126,9 +128,9 @@ public class MPPSSCP extends BasicMPPSSCP {
         for (String remoteAET : ae.getForwardMPPSDestinations())
             if (matchIssuerOfPatientID(remoteAET, ppsWithIAN.pps.getPatient().getAttributes()))
                 mppsSCU.scheduleForwardMPPS(localAET, remoteAET, iuid, rqAttrs, false, 0, 0);
-//        if (ppsWithIAN.ian != null)
-//            for (String remoteAET : ae.getIANDestinations())
-//                ianSCU.scheduleIAN(localAET, remoteAET, ppsWithIAN.ian, 0, 0);
+        if (ppsWithIAN.ian != null)
+            for (String remoteAET : ae.getIANDestinations())
+                ianSCU.scheduleIAN(localAET, remoteAET, ppsWithIAN.ian, 0, 0);
         return null;
     }
 

@@ -168,44 +168,51 @@ public class StoreService {
     public boolean addFileRef(String sourceAET, Attributes data, Attributes modified,
             File file, String digest, String tsuid)
             throws DicomServiceException {
-        FileSystem fs = curFileSystem;
-        Instance inst;
         try {
-            inst = findInstance(data.getString(Tag.SOPInstanceUID, null));
-            Code rnc = inst.getRejectionCode();
-            RejectionNote rn = storeParam.getRejectionNote(rnc);
-            if (containsAction(rn, NOT_ACCEPT_SUBSEQUENT_OCCURRENCE))
-                    throw new DicomServiceException(Status.CannotUnderstand,
-                            rnc.getCodeMeaning());
-            switch (storeDuplicate(inst, digest, fs.getGroupID(), storeParam)) {
-            case IGNORE:
-                coerceAttributes(inst, data, modified);
-                if (containsAction(rn, NOT_REJECT_SUBSEQUENT_OCCURRENCE))
-                    inst.setRejectionCode(null);
-                return false;
-            case STORE:
-                updateInstance(inst, data, modified, storeParam);
-                coerceAttributes(inst.getSeries(), data, modified);
-                if (containsAction(rn, NOT_REJECT_SUBSEQUENT_OCCURRENCE))
-                    inst.setRejectionCode(null);
-                break;
-            case REPLACE:
-                inst.setReplaced(true);
+            FileSystem fs = curFileSystem;
+            Instance inst;
+            try {
+                inst = findInstance(data.getString(Tag.SOPInstanceUID, null));
+                Code rnc = inst.getRejectionCode();
+                RejectionNote rn = storeParam.getRejectionNote(rnc);
+                if (containsAction(rn, NOT_ACCEPT_SUBSEQUENT_OCCURRENCE))
+                        throw new DicomServiceException(Status.CannotUnderstand,
+                                rnc.getCodeMeaning());
+                switch (storeDuplicate(inst, digest, fs.getGroupID(), storeParam)) {
+                case IGNORE:
+                    coerceAttributes(inst, data, modified);
+                    if (containsAction(rn, NOT_REJECT_SUBSEQUENT_OCCURRENCE))
+                        inst.setRejectionCode(null);
+                    return false;
+                case STORE:
+                    updateInstance(inst, data, modified, storeParam);
+                    coerceAttributes(inst.getSeries(), data, modified);
+                    if (containsAction(rn, NOT_REJECT_SUBSEQUENT_OCCURRENCE))
+                        inst.setRejectionCode(null);
+                    break;
+                case REPLACE:
+                    inst.setReplaced(true);
+                    inst = newInstance(sourceAET, data, modified, fs.getAvailability());
+                    if (!containsAction(rn, NOT_REJECT_SUBSEQUENT_OCCURRENCE))
+                        inst.setRejectionCode(rnc);
+                    break;
+                }
+            } catch (NoResultException e) {
                 inst = newInstance(sourceAET, data, modified, fs.getAvailability());
-                if (!containsAction(rn, NOT_REJECT_SUBSEQUENT_OCCURRENCE))
-                    inst.setRejectionCode(rnc);
-                break;
             }
-        } catch (NoResultException e) {
-            inst = newInstance(sourceAET, data, modified, fs.getAvailability());
+            String filePath = file.toURI().toString().substring(fs.getURI().length());
+            FileRef fileRef = new FileRef(fs, filePath, tsuid, file.length(), digest);
+            fileRef.setInstance(inst);
+            em.persist(fileRef);
+            em.flush();
+            em.detach(fileRef);
+            return true;
+        } catch (DicomServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new DicomServiceException(Status.ProcessingFailure, e.getMessage());
         }
-        String filePath = file.toURI().toString().substring(fs.getURI().length());
-        FileRef fileRef = new FileRef(fs, filePath, tsuid, file.length(), digest);
-        fileRef.setInstance(inst);
-        em.persist(fileRef);
-        em.flush();
-        em.detach(fileRef);
-        return true;
+
     }
 
     protected boolean containsAction(RejectionNote rn, final Action action) {
@@ -255,40 +262,46 @@ public class StoreService {
     public Instance newInstance(String sourceAET, Attributes data,
             Attributes modified, Availability availability)
                     throws DicomServiceException {
-        rejectedInstances.clear();
-        Code conceptNameCode = singleCode(data, Tag.ConceptNameCodeSequence);
-        RejectionNote rn = storeParam.getRejectionNote(conceptNameCode);
-        if (rn != null) {
-            rejectRefInstances(data, rn);
+        try {
+            rejectedInstances.clear();
+            Code conceptNameCode = singleCode(data, Tag.ConceptNameCodeSequence);
+            RejectionNote rn = storeParam.getRejectionNote(conceptNameCode);
+            if (rn != null) {
+                rejectRefInstances(data, rn);
+            }
+            Series series = findOrCreateSeries(sourceAET, data, availability);
+            coerceAttributes(series, data, modified);
+            if (!modified.isEmpty() && storeParam.isStoreOriginalAttributes()) {
+                Attributes item = new Attributes(4);
+                Sequence origAttrsSeq = data.ensureSequence(Tag.OriginalAttributesSequence, 1);
+                origAttrsSeq.add(item);
+                item.setDate(Tag.AttributeModificationDateTime, VR.DT, new Date());
+                item.setString(Tag.ModifyingSystem, VR.LO, storeParam.getModifyingSystem());
+                item.setString(Tag.SourceOfPreviousValues, VR.LO, sourceAET);
+                item.newSequence(Tag.ModifiedAttributesSequence, 1).add(modified);
+            }
+            Instance inst = new Instance();
+            inst.setSeries(series);
+            inst.setConceptNameCode(conceptNameCode);
+            inst.setRejectionCode(curRejectionCode);
+            inst.setVerifyingObservers(createVerifyingObservers(
+                    data.getSequence(Tag.VerifyingObserverSequence), storeParam.getFuzzyStr()));
+            inst.setContentItems(createContentItems(data.getSequence(Tag.ContentSequence)));
+            inst.setRetrieveAETs(storeParam.getRetrieveAETs());
+            inst.setExternalRetrieveAET(storeParam.getExternalRetrieveAET());
+            inst.setAvailability(availability);
+            inst.setAttributes(data, 
+                    storeParam.getAttributeFilter(Entity.Instance),
+                    storeParam.getFuzzyStr());
+            em.persist(inst);
+            em.flush();
+            em.detach(inst);
+            return inst;
+        } catch (DicomServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new DicomServiceException(Status.ProcessingFailure, e.getMessage());
         }
-        Series series = findOrCreateSeries(sourceAET, data, availability);
-        coerceAttributes(series, data, modified);
-        if (!modified.isEmpty() && storeParam.isStoreOriginalAttributes()) {
-            Attributes item = new Attributes(4);
-            Sequence origAttrsSeq = data.ensureSequence(Tag.OriginalAttributesSequence, 1);
-            origAttrsSeq.add(item);
-            item.setDate(Tag.AttributeModificationDateTime, VR.DT, new Date());
-            item.setString(Tag.ModifyingSystem, VR.LO, storeParam.getModifyingSystem());
-            item.setString(Tag.SourceOfPreviousValues, VR.LO, sourceAET);
-            item.newSequence(Tag.ModifiedAttributesSequence, 1).add(modified);
-        }
-        Instance inst = new Instance();
-        inst.setSeries(series);
-        inst.setConceptNameCode(conceptNameCode);
-        inst.setRejectionCode(curRejectionCode);
-        inst.setVerifyingObservers(createVerifyingObservers(
-                data.getSequence(Tag.VerifyingObserverSequence), storeParam.getFuzzyStr()));
-        inst.setContentItems(createContentItems(data.getSequence(Tag.ContentSequence)));
-        inst.setRetrieveAETs(storeParam.getRetrieveAETs());
-        inst.setExternalRetrieveAET(storeParam.getExternalRetrieveAET());
-        inst.setAvailability(availability);
-        inst.setAttributes(data, 
-                storeParam.getAttributeFilter(Entity.Instance),
-                storeParam.getFuzzyStr());
-        em.persist(inst);
-        em.flush();
-        em.detach(inst);
-        return inst;
     }
 
     private void rejectRefInstances(Attributes data, RejectionNote rn)
@@ -466,7 +479,6 @@ public class StoreService {
         String seriesIUID = data.getString(Tag.SeriesInstanceUID, null);
         Series series = cachedSeries;
         if (series == null || !series.getSeriesInstanceUID().equals(seriesIUID)) {
-//            updateSeries(cachedSeries);
             updateRefPPS(
                     data.getNestedDataset(Tag.ReferencedPerformedProcedureStepSequence),
                     storeParam);
