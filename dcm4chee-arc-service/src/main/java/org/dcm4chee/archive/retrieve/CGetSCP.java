@@ -63,7 +63,6 @@ import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.query.util.IDWithIssuer;
 import org.dcm4chee.archive.query.util.QueryParam;
 import org.dcm4chee.archive.retrieve.dao.RetrieveService;
-import org.dcm4chee.archive.util.BeanLocator;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -80,13 +79,14 @@ public class CGetSCP extends BasicCGetSCP {
     public CGetSCP(String sopClass,
             ApplicationEntityCache aeCache,
             PIXConsumer pixConsumer,
+            RetrieveService retrieveService,
             String... qrLevels) {
         super(sopClass);
         this.qrLevels = qrLevels;
         this.rootLevel = QueryRetrieveLevel.valueOf(qrLevels[0]);
         this.aeCache = aeCache;
         this.pixConsumer = pixConsumer;
-        this.retrieveService = BeanLocator.lookup(RetrieveService.class);
+        this.retrieveService = retrieveService;
     }
 
     public CGetSCP withoutBulkData(boolean withoutBulkData) {

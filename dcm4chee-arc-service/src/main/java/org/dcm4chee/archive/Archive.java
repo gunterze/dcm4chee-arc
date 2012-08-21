@@ -38,7 +38,6 @@
 
 package org.dcm4chee.archive;
 
-import javax.jms.ConnectionFactory;
 import javax.jms.Queue;
 
 import org.dcm4che.conf.api.ApplicationEntityCache;
@@ -48,23 +47,29 @@ import org.dcm4che.conf.api.hl7.HL7Configuration;
 import org.dcm4che.data.UID;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.DeviceService;
+import org.dcm4che.net.hl7.HL7MessageListener;
+import org.dcm4che.net.hl7.service.HL7ServiceRegistry;
 import org.dcm4che.net.service.DicomServiceRegistry;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.conf.ArchiveDevice;
 import org.dcm4chee.archive.conf.RejectionNote;
 import org.dcm4chee.archive.dao.CodeService;
+import org.dcm4chee.archive.dao.PatientService;
 import org.dcm4chee.archive.entity.Code;
+import org.dcm4chee.archive.hl7.PatientUpdateService;
 import org.dcm4chee.archive.mpps.IANSCU;
 import org.dcm4chee.archive.mpps.MPPSSCP;
 import org.dcm4chee.archive.mpps.MPPSSCU;
+import org.dcm4chee.archive.mpps.dao.MPPSService;
 import org.dcm4chee.archive.mwl.MWLCFindSCP;
 import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.query.CFindSCP;
 import org.dcm4chee.archive.retrieve.CGetSCP;
 import org.dcm4chee.archive.retrieve.CMoveSCP;
+import org.dcm4chee.archive.retrieve.dao.RetrieveService;
 import org.dcm4chee.archive.stgcmt.StgCmtSCP;
+import org.dcm4chee.archive.stgcmt.dao.StgCmtService;
 import org.dcm4chee.archive.store.CStoreSCP;
-import org.dcm4chee.archive.util.BeanLocator;
 import org.dcm4chee.archive.util.JMSService;
 
 /**
@@ -80,33 +85,96 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
 
     private final HL7Configuration dicomConfiguration;
     private final CodeService codeService;
+    private final CStoreSCP storeSCP;
+    private final StgCmtSCP stgCmtSCP;
+    private final MPPSSCP mppsSCP;
+    private final CFindSCP patientRootFindSCP;
+    private final CFindSCP studyRootFindSCP;
+    private final CFindSCP patientStudyOnlyFindSCP;
+    private final CMoveSCP patientRootMoveSCP;
+    private final CMoveSCP studyRootMoveSCP;
+    private final CMoveSCP patientStudyOnlyMoveSCP;
+    private final CGetSCP patientRootGetSCP;
+    private final CGetSCP studyRootGetSCP;
+    private final CGetSCP patientStudyOnlyGetSCP;
+    private final CGetSCP withoutBulkDataGetSCP;
+    private final MWLCFindSCP mwlFindSCP;
     private final ApplicationEntityCache aeCache;
     private final HL7ApplicationCache hl7AppCache;
     private final PIXConsumer pixConsumer;
     private final JMSService jmsService;
     private final MPPSSCU mppsSCU;
     private final IANSCU ianSCU;
-    private final StgCmtSCP stgCmtSCP;
 
     public Archive(HL7Configuration dicomConfiguration, String deviceName,
-            ConnectionFactory connFactory,
+            CodeService codeService,
+            PatientService patientService,
+            StgCmtService stgCmtService,
+            MPPSService mppsService,
+            RetrieveService retrieveService,
+            JMSService jmsService,
             Queue mppsSCUQueue,
             Queue ianSCUQueue,
             Queue stgcmtSCPQueue)
             throws ConfigurationException, Exception {
         this.dicomConfiguration = dicomConfiguration;
-        this.codeService = BeanLocator.lookup(CodeService.class);
+        this.codeService = codeService;
         this.aeCache = new ApplicationEntityCache(dicomConfiguration);
         this.hl7AppCache = new HL7ApplicationCache(dicomConfiguration);
         this.pixConsumer = new PIXConsumer(hl7AppCache);
-        this.jmsService = new JMSService(connFactory);
+        this.jmsService = jmsService;
         this.mppsSCU = new MPPSSCU(aeCache, jmsService, mppsSCUQueue);
         this.ianSCU = new IANSCU(aeCache, jmsService, ianSCUQueue);
-        this.stgCmtSCP = new StgCmtSCP(aeCache, jmsService, stgcmtSCPQueue);
+        this.storeSCP = new CStoreSCP(aeCache, ianSCU);
+        this.stgCmtSCP = new StgCmtSCP(aeCache, stgCmtService,
+                jmsService, stgcmtSCPQueue);
+        this.mppsSCP = new MPPSSCP(aeCache, mppsSCU, ianSCU, mppsService);
+        this.patientRootFindSCP = new CFindSCP(
+                UID.PatientRootQueryRetrieveInformationModelFIND,
+                aeCache, pixConsumer, PATIENT, STUDY, SERIES, IMAGE);
+        this.studyRootFindSCP = new CFindSCP(
+                UID.StudyRootQueryRetrieveInformationModelFIND,
+                aeCache, pixConsumer, STUDY, SERIES, IMAGE);
+        this.patientStudyOnlyFindSCP = new CFindSCP(
+                UID.PatientStudyOnlyQueryRetrieveInformationModelFINDRetired,
+                aeCache, pixConsumer, PATIENT, STUDY);
+        this.patientRootMoveSCP = new CMoveSCP(
+                UID.PatientRootQueryRetrieveInformationModelMOVE,
+                aeCache, pixConsumer, retrieveService, PATIENT, STUDY, SERIES, IMAGE);
+        this.studyRootMoveSCP = new CMoveSCP(
+                UID.StudyRootQueryRetrieveInformationModelMOVE,
+                aeCache, pixConsumer, retrieveService, STUDY, SERIES, IMAGE);
+        this.patientStudyOnlyMoveSCP = new CMoveSCP(
+                UID.PatientStudyOnlyQueryRetrieveInformationModelMOVERetired,
+                aeCache, pixConsumer, retrieveService, PATIENT, STUDY);
+        this.patientRootGetSCP = new CGetSCP(
+                UID.PatientRootQueryRetrieveInformationModelGET,
+                aeCache, pixConsumer, retrieveService, PATIENT, STUDY, SERIES, IMAGE);
+        this.studyRootGetSCP = new CGetSCP(
+                UID.StudyRootQueryRetrieveInformationModelGET,
+                aeCache, pixConsumer, retrieveService, STUDY, SERIES, IMAGE);
+        this.patientStudyOnlyGetSCP = new CGetSCP(
+                UID.PatientStudyOnlyQueryRetrieveInformationModelGETRetired,
+                aeCache, pixConsumer, retrieveService, PATIENT, STUDY);
+        this.withoutBulkDataGetSCP = new CGetSCP(
+                UID.CompositeInstanceRetrieveWithoutBulkDataGET,
+                aeCache, pixConsumer, retrieveService, IMAGE)
+                .withoutBulkData(true);
+        this.mwlFindSCP = new MWLCFindSCP(
+                UID.ModalityWorklistInformationModelFIND,
+                aeCache, pixConsumer);
         init((ArchiveDevice) dicomConfiguration.findDevice(deviceName));
+        device.setHL7MessageListener(hl7ServiceRegistry(patientService));
         setConfigurationStaleTimeout();
         loadRejectionNoteCodes();
    }
+
+    private HL7MessageListener hl7ServiceRegistry(PatientService patientService) {
+        HL7ServiceRegistry serviceRegistry = new HL7ServiceRegistry();
+        serviceRegistry.addHL7Service(new PatientUpdateService(patientService,
+                "ADT^A02", "ADT^A03", "ADT^A06", "ADT^A07", "ADT^A08", "ADT^A40"));
+        return serviceRegistry ;
+    }
 
     @Override
     public void reloadConfiguration() throws Exception {
@@ -133,57 +201,20 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
     @Override
     protected DicomServiceRegistry serviceRegistry() {
         DicomServiceRegistry services = super.serviceRegistry();
-        services.addDicomService(
-                new CStoreSCP(aeCache, ianSCU));
-        services.addDicomService(
-                new CFindSCP(
-                        UID.PatientRootQueryRetrieveInformationModelFIND,
-                        aeCache, pixConsumer, PATIENT, STUDY, SERIES, IMAGE));
-        services.addDicomService(
-                new CFindSCP(
-                        UID.StudyRootQueryRetrieveInformationModelFIND,
-                        aeCache, pixConsumer, STUDY, SERIES, IMAGE));
-        services.addDicomService(
-                new CFindSCP(
-                        UID.PatientStudyOnlyQueryRetrieveInformationModelFINDRetired,
-                        aeCache, pixConsumer, PATIENT, STUDY));
-        services.addDicomService(
-                new CMoveSCP(
-                        UID.PatientRootQueryRetrieveInformationModelMOVE,
-                        aeCache, pixConsumer, PATIENT, STUDY, SERIES, IMAGE));
-        services.addDicomService(
-                new CMoveSCP(
-                        UID.StudyRootQueryRetrieveInformationModelMOVE,
-                        aeCache, pixConsumer, STUDY, SERIES, IMAGE));
-        services.addDicomService(
-                new CMoveSCP(
-                        UID.PatientStudyOnlyQueryRetrieveInformationModelMOVERetired,
-                        aeCache, pixConsumer, PATIENT, STUDY));
-        services.addDicomService(
-                new CGetSCP(
-                        UID.PatientRootQueryRetrieveInformationModelGET,
-                        aeCache, pixConsumer, PATIENT, STUDY, SERIES, IMAGE));
-        services.addDicomService(
-                new CGetSCP(
-                        UID.StudyRootQueryRetrieveInformationModelGET,
-                        aeCache, pixConsumer, STUDY, SERIES, IMAGE));
-        services.addDicomService(
-                new CGetSCP(
-                        UID.PatientStudyOnlyQueryRetrieveInformationModelGETRetired,
-                        aeCache, pixConsumer,
-                        PATIENT, STUDY));
-        services.addDicomService(
-                new CGetSCP(
-                        UID.CompositeInstanceRetrieveWithoutBulkDataGET,
-                        aeCache, pixConsumer, IMAGE)
-                .withoutBulkData(true));
-        services.addDicomService(
-                new MWLCFindSCP(
-                        UID.ModalityWorklistInformationModelFIND,
-                        aeCache, pixConsumer));
-        services.addDicomService(
-                new MPPSSCP(aeCache, mppsSCU, ianSCU));
+        services.addDicomService(storeSCP);
         services.addDicomService(stgCmtSCP);
+        services.addDicomService(mwlFindSCP);
+        services.addDicomService(mppsSCP);
+        services.addDicomService(patientRootFindSCP);
+        services.addDicomService(studyRootFindSCP);
+        services.addDicomService(patientStudyOnlyFindSCP);
+        services.addDicomService(patientRootMoveSCP);
+        services.addDicomService(studyRootMoveSCP);
+        services.addDicomService(patientStudyOnlyMoveSCP);
+        services.addDicomService(patientRootGetSCP);
+        services.addDicomService(studyRootGetSCP);
+        services.addDicomService(patientStudyOnlyGetSCP);
+        services.addDicomService(withoutBulkDataGetSCP);
         return services;
     }
 

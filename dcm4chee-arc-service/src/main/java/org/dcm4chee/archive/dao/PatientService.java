@@ -38,6 +38,7 @@
 
 package org.dcm4chee.archive.dao;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -55,6 +56,11 @@ import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
 import org.dcm4chee.archive.entity.Issuer;
 import org.dcm4chee.archive.entity.Patient;
+import org.dcm4chee.archive.entity.PerformedProcedureStep;
+import org.dcm4chee.archive.entity.Study;
+import org.dcm4chee.archive.entity.Visit;
+import org.dcm4chee.archive.exception.NonUniquePatientException;
+import org.dcm4chee.archive.exception.PatientMergedException;
 import org.dcm4chee.archive.store.StoreParam;
 
 /**
@@ -185,7 +191,7 @@ public class PatientService {
         return patient;
     }
 
-    public static boolean equals(Issuer issuer1, Issuer issuer2) {
+    private static boolean equals(Issuer issuer1, Issuer issuer2) {
         if (issuer1 == issuer2)
             return true;
 
@@ -201,5 +207,25 @@ public class PatientService {
             return true;
 
         return false;
+    }
+
+    public void mergePatient(Attributes attrs, Attributes merged,
+            StoreParam storeParam) {
+        Patient mergedPat = updateOrCreatePatient(merged, storeParam);
+        Patient pat = updateOrCreatePatient(attrs, storeParam);
+        Collection<Study> studies = mergedPat.getStudies();
+        if (studies != null)
+            for (Study study : studies)
+                study.setPatient(pat);
+        Collection<Visit> visits = mergedPat.getVisits();
+        if (visits != null)
+            for (Visit visit : visits)
+                visit.setPatient(pat);
+        Collection<PerformedProcedureStep> ppss =
+                mergedPat.getPerformedProcedureSteps();
+        if (ppss != null)
+            for (PerformedProcedureStep pps : ppss)
+                pps.setPatient(pat);
+        mergedPat.setMergedWith(pat);
     }
 }

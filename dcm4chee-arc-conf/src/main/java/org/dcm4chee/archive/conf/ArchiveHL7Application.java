@@ -104,10 +104,6 @@ public class ArchiveHL7Application extends HL7Application {
         return uri != null ? getArchiveDevice().getTemplates(uri) : null;
     }
 
-//    public StoreParam getStoreParam() {
-//        return getArchiveDevice().getStoreParam();
-//    }
-
     @Override
     protected void setHL7ApplicationAttributes(HL7Application src) {
         super.setHL7ApplicationAttributes(src);

@@ -46,8 +46,6 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJBException;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 import javax.sql.DataSource;
@@ -76,7 +74,6 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @Stateful
-@TransactionAttribute(TransactionAttributeType.NEVER)
 public class MWLQueryService {
 
     // injection specified in META-INF/ejb-jar.xml

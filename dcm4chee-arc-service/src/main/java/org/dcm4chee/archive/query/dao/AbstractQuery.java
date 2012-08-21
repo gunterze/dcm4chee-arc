@@ -58,7 +58,7 @@ import com.mysema.query.types.Predicate;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-abstract class QueryImpl {
+abstract class AbstractQuery {
 
     private static final String UPDATE_STUDY = "update Study s "
             + "set s.numberOfStudyRelatedSeries = ?, "
@@ -83,7 +83,7 @@ abstract class QueryImpl {
     private boolean hasNext;
 
 
-    protected QueryImpl(StatelessSession session, ScrollableResults results,
+    protected AbstractQuery(StatelessSession session, ScrollableResults results,
             QueryParam queryParam, boolean optionalKeyNotSupported) {
         this.session = session;
         this.results = results;

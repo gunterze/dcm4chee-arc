@@ -163,11 +163,15 @@ public class StoreParam {
         return null;
     }
 
-    public static StoreParam valueOf(ArchiveApplicationEntity ae) {
-        ArchiveDevice dev = ae.getArchiveDevice();
+    public static StoreParam valueOf(ArchiveDevice dev) {
         StoreParam storeParam = new StoreParam();
         storeParam.setFuzzyStr(dev.getFuzzyStr());
         storeParam.setAttributeFilters(dev.getAttributeFilters());
+        return storeParam;
+    }
+
+    public static StoreParam valueOf(ArchiveApplicationEntity ae) {
+        StoreParam storeParam = StoreParam.valueOf(ae.getArchiveDevice());
         storeParam.setStoreOriginalAttributes(ae.isStoreOriginalAttributes());
         storeParam.setModifyingSystem(ae.getEffectiveModifyingSystem());
         storeParam.setRetrieveAETs(ae.getRetrieveAETs());

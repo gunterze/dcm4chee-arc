@@ -80,9 +80,14 @@ public class JMSService {
         }
     }
 
-    public void close() throws JMSException {
-        sessions.clear();
-        conn.close();
+    public void close() {
+        try {
+            sessions.clear();
+            conn.close();
+        } catch (JMSException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     public void sendMessage(Destination dest, MessageCreator creator, int delay)

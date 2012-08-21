@@ -41,6 +41,7 @@ package org.dcm4chee.archive;
 import java.lang.management.ManagementFactory;
 
 import javax.annotation.Resource;
+import javax.ejb.EJB;
 import javax.jms.ConnectionFactory;
 import javax.jms.Queue;
 import javax.management.ObjectInstance;
@@ -50,6 +51,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
 import org.dcm4che.conf.api.hl7.HL7Configuration;
+import org.dcm4chee.archive.dao.CodeService;
+import org.dcm4chee.archive.dao.PatientService;
+import org.dcm4chee.archive.mpps.dao.MPPSService;
+import org.dcm4chee.archive.retrieve.dao.RetrieveService;
+import org.dcm4chee.archive.stgcmt.dao.StgCmtService;
+import org.dcm4chee.archive.util.JMSService;
 
 @SuppressWarnings("serial")
 public class ArchiveServlet extends HttpServlet {
@@ -72,16 +79,42 @@ public class ArchiveServlet extends HttpServlet {
     @Resource(mappedName="java:/queue/stgcmtscp")
     private Queue stgcmtSCPQueue;
 
+    @EJB
+    private CodeService codeService;
+
+    @EJB
+    private PatientService patientService;
+
+    @EJB
+    private StgCmtService stgCmtService;
+
+    @EJB
+    private MPPSService mppsService;
+
+    @EJB
+    private RetrieveService retrieveService;
+
+    private JMSService jmsService;
+
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
         try {
+            jmsService = new JMSService(connFactory);
             dicomConfig = (HL7Configuration) Class.forName(
                     config.getInitParameter("dicomConfigurationClass"), false,
                     Thread.currentThread().getContextClassLoader()).newInstance();
             archive = new Archive(dicomConfig,
                     config.getInitParameter("deviceName"),
-                    connFactory, mppsSCUQueue, ianSCUQueue, stgcmtSCPQueue);
+                    codeService, 
+                    patientService,
+                    stgCmtService,
+                    mppsService,
+                    retrieveService,
+                    jmsService,
+                    mppsSCUQueue,
+                    ianSCUQueue,
+                    stgcmtSCPQueue);
             archive.start();
             mbean = ManagementFactory.getPlatformMBeanServer()
                     .registerMBean(archive, 
@@ -105,6 +138,8 @@ public class ArchiveServlet extends HttpServlet {
             archive.stop();
         if (dicomConfig != null)
             dicomConfig.close();
+        if (jmsService != null)
+            jmsService.close();
     }
 
 }

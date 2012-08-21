@@ -39,11 +39,7 @@
 package org.dcm4chee.archive.query.dao;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.data.Tag;
-import org.dcm4chee.archive.entity.Availability;
 import org.dcm4chee.archive.entity.QPatient;
-import org.dcm4chee.archive.entity.QSeries;
-import org.dcm4chee.archive.entity.QStudy;
 import org.dcm4chee.archive.entity.Utils;
 import org.dcm4chee.archive.query.util.Builder;
 import org.dcm4chee.archive.query.util.IDWithIssuer;
@@ -58,71 +54,30 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-class SeriesQueryImpl extends QueryImpl {
+class PatientQuery extends AbstractQuery {
 
-    public SeriesQueryImpl(StatelessSession session, IDWithIssuer[] pids,
+    public PatientQuery(StatelessSession session, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {
-        super(session, query(session, pids, keys, queryParam), queryParam, false);
+        super(session, query(session, pids, keys, queryParam),
+                queryParam, false);
     }
 
     private static ScrollableResults query(StatelessSession session, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {
         BooleanBuilder builder = new BooleanBuilder();
         Builder.addPatientLevelPredicates(builder, pids, keys, queryParam);
-        Builder.addStudyLevelPredicates(builder, keys, queryParam);
-        Builder.addSeriesLevelPredicates(builder, keys, queryParam);
         return new HibernateQuery(session)
-            .from(QSeries.series)
-            .innerJoin(QSeries.series.study, QStudy.study)
-            .innerJoin(QStudy.study.patient, QPatient.patient)
+            .from(QPatient.patient)
             .where(builder)
             .scroll(ScrollMode.FORWARD_ONLY,
-                QStudy.study.pk,
-                QSeries.series.pk,
-                QStudy.study.numberOfStudyRelatedSeries,
-                QStudy.study.numberOfStudyRelatedInstances,
-                QSeries.series.numberOfSeriesRelatedInstances,
-                QStudy.study.modalitiesInStudy,
-                QStudy.study.sopClassesInStudy,
-                QSeries.series.retrieveAETs,
-                QSeries.series.externalRetrieveAET,
-                QSeries.series.availability,
-                QSeries.series.encodedAttributes,
-                QStudy.study.encodedAttributes,
+                QPatient.patient.pk,
                 QPatient.patient.encodedAttributes);
     }
 
     @Override
     protected Attributes toAttributes(ScrollableResults results) {
-        Long studyPk = results.getLong(0);
-        Long seriesPk = results.getLong(1);
-        int numberOfStudyRelatedSeries = results.getInteger(2);
-        int numberOfStudyRelatedInstances = results.getInteger(3);
-        int numberOfSeriesRelatedInstances = results.getInteger(4);
-        String modalitiesInStudy = results.getString(5);
-        String sopClassesInStudy = results.getString(6);
-        String retrieveAETs = results.getString(7);
-        String externalRetrieveAET = results.getString(8);
-        Availability availability = (Availability) results.get(9);
-        byte[] seriesAttributes = results.getBinary(10);
-        byte[] studyAttributes = results.getBinary(11);
-        byte[] patientAttributes = results.getBinary(12);
         Attributes attrs = new Attributes();
-        Utils.decodeAttributes(attrs, patientAttributes);
-        Utils.decodeAttributes(attrs, studyAttributes);
-        Utils.decodeAttributes(attrs, seriesAttributes);
-        super.setStudyQueryAttributes(studyPk, attrs,
-                numberOfStudyRelatedSeries,
-                numberOfStudyRelatedInstances,
-                modalitiesInStudy,
-                sopClassesInStudy);
-        super.setSeriesQueryAttributes(seriesPk, attrs,
-                numberOfSeriesRelatedInstances);
-        Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
-        Utils.setAvailability(attrs, availability);
-        // skip match for empty Series
-        if (attrs.getInt(Tag.NumberOfSeriesRelatedInstances, 0) == 0)
-            return null;
+        Utils.decodeAttributes(attrs, results.getBinary(1));
         return attrs;
     }
 

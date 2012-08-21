@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Agfa Healthcare.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,17 +36,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.dao;
+package org.dcm4chee.archive.hl7;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+import javax.xml.transform.Templates;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXResult;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+
+import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
+import org.dcm4che.data.VR;
+import org.dcm4che.hl7.HL7Charset;
+import org.dcm4che.hl7.HL7Parser;
+import org.dcm4che.io.ContentHandlerAdapter;
+import org.xml.sax.SAXException;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class EntityAlreadyExistsException extends RuntimeException {
+abstract class HL7toDicom {
 
-    private static final long serialVersionUID = 8766498222010631052L;
+    private static SAXTransformerFactory factory =
+            (SAXTransformerFactory) TransformerFactory.newInstance();
 
-    public EntityAlreadyExistsException(String message) {
-        super(message);
+    public static Attributes transform(Templates tpl,
+            byte[] msg, int off, int len, String hl7charset)
+            throws TransformerConfigurationException, IOException, SAXException {
+        Attributes attrs = new Attributes();
+        String dicomCharset = HL7Charset.toDicomCharacterSetCode(hl7charset);
+        if (dicomCharset != null)
+            attrs.setString(Tag.SpecificCharacterSet, VR.CS, dicomCharset);
+        TransformerHandler th = factory.newTransformerHandler(tpl);
+        th.setResult(new SAXResult(new ContentHandlerAdapter(attrs)));
+        new HL7Parser(th).parse(new InputStreamReader(
+                new ByteArrayInputStream(msg, off, len),
+                HL7Charset.toCharsetName(hl7charset)));
+        return attrs;
     }
-
 }

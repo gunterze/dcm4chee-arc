@@ -52,7 +52,6 @@ import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.mpps.dao.MPPSService;
 import org.dcm4chee.archive.store.StoreParam;
 import org.dcm4chee.archive.store.Supplements;
-import org.dcm4chee.archive.util.BeanLocator;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -65,11 +64,11 @@ public class MPPSSCP extends BasicMPPSSCP {
     private final IANSCU ianSCU;
 
     public  MPPSSCP(ApplicationEntityCache aeCache, MPPSSCU mppsSCU,
-            IANSCU ianSCU) {
+            IANSCU ianSCU, MPPSService mppsService) {
        this.aeCache = aeCache;
        this.mppsSCU = mppsSCU;
        this.ianSCU = ianSCU;
-       this.mppsService = BeanLocator.lookup(MPPSService.class);
+       this.mppsService = mppsService;
     }
 
     @Override

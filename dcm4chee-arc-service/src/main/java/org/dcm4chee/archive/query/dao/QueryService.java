@@ -45,8 +45,6 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJBException;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
-import javax.ejb.TransactionManagement;
-import javax.ejb.TransactionManagementType;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 import javax.sql.DataSource;
@@ -63,7 +61,6 @@ import org.hibernate.ejb.HibernateEntityManagerFactory;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @Stateful
-@TransactionManagement(TransactionManagementType.BEAN)
 public class QueryService {
 
     // injection specified in META-INF/ejb-jar.xml
@@ -76,7 +73,7 @@ public class QueryService {
 
     private Connection connection;
 
-    private QueryImpl query;
+    private AbstractQuery query;
     
     @PostConstruct
     protected void init() {
@@ -116,22 +113,22 @@ public class QueryService {
 
     public void findPatients(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        query = new PatientQueryImpl(session, pids, keys, queryParam);
+        query = new PatientQuery(session, pids, keys, queryParam);
     }
 
     public void findStudies(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        query = new StudyQueryImpl(session, pids, keys, queryParam);
+        query = new StudyQuery(session, pids, keys, queryParam);
     }
 
     public void findSeries(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        query = new SeriesQueryImpl(session, pids, keys, queryParam);
+        query = new SeriesQuery(session, pids, keys, queryParam);
     }
 
     public void findInstances(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        query = new InstanceQueryImpl(session, pids, keys, queryParam);
+        query = new InstanceQuery(session, pids, keys, queryParam);
     }
 
     public boolean optionalKeyNotSupported() {

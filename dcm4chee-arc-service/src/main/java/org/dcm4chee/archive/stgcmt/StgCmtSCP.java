@@ -69,7 +69,6 @@ import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.conf.ArchiveDevice;
 import org.dcm4chee.archive.stgcmt.dao.StgCmtService;
-import org.dcm4chee.archive.util.BeanLocator;
 import org.dcm4chee.archive.util.JMSService;
 
 /**
@@ -80,16 +79,16 @@ public class StgCmtSCP extends DicomService implements MessageListener {
     private final ApplicationEntityCache aeCache;
     private final JMSService jmsService;
     private final Queue queue;
-    private final StgCmtService stgCmtQuery;
+    private final StgCmtService stgCmtService;
     private ArchiveDevice device;
 
-    public StgCmtSCP(ApplicationEntityCache aeCache, JMSService jmsService,
-            Queue queue) {
+    public StgCmtSCP(ApplicationEntityCache aeCache, StgCmtService stgCmtService,
+            JMSService jmsService, Queue queue) {
         super(UID.StorageCommitmentPushModelSOPClass);
         this.aeCache = aeCache;
         this.jmsService = jmsService;
         this.queue = queue;
-        this.stgCmtQuery = BeanLocator.lookup(StgCmtService.class);
+        this.stgCmtService = stgCmtService;
     }
 
     public void start(ArchiveDevice device) throws JMSException {
@@ -125,7 +124,7 @@ public class StgCmtSCP extends DicomService implements MessageListener {
                     (ArchiveApplicationEntity) as.getApplicationEntity();
             ApplicationEntity remoteAE = aeCache.findApplicationEntity(remoteAET);
             ae.findCompatibelConnection(remoteAE);
-            Attributes eventInfo = stgCmtQuery.calculateResult(actionInfo);
+            Attributes eventInfo = stgCmtService.calculateResult(actionInfo);
             scheduleNEventReport(localAET, remoteAET, eventInfo, 0,
                     ae.getStorageCommitmentDelay());
         } catch (IncompatibleConnectionException e) {

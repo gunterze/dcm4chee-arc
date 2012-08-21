@@ -45,8 +45,6 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionManagement;
-import javax.ejb.TransactionManagementType;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 
@@ -76,7 +74,6 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
  * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 @Stateless
-@TransactionManagement(TransactionManagementType.BEAN)
 public class RetrieveService {
 
     private static final String QUERY_SERIES_ATTRS = "select " +

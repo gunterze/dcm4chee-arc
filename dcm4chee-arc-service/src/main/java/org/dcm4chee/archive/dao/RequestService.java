@@ -60,6 +60,8 @@ import org.dcm4chee.archive.entity.ScheduledProcedureStep;
 import org.dcm4chee.archive.entity.ScheduledStationAETitle;
 import org.dcm4chee.archive.entity.ServiceRequest;
 import org.dcm4chee.archive.entity.Visit;
+import org.dcm4chee.archive.exception.EntityAlreadyExistsException;
+import org.dcm4chee.archive.exception.PatientMismatchException;
 import org.dcm4chee.archive.store.StoreParam;
 
 /**

@@ -59,7 +59,7 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-class InstanceQueryImpl extends QueryImpl {
+class InstanceQuery extends AbstractQuery {
 
     private static final String QUERY_SERIES_ATTRS = "select "
             + "s.study.pk, "
@@ -77,7 +77,7 @@ class InstanceQueryImpl extends QueryImpl {
     private Attributes seriesAttrs;
     private Query seriesQuery;
 
-    public InstanceQueryImpl(StatelessSession session, IDWithIssuer[] pids,
+    public InstanceQuery(StatelessSession session, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {
         super(session, query(session, pids, keys, queryParam), queryParam, false);
         seriesQuery = session.createQuery(QUERY_SERIES_ATTRS);
