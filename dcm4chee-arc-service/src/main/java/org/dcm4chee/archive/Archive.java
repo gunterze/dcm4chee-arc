@@ -62,6 +62,7 @@ import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.query.CFindSCP;
 import org.dcm4chee.archive.retrieve.CGetSCP;
 import org.dcm4chee.archive.retrieve.CMoveSCP;
+import org.dcm4chee.archive.stgcmt.StgCmtSCP;
 import org.dcm4chee.archive.store.CStoreSCP;
 import org.dcm4chee.archive.util.BeanLocator;
 import org.dcm4chee.archive.util.JMSService;
@@ -85,11 +86,13 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
     private final JMSService jmsService;
     private final MPPSSCU mppsSCU;
     private final IANSCU ianSCU;
+    private final StgCmtSCP stgCmtSCP;
 
     public Archive(HL7Configuration dicomConfiguration, String deviceName,
             ConnectionFactory connFactory,
             Queue mppsSCUQueue,
-            Queue ianSCUQueue)
+            Queue ianSCUQueue,
+            Queue stgcmtSCPQueue)
             throws ConfigurationException, Exception {
         this.dicomConfiguration = dicomConfiguration;
         this.codeService = BeanLocator.lookup(CodeService.class);
@@ -99,6 +102,7 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         this.jmsService = new JMSService(connFactory);
         this.mppsSCU = new MPPSSCU(aeCache, jmsService, mppsSCUQueue);
         this.ianSCU = new IANSCU(aeCache, jmsService, ianSCUQueue);
+        this.stgCmtSCP = new StgCmtSCP(aeCache, jmsService, stgcmtSCPQueue);
         init((ArchiveDevice) dicomConfiguration.findDevice(deviceName));
         setConfigurationStaleTimeout();
         loadRejectionNoteCodes();
@@ -179,6 +183,7 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
                         aeCache, pixConsumer));
         services.addDicomService(
                 new MPPSSCP(aeCache, mppsSCU, ianSCU));
+        services.addDicomService(stgCmtSCP);
         return services;
     }
 
@@ -187,6 +192,7 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         super.start();
         mppsSCU.start(device);
         ianSCU.start(device);
+        stgCmtSCP.start(device);
         jmsService.start();
     }
 
@@ -196,6 +202,7 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         jmsService.stop();
         mppsSCU.stop();
         ianSCU.stop();
+        stgCmtSCP.stop();
     }
 
 }
