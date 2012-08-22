@@ -45,6 +45,8 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJBException;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 import javax.sql.DataSource;
@@ -61,6 +63,7 @@ import org.hibernate.ejb.HibernateEntityManagerFactory;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @Stateful
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class QueryService {
 
     // injection specified in META-INF/ejb-jar.xml
@@ -74,7 +77,7 @@ public class QueryService {
     private Connection connection;
 
     private AbstractQuery query;
-    
+
     @PostConstruct
     protected void init() {
         SessionFactory sessionFactory = 
@@ -92,7 +95,7 @@ public class QueryService {
     }
 
     public void find(QueryRetrieveLevel qrlevel, IDWithIssuer[] pids,
-            Attributes keys, QueryParam queryParam) {
+            Attributes keys, QueryParam queryParam) throws Exception {
         switch (qrlevel) {
         case PATIENT:
             findPatients(pids, keys, queryParam);
@@ -161,8 +164,8 @@ public class QueryService {
         s.close();
         try {
             c.close();
-        } catch (SQLException e) {
-            throw new EJBException(e);
+        } catch (Exception e) {
+            //TODO
         }
     }
 }
