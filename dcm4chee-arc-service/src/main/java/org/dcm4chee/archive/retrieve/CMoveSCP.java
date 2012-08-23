@@ -144,7 +144,7 @@ public class CMoveSCP extends BasicCMoveSCP {
         } catch (DicomServiceException e) {
             throw e;
         } catch (Exception e) {
-            throw new DicomServiceException(Status.UnableToProcess, e);
+            throw new DicomServiceException(Status.UnableToCalculateNumberOfMatches, e);
         }
     }
 
