@@ -95,18 +95,19 @@ public class MPPSSCP extends BasicMPPSSCP {
     }
 
     private boolean matchIssuerOfPatientID(String remoteAET, Attributes rqAttrs) {
-        String issuerOfPatientID = rqAttrs.getString(Tag.IssuerOfPatientID);
-        if (issuerOfPatientID == null)
+        Issuer issuer = Issuer.issuerOfPatientID(rqAttrs);
+        if (issuer == null)
             return true;
+
         ApplicationEntity remoteAE = null;
         try {
             remoteAE = aeCache.get(remoteAET);
         } catch (ConfigurationException e) {
         }
-        return remoteAE == null
-                || new Issuer(issuerOfPatientID,
-                        rqAttrs.getNestedDataset(Tag.IssuerOfPatientIDQualifiersSequence))
-                    .matches(remoteAE.getDevice().getIssuerOfPatientID());
+        if (remoteAE == null)
+            return true;
+
+        return issuer.matches(remoteAE.getDevice().getIssuerOfPatientID());
     }
 
     @Override

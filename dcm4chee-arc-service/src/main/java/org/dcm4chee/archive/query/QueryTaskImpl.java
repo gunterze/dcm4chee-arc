@@ -61,8 +61,8 @@ class QueryTaskImpl extends BasicQueryTask {
 
     private final QueryService query;
     private final IDWithIssuer[] pids;
-    private final Issuer issuerOfPatientID;
-    private final Issuer issuerOfAccessionNumber;
+    private final Issuer expectedIssuerOfPatientID;
+    private final Issuer expectedIssuerOfAccessionNumber;
     private final boolean returnOtherPatientIDs;
 
     public QueryTaskImpl(Association as, PresentationContext pc, Attributes rq,
@@ -77,19 +77,20 @@ class QueryTaskImpl extends BasicQueryTask {
             throw e;
         }
         this.pids = pids;
-        String iopid = keys.getString(Tag.IssuerOfPatientID);
-        Attributes qualifiers =
-                keys.getNestedDataset(Tag.IssuerOfPatientIDQualifiersSequence);
-        this.issuerOfPatientID = iopid != null
-                || qualifiers != null && !qualifiers.isEmpty()
-                    ? new Issuer(iopid, qualifiers)
-                    : queryParam.getDefaultIssuerOfPatientID();
-        Attributes ioaccno = keys.getNestedDataset(Tag.IssuerOfAccessionNumberSequence);
-        this.issuerOfAccessionNumber = 
-                ioaccno != null && !ioaccno.isEmpty()
-                    ? new Issuer(ioaccno)
-                    : queryParam.getDefaultIssuerOfAccessionNumber();
+        this.expectedIssuerOfPatientID =  (pids.length > 0)
+             ? pids[0].issuer
+             : maskNull(Issuer.issuerOfPatientID(keys),
+                     queryParam.getDefaultIssuerOfPatientID());
+        
+        this.expectedIssuerOfAccessionNumber = maskNull(
+                Issuer.valueOf(
+                        keys.getNestedDataset(Tag.IssuerOfAccessionNumberSequence)),
+                queryParam.getDefaultIssuerOfAccessionNumber());
         this.returnOtherPatientIDs = queryParam.isReturnOtherPatientIDs();
+    }
+
+    private static Issuer maskNull(Issuer issuer, Issuer defIssuer) {
+        return issuer != null ? issuer : defIssuer;
     }
 
     @Override
@@ -112,10 +113,10 @@ class QueryTaskImpl extends BasicQueryTask {
 
         if (pids.length > 1) {
             pids[0].toPIDWithIssuer(match);
-        } else if (issuerOfPatientID != null
-                && !issuerOfPatientID.matches(pid.issuer)) {
+        } else if (expectedIssuerOfPatientID != null
+                && !expectedIssuerOfPatientID.matches(pid.issuer)) {
             match.setNull(Tag.PatientID, VR.LO);
-            issuerOfPatientID.toIssuerOfPatientID(match);
+            expectedIssuerOfPatientID.toIssuerOfPatientID(match);
         }
         if (returnOtherPatientIDs && keys.contains(Tag.OtherPatientIDsSequence))
             if (pids.length > 0)
@@ -137,14 +138,13 @@ class QueryTaskImpl extends BasicQueryTask {
     }
 
     private void adjustAccessionNumber(Attributes match, Attributes keys) {
-        if (issuerOfAccessionNumber == null
+        if (expectedIssuerOfAccessionNumber == null
                 || keys != null && !keys.contains(Tag.AccessionNumber)
                 || !match.containsValue(Tag.AccessionNumber))
             return;
 
-        Attributes ioaccno = match.getNestedDataset(Tag.IssuerOfAccessionNumberSequence);
-        if (ioaccno != null && !ioaccno.isEmpty() &&
-                !issuerOfAccessionNumber.matches(new Issuer(ioaccno))) {
+        if (!expectedIssuerOfAccessionNumber.matches(Issuer.valueOf(
+                match.getNestedDataset(Tag.IssuerOfAccessionNumberSequence)))) {
             match.setNull(Tag.AccessionNumber, VR.SH);
             match.remove(Tag.IssuerOfAccessionNumberSequence);
         }

@@ -196,11 +196,11 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
         if (!attrs.containsValue(Tag.AccessionNumber))
             return;
 
-        Attributes item = attrs.getNestedDataset(Tag.IssuerOfAccessionNumberSequence);
-        if (item == null)
+        Issuer issuer = Issuer.valueOf(
+                attrs.getNestedDataset(Tag.IssuerOfAccessionNumberSequence));
+        if (issuer == null)
             return;
-
-        Issuer issuer = new Issuer(item);
+        
         if (!issuer.matches(destIssuer)) {
             attrs.setNull(Tag.AccessionNumber, VR.SH);
             attrs.remove(Tag.IssuerOfAccessionNumberSequence);

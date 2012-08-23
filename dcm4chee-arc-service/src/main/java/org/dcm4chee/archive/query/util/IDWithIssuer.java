@@ -98,11 +98,7 @@ public class IDWithIssuer {
         if (id == null)
             return null;
 
-        String issuer = keys.getString(Tag.IssuerOfPatientID);
-        Attributes qualifiers = keys.getNestedDataset(Tag.IssuerOfPatientIDQualifiersSequence);
-        Issuer issuerOfPatientID = issuer != null || qualifiers != null
-                ? new Issuer(issuer, qualifiers)
-                : null;
+        Issuer issuerOfPatientID = Issuer.issuerOfPatientID(keys);
         return new IDWithIssuer(id,
                 issuerOfPatientID != null
                     ? issuerOfPatientID
