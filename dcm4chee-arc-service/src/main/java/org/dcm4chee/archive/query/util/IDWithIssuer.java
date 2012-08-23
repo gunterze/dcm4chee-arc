@@ -78,18 +78,8 @@ public class IDWithIssuer {
         attrs.setString(Tag.PatientID, VR.LO, id);
         if (issuer == null)
             return attrs;
-        String issuerOfPatientID = issuer.getLocalNamespaceEntityID();
-        if (issuerOfPatientID != null)
-            attrs.setString(Tag.IssuerOfPatientID, VR.LO, issuerOfPatientID);
-        String universalEntityID = issuer.getUniversalEntityID();
-        if (universalEntityID != null) {
-            Attributes item = new Attributes(2);
-            item.setString(Tag.UniversalEntityID, VR.UT, universalEntityID);
-            item.setString(Tag.UniversalEntityIDType, VR.UT,
-                    issuer.getUniversalEntityIDType());
-            attrs.newSequence(Tag.IssuerOfPatientIDQualifiersSequence, 1).add(item);
-        }
-        return attrs;
+
+        return issuer.toIssuerOfPatientID(attrs);
     }
 
     public static IDWithIssuer pidWithIssuer(Attributes keys,

@@ -60,6 +60,7 @@ import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicRetrieveTask;
 import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.util.SafeClose;
+import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.query.util.IDWithIssuer;
@@ -74,7 +75,6 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
     private final RetrieveService retrieveService;
     private final boolean withoutBulkData;
     private IDWithIssuer[] pids;
-    private IDWithIssuer pidWithMatchingIssuer;
     private String[] patientNames;
     private boolean returnOtherPatientIDs;
     private boolean returnOtherPatientNames;
@@ -83,9 +83,10 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
 
     public RetrieveTaskImpl(BasicRetrieveTask.Service service, Association as,
             PresentationContext pc, Attributes rq, List<InstanceLocator> matches,
-            PIXConsumer pixConsumer, RetrieveService retrieveService,
-            boolean withoutBulkData) {
+            IDWithIssuer[] pids, PIXConsumer pixConsumer,
+            RetrieveService retrieveService, boolean withoutBulkData) {
         super(service, as, pc, rq, matches);
+        this.pids = pids;
         this.pixConsumer = pixConsumer;
         this.retrieveService = retrieveService;
         this.withoutBulkData = withoutBulkData;
@@ -136,38 +137,40 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
     }
 
     private void adjustPatientID(Attributes attrs) {
-        IDWithIssuer pid0 = IDWithIssuer.pidWithIssuer(attrs, null);
-        if (pid0 == null)
+        IDWithIssuer pid = IDWithIssuer.pidWithIssuer(attrs, null);
+        if (pid == null)
             return;
 
-        if (pids == null) {
-            pids = pixConsumer == null 
-                    ? new IDWithIssuer[] { pid0 }
-                    : pixConsumer.pixQuery(
-                            (ArchiveApplicationEntity) as.getApplicationEntity(),
-                            pid0);
-            pidWithMatchingIssuer = pidWithMatchingIssuer(pids, issuerOfPatientID);
-            if (returnOtherPatientNames) {
-                if (pids.length > 0)
-                    patientNames = retrieveService.patientNamesOf(pids);
-                else {
-                    String patientName = attrs.getString(Tag.PatientName);
-                    if (patientName != null)
-                        patientNames = new String[] { patientName };
-                }
-            }
+        if (pids.length == 0) {
+            pids = pixConsumer.pixQuery(
+                   (ArchiveApplicationEntity) as.getApplicationEntity(), pid);
         }
 
-        if (pidWithMatchingIssuer != null) {
-            pidWithMatchingIssuer.toPIDWithIssuer(attrs);
+        IDWithIssuer issuer = pidWithMatchingIssuer(pids, issuerOfPatientID);
+        if (issuer != null) {
+            issuer.toPIDWithIssuer(attrs);
         } else {
             attrs.setNull(Tag.PatientID, VR.LO);
             issuerOfPatientID.toIssuerOfPatientID(attrs);
         }
-        if (returnOtherPatientIDs)
+        if (returnOtherPatientIDs && pids.length > 0)
             IDWithIssuer.addOtherPatientIDs(attrs, pids);
-        if (patientNames != null)
+        if (returnOtherPatientNames && hasPatientNames(attrs))
             attrs.setString(Tag.OtherPatientNames, VR.PN, patientNames);
+    }
+
+    private boolean hasPatientNames(Attributes attrs) {
+        if (patientNames == null) {
+            if (pids.length > 1)
+                patientNames = retrieveService.patientNamesOf(pids);
+            else {
+                String patientName = attrs.getString(Tag.PatientName);
+                patientNames = patientName != null
+                        ? new String[] { patientName }
+                        : StringUtils.EMPTY_STRING;
+            }
+        }
+        return patientNames.length > 0;
     }
 
     private IDWithIssuer pidWithMatchingIssuer(IDWithIssuer[] pids, Issuer issuer) {

@@ -71,6 +71,9 @@ public class PIXConsumer {
     }
 
     public IDWithIssuer[] pixQuery(ArchiveApplicationEntity ae, IDWithIssuer pid) {
+        if (pid == null)
+            return IDWithIssuer.EMPTY;
+
         String pixConsumer = ae.getLocalPIXConsumerApplication();
         String pixManager = ae.getRemotePIXManagerApplication();
         if (pixConsumer == null || pixManager == null

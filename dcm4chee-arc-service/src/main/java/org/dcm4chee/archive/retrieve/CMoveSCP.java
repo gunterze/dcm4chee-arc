@@ -112,9 +112,13 @@ public class CMoveSCP extends BasicCMoveSCP {
             ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
             ApplicationEntity sourceAE = aeCache.get(as.getRemoteAET());
             QueryParam queryParam = QueryParam.valueOf(ae, queryOpts, sourceAE, roles());
-            List<InstanceLocator> matches = calculateMatches(rq, keys, queryParam);
+            IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys,
+                    queryParam.getDefaultIssuerOfPatientID());
+            IDWithIssuer[] pids = pixConsumer.pixQuery(ae, pid);
+            List<InstanceLocator> matches =
+                    retrieveService.calculateMatches(pids, keys, queryParam);
             RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(C_MOVE, as,
-                    pc, rq, matches, pixConsumer, retrieveService, false) {
+                    pc, rq, matches, pids, pixConsumer, retrieveService, false) {
     
                 @Override
                 protected Association getStoreAssociation() throws DicomServiceException {
@@ -141,19 +145,6 @@ public class CMoveSCP extends BasicCMoveSCP {
             throw e;
         } catch (Exception e) {
             throw new DicomServiceException(Status.UnableToProcess, e);
-        }
-    }
-
-    private List<InstanceLocator> calculateMatches(Attributes rq,
-            Attributes keys, QueryParam queryParam)
-            throws DicomServiceException {
-        try {
-            IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys,
-                    queryParam.getDefaultIssuerOfPatientID());
-            IDWithIssuer[] pids = pid != null ? new IDWithIssuer[] { pid } : null;
-            return retrieveService.calculateMatches(pids, keys, queryParam);
-        }  catch (Exception e) {
-            throw new DicomServiceException(Status.UnableToCalculateNumberOfMatches, e);
         }
     }
 

@@ -96,9 +96,7 @@ public class CFindSCP extends BasicCFindSCP {
                     aeCache.get(as.getRemoteAET()), roles(as));
             IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys,
                     queryParam.getDefaultIssuerOfPatientID());
-            IDWithIssuer[] pids = pid == null 
-                    ? IDWithIssuer.EMPTY
-                    : pixConsumer.pixQuery(ae, pid);
+            IDWithIssuer[] pids = pixConsumer.pixQuery(ae, pid);
             return new QueryTaskImpl(as, pc, rq, keys, level, pids, queryParam);
         } catch (DicomServiceException e) {
             throw e;

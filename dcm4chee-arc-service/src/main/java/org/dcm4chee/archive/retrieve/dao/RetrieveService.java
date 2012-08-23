@@ -212,6 +212,6 @@ public class RetrieveService {
             c.add(Utils.decodeAttributes((byte[]) tuple[1])
                     .getString(Tag.PatientName));
         c.remove(null);
-        return c.isEmpty() ? null : c.toArray(new String[c.size()]);
+        return c.toArray(new String[c.size()]);
     }
 }
