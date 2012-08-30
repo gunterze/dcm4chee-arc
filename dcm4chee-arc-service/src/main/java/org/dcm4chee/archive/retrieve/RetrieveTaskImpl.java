@@ -78,8 +78,8 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
     private String[] patientNames;
     private boolean returnOtherPatientIDs;
     private boolean returnOtherPatientNames;
-    private Issuer issuerOfPatientID;
-    private Issuer issuerOfAccessionNumber;
+    private Issuer requestedIssuerOfPatientID;
+    private Issuer requestedIssuerOfAccessionNumber;
 
     public RetrieveTaskImpl(BasicRetrieveTask.Service service, Association as,
             PresentationContext pc, Attributes rq, List<InstanceLocator> matches,
@@ -93,8 +93,8 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
     }
 
     public void setDestinationDevice(Device destDevice) {
-        this.issuerOfPatientID = destDevice.getIssuerOfPatientID();
-        this.issuerOfAccessionNumber = destDevice.getIssuerOfAccessionNumber();
+        this.requestedIssuerOfPatientID = destDevice.getIssuerOfPatientID();
+        this.requestedIssuerOfAccessionNumber = destDevice.getIssuerOfAccessionNumber();
     }
 
     public void setReturnOtherPatientIDs(boolean returnOtherPatientIDs) {
@@ -146,12 +146,12 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
                    (ArchiveApplicationEntity) as.getApplicationEntity(), pid);
         }
 
-        IDWithIssuer issuer = pidWithMatchingIssuer(pids, issuerOfPatientID);
+        IDWithIssuer issuer = pidWithMatchingIssuer(pids, requestedIssuerOfPatientID);
         if (issuer != null) {
             issuer.toPIDWithIssuer(attrs);
         } else {
             attrs.setNull(Tag.PatientID, VR.LO);
-            issuerOfPatientID.toIssuerOfPatientID(attrs);
+            requestedIssuerOfPatientID.toIssuerOfPatientID(attrs);
         }
         if (returnOtherPatientIDs && pids.length > 0)
             IDWithIssuer.addOtherPatientIDs(attrs, pids);
@@ -185,14 +185,14 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
     }
 
     private void adjustAccessionNumber(Attributes attrs) {
-        if (issuerOfAccessionNumber == null)
+        if (requestedIssuerOfAccessionNumber == null)
             return;
 
-        adjustAccessionNumber(attrs, issuerOfAccessionNumber);
+        adjustAccessionNumber(attrs, requestedIssuerOfAccessionNumber);
         Sequence rqAttrsSeq = attrs.getSequence(Tag.RequestAttributesSequence);
         if (rqAttrsSeq != null)
             for (Attributes rqAttrs : rqAttrsSeq)
-                adjustAccessionNumber(rqAttrs, issuerOfAccessionNumber);
+                adjustAccessionNumber(rqAttrs, requestedIssuerOfAccessionNumber);
     }
 
     private void adjustAccessionNumber(Attributes attrs, Issuer destIssuer) {

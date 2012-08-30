@@ -62,8 +62,8 @@ class QueryTaskImpl extends BasicQueryTask {
     private final QueryService query;
     private final IDWithIssuer[] pids;
     private final String[] patientNames;
-    private final Issuer expectedIssuerOfPatientID;
-    private final Issuer expectedIssuerOfAccessionNumber;
+    private final Issuer requestedIssuerOfPatientID;
+    private final Issuer requestedIssuerOfAccessionNumber;
     private final boolean returnOtherPatientIDs;
     private final boolean returnOtherPatientNames;
     private final boolean skipMatchesWithoutPatientID;
@@ -81,12 +81,12 @@ class QueryTaskImpl extends BasicQueryTask {
             throw e;
         }
         this.pids = pids;
-        this.expectedIssuerOfPatientID =  (pids.length > 0)
+        this.requestedIssuerOfPatientID =  (pids.length > 0)
              ? pids[0].issuer
              : maskNull(Issuer.issuerOfPatientID(keys),
                      queryParam.getDefaultIssuerOfPatientID());
         
-        this.expectedIssuerOfAccessionNumber = maskNull(
+        this.requestedIssuerOfAccessionNumber = maskNull(
                 Issuer.valueOf(
                         keys.getNestedDataset(Tag.IssuerOfAccessionNumberSequence)),
                 queryParam.getDefaultIssuerOfAccessionNumber());
@@ -130,10 +130,10 @@ class QueryTaskImpl extends BasicQueryTask {
 
         if (pids.length > 1) {
             pids[0].toPIDWithIssuer(match);
-        } else if (expectedIssuerOfPatientID != null
-                && !expectedIssuerOfPatientID.matches(pid.issuer)) {
+        } else if (requestedIssuerOfPatientID != null
+                && !requestedIssuerOfPatientID.matches(pid.issuer)) {
             match.setNull(Tag.PatientID, VR.LO);
-            expectedIssuerOfPatientID.toIssuerOfPatientID(match);
+            requestedIssuerOfPatientID.toIssuerOfPatientID(match);
         }
         if (returnOtherPatientIDs)
             if (pids.length > 0)
@@ -161,12 +161,12 @@ class QueryTaskImpl extends BasicQueryTask {
     }
 
     private void adjustAccessionNumber(Attributes match, Attributes keys) {
-        if (expectedIssuerOfAccessionNumber == null
+        if (requestedIssuerOfAccessionNumber == null
                 || keys != null && !keys.contains(Tag.AccessionNumber)
                 || !match.containsValue(Tag.AccessionNumber))
             return;
 
-        if (!expectedIssuerOfAccessionNumber.matches(Issuer.valueOf(
+        if (!requestedIssuerOfAccessionNumber.matches(Issuer.valueOf(
                 match.getNestedDataset(Tag.IssuerOfAccessionNumberSequence)))) {
             match.setNull(Tag.AccessionNumber, VR.SH);
             match.remove(Tag.IssuerOfAccessionNumberSequence);
