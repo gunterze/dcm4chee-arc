@@ -66,10 +66,12 @@ class QueryTaskImpl extends BasicQueryTask {
     private final Issuer expectedIssuerOfAccessionNumber;
     private final boolean returnOtherPatientIDs;
     private final boolean returnOtherPatientNames;
+    private final boolean skipMatchesWithoutPatientID;
 
     public QueryTaskImpl(Association as, PresentationContext pc, Attributes rq,
             Attributes keys, QueryRetrieveLevel qrlevel, IDWithIssuer[] pids,
-            QueryParam queryParam) throws Exception {
+            QueryParam queryParam, boolean skipMatchesWithoutPatientID)
+            throws Exception {
         super(as, pc, rq, keys);
         this.query = BeanLocator.lookup(QueryService.class);
         try {
@@ -95,6 +97,7 @@ class QueryTaskImpl extends BasicQueryTask {
         this.patientNames = returnOtherPatientNames && pids.length > 1 
                 ? query.patientNamesOf(pids)
                 : null;
+        this.skipMatchesWithoutPatientID = skipMatchesWithoutPatientID;
      }
 
     private static Issuer maskNull(Issuer issuer, Issuer defIssuer) {
@@ -103,7 +106,13 @@ class QueryTaskImpl extends BasicQueryTask {
 
     @Override
     protected Attributes adjust(Attributes match) {
+        if (match == null)
+            return null;
+
         adjustPatientID(match);
+        if (skipMatchesWithoutPatientID && !match.containsValue(Tag.PatientID))
+            return null;
+
         adjustAccessionNumber(match);
         Attributes filtered = new Attributes(match.size());
         filtered.setString(Tag.QueryRetrieveLevel, VR.CS,

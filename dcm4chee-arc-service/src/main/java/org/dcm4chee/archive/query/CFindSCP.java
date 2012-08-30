@@ -97,7 +97,8 @@ public class CFindSCP extends BasicCFindSCP {
             IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys,
                     queryParam.getDefaultIssuerOfPatientID());
             IDWithIssuer[] pids = pixConsumer.pixQuery(ae, pid);
-            return new QueryTaskImpl(as, pc, rq, keys, level, pids, queryParam);
+            return new QueryTaskImpl(as, pc, rq, keys, level, pids, queryParam,
+                    rootLevel == QueryRetrieveLevel.PATIENT);
         } catch (DicomServiceException e) {
             throw e;
         } catch (Exception e) {
