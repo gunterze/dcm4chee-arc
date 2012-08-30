@@ -61,9 +61,11 @@ class QueryTaskImpl extends BasicQueryTask {
 
     private final QueryService query;
     private final IDWithIssuer[] pids;
+    private final String[] patientNames;
     private final Issuer expectedIssuerOfPatientID;
     private final Issuer expectedIssuerOfAccessionNumber;
     private final boolean returnOtherPatientIDs;
+    private final boolean returnOtherPatientNames;
 
     public QueryTaskImpl(Association as, PresentationContext pc, Attributes rq,
             Attributes keys, QueryRetrieveLevel qrlevel, IDWithIssuer[] pids,
@@ -86,8 +88,14 @@ class QueryTaskImpl extends BasicQueryTask {
                 Issuer.valueOf(
                         keys.getNestedDataset(Tag.IssuerOfAccessionNumberSequence)),
                 queryParam.getDefaultIssuerOfAccessionNumber());
-        this.returnOtherPatientIDs = queryParam.isReturnOtherPatientIDs();
-    }
+        this.returnOtherPatientIDs = queryParam.isReturnOtherPatientIDs()
+                && keys.contains(Tag.OtherPatientIDsSequence);
+        this.returnOtherPatientNames = queryParam.isReturnOtherPatientNames()
+                && keys.contains(Tag.OtherPatientNames);
+        this.patientNames = returnOtherPatientNames && pids.length > 1 
+                ? query.patientNamesOf(pids)
+                : null;
+     }
 
     private static Issuer maskNull(Issuer issuer, Issuer defIssuer) {
         return issuer != null ? issuer : defIssuer;
@@ -118,11 +126,17 @@ class QueryTaskImpl extends BasicQueryTask {
             match.setNull(Tag.PatientID, VR.LO);
             expectedIssuerOfPatientID.toIssuerOfPatientID(match);
         }
-        if (returnOtherPatientIDs && keys.contains(Tag.OtherPatientIDsSequence))
+        if (returnOtherPatientIDs)
             if (pids.length > 0)
                 IDWithIssuer.addOtherPatientIDs(match, pids);
             else
                 IDWithIssuer.addOtherPatientIDs(match, pid);
+        if (returnOtherPatientNames)
+            if (patientNames != null)
+                match.setString(Tag.OtherPatientNames, VR.PN, patientNames);
+            else
+                match.setString(Tag.OtherPatientNames, VR.PN,
+                        match.getString(Tag.PatientName));
     }
 
     private void adjustAccessionNumber(Attributes match) {

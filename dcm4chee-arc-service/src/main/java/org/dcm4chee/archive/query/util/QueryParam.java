@@ -68,6 +68,7 @@ public class QueryParam {
     private List<Code> hideRejectionCodes;
     private String[] roles;
     private boolean returnOtherPatientIDs;
+    private boolean returnOtherPatientNames;
     private Issuer defaultIssuerOfPatientID;
     private Issuer defaultIssuerOfAccessionNumber;
 
@@ -152,6 +153,14 @@ public class QueryParam {
         this.returnOtherPatientIDs = returnOtherPatientIDs;
     }
 
+    public boolean isReturnOtherPatientNames() {
+        return returnOtherPatientNames;
+    }
+
+    public void setReturnOtherPatientNames(boolean returnOtherPatientNames) {
+        this.returnOtherPatientNames = returnOtherPatientNames;
+    }
+
     public Issuer getDefaultIssuerOfPatientID() {
         return defaultIssuerOfPatientID;
     }
@@ -183,6 +192,7 @@ public class QueryParam {
         queryParam.setRoles(roles);
         queryParam.setRejectionNotes(ae.getRejectionNotes());
         queryParam.setReturnOtherPatientIDs(ae.isReturnOtherPatientIDs());
+        queryParam.setReturnOtherPatientNames(ae.isReturnOtherPatientNames());
 
         if (sourceAE != null) {
             Device sourceDevice = sourceAE.getDevice();

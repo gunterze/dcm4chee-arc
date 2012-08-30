@@ -40,6 +40,8 @@ package org.dcm4chee.archive.query.dao;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJBException;
@@ -52,12 +54,19 @@ import javax.persistence.PersistenceUnit;
 import javax.sql.DataSource;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
 import org.dcm4che.net.service.QueryRetrieveLevel;
+import org.dcm4chee.archive.entity.QPatient;
+import org.dcm4chee.archive.entity.Utils;
+import org.dcm4chee.archive.query.util.Builder;
 import org.dcm4chee.archive.query.util.IDWithIssuer;
 import org.dcm4chee.archive.query.util.QueryParam;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
+
+import com.mysema.query.BooleanBuilder;
+import com.mysema.query.jpa.hibernate.HibernateQuery;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -152,6 +161,24 @@ public class QueryService {
     private void checkResults() {
         if (query == null)
             throw new IllegalStateException("results not initalized");
+    }
+
+    public String[] patientNamesOf(IDWithIssuer[] pids) {
+        HashSet<String> c = new HashSet<String>(pids.length * 4 / 3 + 1);
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(Builder.pids(pids, false));
+        builder.and(QPatient.patient.mergedWith.isNull());
+        List<Object[]> tuples = new HibernateQuery(session)
+            .from(QPatient.patient)
+            .where(builder)
+            .list(
+                QPatient.patient.pk,
+                QPatient.patient.encodedAttributes);
+        for (Object[] tuple : tuples)
+            c.add(Utils.decodeAttributes((byte[]) tuple[1])
+                    .getString(Tag.PatientName));
+        c.remove(null);
+        return c.toArray(new String[c.size()]);
     }
 
     @Remove
