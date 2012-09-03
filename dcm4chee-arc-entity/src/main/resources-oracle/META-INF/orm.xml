@@ -35,7 +35,7 @@
         <column name="code_version"/>
       </basic>
       <basic name="codeMeaning" optional="false">
-        <column name="code_meaning" column-definition="nvarchar2(255 char)"/>
+        <column name="code_meaning" column-definition="nvarchar2(255)"/>
       </basic>
     </attributes>
   </mapped-superclass>
@@ -96,13 +96,13 @@
         <generated-value strategy="SEQUENCE" generator="seq" />
       </id>
       <basic name="patientName" optional="false">
-        <column name="pat_name" column-definition="nvarchar2(255 char)" />
+        <column name="pat_name" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="patientIdeographicName" optional="false">
-        <column name="pat_i_name" column-definition="nvarchar2(255 char)" />
+        <column name="pat_i_name" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="patientPhoneticName" optional="false">
-        <column name="pat_p_name" column-definition="nvarchar2(255 char)" />
+        <column name="pat_p_name" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="encodedAttributes" optional="false">
         <column name="pat_attrs" column-definition="blob" />
@@ -119,16 +119,16 @@
         <generated-value strategy="SEQUENCE" generator="seq" />
       </id>
       <basic name="referringPhysicianName" optional="false">
-        <column name="ref_physician" column-definition="nvarchar2(255 char)" />
+        <column name="ref_physician" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="referringPhysicianIdeographicName" optional="false">
-        <column name="ref_phys_i_name" column-definition="nvarchar2(255 char)" />
+        <column name="ref_phys_i_name" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="referringPhysicianPhoneticName" optional="false">
-        <column name="ref_phys_p_name" column-definition="nvarchar2(255 char)" />
+        <column name="ref_phys_p_name" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="studyDescription" optional="false">
-        <column name="study_desc" column-definition="nvarchar2(255 char)" />
+        <column name="study_desc" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="encodedAttributes" optional="false">
         <column name="study_attrs" column-definition="blob" />
@@ -145,19 +145,19 @@
         <generated-value strategy="SEQUENCE" generator="seq" />
       </id>
       <basic name="institutionalDepartmentName" optional="false">
-        <column name="department" column-definition="nvarchar2(255 char)" />
+        <column name="department" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="institutionName" optional="false">
-        <column name="institution" column-definition="nvarchar2(255 char)" />
+        <column name="institution" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="performingPhysicianName" optional="false">
-        <column name="perf_phys_name" column-definition="nvarchar2(255 char)" />
+        <column name="perf_phys_name" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="performingPhysicianIdeographicName" optional="false">
-        <column name="perf_phys_i_name" column-definition="nvarchar2(255 char)" />
+        <column name="perf_phys_i_name" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="performingPhysicianPhoneticName" optional="false">
-        <column name="perf_phys_p_name" column-definition="nvarchar2(255 char)" />
+        <column name="perf_phys_p_name" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="encodedAttributes" optional="false">
         <column name="series_attrs" column-definition="blob" />
@@ -188,13 +188,13 @@
         <generated-value strategy="SEQUENCE" generator="seq" />
       </id>
       <basic name="verifyingObserverName" optional="false">
-        <column name="observer_name" column-definition="nvarchar2(255 char)" />
+        <column name="observer_name" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="verifyingObserverIdeographicName" optional="false">
-        <column name="observer_i_name" column-definition="nvarchar2(255 char)" />
+        <column name="observer_i_name" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="verifyingObserverPhoneticName" optional="false">
-        <column name="observer_p_name" column-definition="nvarchar2(255 char)" />
+        <column name="observer_p_name" column-definition="nvarchar2(255)" />
       </basic>
     </attributes>
   </entity>
@@ -255,16 +255,16 @@
         <generated-value strategy="SEQUENCE" generator="seq" />
       </id>
       <basic name="requestingService" optional="false">
-        <column name="req_service" column-definition="nvarchar2(255 char)" />
+        <column name="req_service" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="requestingPhysician" optional="false">
-        <column name="req_physician" column-definition="nvarchar2(255 char)" />
+        <column name="req_physician" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="requestingPhysicianIdeographicName" optional="false">
-        <column name="req_phys_i_name" column-definition="nvarchar2(255 char)" />
+        <column name="req_phys_i_name" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="requestingPhysicianPhoneticName" optional="false">
-        <column name="req_phys_p_name" column-definition="nvarchar2(255 char)" />
+        <column name="req_phys_p_name" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="encodedAttributes" optional="false">
         <column name="request_attrs" column-definition="blob" />
@@ -295,13 +295,13 @@
         <generated-value strategy="SEQUENCE" generator="seq" />
       </id>
       <basic name="scheduledPerformingPhysicianName" optional="false">
-        <column name="perf_phys_name" column-definition="nvarchar2(255 char)" />
+        <column name="perf_phys_name" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="scheduledPerformingPhysicianIdeographicName" optional="false">
-        <column name="perf_phys_i_name" column-definition="nvarchar2(255 char)" />
+        <column name="perf_phys_i_name" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="scheduledPerformingPhysicianPhoneticName" optional="false">
-        <column name="perf_phys_p_name" column-definition="nvarchar2(255 char)" />
+        <column name="perf_phys_p_name" column-definition="nvarchar2(255)" />
       </basic>
       <basic name="encodedAttributes" optional="false">
         <column name="sps_attrs" column-definition="blob" />
