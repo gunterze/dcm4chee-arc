@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Agfa Healthcare.
- * Portions created by the Initial Developer are Copyright (C) 2012
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,21 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.mpps;
+package org.dcm4chee.archive.exception;
 
-import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.entity.PerformedProcedureStep;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class PPSWithIAN {
+public class PatientCircularMergedException extends RuntimeException {
 
-    public final PerformedProcedureStep pps;
-    public final Attributes ian;
+    private static final long serialVersionUID = 3937535085752305999L;
 
-    public PPSWithIAN(PerformedProcedureStep pps, Attributes ian) {
-        this.pps = pps;
-        this.ian = ian;
+    public PatientCircularMergedException(String message) {
+        super(message);
     }
+
 }

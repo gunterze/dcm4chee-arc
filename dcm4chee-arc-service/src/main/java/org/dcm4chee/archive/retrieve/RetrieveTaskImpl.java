@@ -61,9 +61,9 @@ import org.dcm4che.net.service.BasicRetrieveTask;
 import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.StringUtils;
+import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.pix.PIXConsumer;
-import org.dcm4chee.archive.query.util.IDWithIssuer;
 import org.dcm4chee.archive.retrieve.dao.RetrieveService;
 
 /**

@@ -40,14 +40,14 @@ package org.dcm4chee.archive.query.dao;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4chee.archive.common.IDWithIssuer;
+import org.dcm4chee.archive.common.QueryParam;
 import org.dcm4chee.archive.entity.Availability;
 import org.dcm4chee.archive.entity.QPatient;
 import org.dcm4chee.archive.entity.QSeries;
 import org.dcm4chee.archive.entity.QStudy;
 import org.dcm4chee.archive.entity.Utils;
-import org.dcm4chee.archive.query.util.Builder;
-import org.dcm4chee.archive.query.util.IDWithIssuer;
-import org.dcm4chee.archive.query.util.QueryParam;
+import org.dcm4chee.archive.util.query.Builder;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;

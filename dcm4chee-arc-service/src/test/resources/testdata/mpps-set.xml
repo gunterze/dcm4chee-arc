@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NativeDicomModel xml-space="preserved">
+<DicomAttribute keyword="PerformedProcedureStepEndDate" tag="00400250" vr="DA">
+<Value number="1">20120130</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PerformedProcedureStepEndTime" tag="00400251" vr="TM">
+<Value number="1">1100</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PerformedProcedureStepStatus" tag="00400252" vr="CS">
+<Value number="1">COMPLETED</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PerformedSeriesSequence" tag="00400340" vr="SQ">
+<Item number="1">
+<DicomAttribute keyword="RetrieveAETitle" tag="00080054" vr="AE"/>
+<DicomAttribute keyword="SeriesDescription" tag="0008103E" vr="LO"/>
+<DicomAttribute keyword="PerformingPhysicianName" tag="00081050" vr="PN"/>
+<DicomAttribute keyword="OperatorsName" tag="00081070" vr="PN"/>
+<DicomAttribute keyword="ReferencedImageSequence" tag="00081140" vr="SQ">
+<Item number="1">
+<DicomAttribute keyword="ReferencedSOPClassUID" tag="00081150" vr="UI">
+<Value number="1">1.2.840.10008.5.1.4.1.1.2</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ReferencedSOPInstanceUID" tag="00081155" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.20110607.1.1</Value>
+</DicomAttribute>
+</Item>
+<Item number="2">
+<DicomAttribute keyword="ReferencedSOPClassUID" tag="00081150" vr="UI">
+<Value number="1">1.2.840.10008.5.1.4.1.1.2</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ReferencedSOPInstanceUID" tag="00081155" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.20110607.1234.1.2</Value>
+</DicomAttribute>
+</Item>
+</DicomAttribute>
+<DicomAttribute keyword="ProtocolName" tag="00181030" vr="LO">
+<Value number="1">UNKNOWN</Value>
+</DicomAttribute>
+<DicomAttribute keyword="SeriesInstanceUID" tag="0020000E" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.20110607.1</Value>
+</DicomAttribute>
+</Item>
+<Item number="2">
+<DicomAttribute keyword="RetrieveAETitle" tag="00080054" vr="AE"/>
+<DicomAttribute keyword="SeriesDescription" tag="0008103E" vr="LO"/>
+<DicomAttribute keyword="PerformingPhysicianName" tag="00081050" vr="PN"/>
+<DicomAttribute keyword="OperatorsName" tag="00081070" vr="PN"/>
+<DicomAttribute keyword="ReferencedImageSequence" tag="00081140" vr="SQ">
+<Item number="1">
+<DicomAttribute keyword="ReferencedSOPClassUID" tag="00081150" vr="UI">
+<Value number="1">1.2.840.10008.5.1.4.1.1.11.1</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ReferencedSOPInstanceUID" tag="00081155" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.20110607.2.1</Value>
+</DicomAttribute>
+</Item>
+</DicomAttribute>
+<DicomAttribute keyword="ProtocolName" tag="00181030" vr="LO">
+<Value number="1">UNKNOWN</Value>
+</DicomAttribute>
+<DicomAttribute keyword="SeriesInstanceUID" tag="0020000E" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.20110607.2</Value>
+</DicomAttribute>
+</Item>
+</DicomAttribute>
+</NativeDicomModel>

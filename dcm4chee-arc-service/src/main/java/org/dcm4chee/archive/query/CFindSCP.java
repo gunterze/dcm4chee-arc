@@ -54,10 +54,10 @@ import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.QueryTask;
 import org.dcm4che.util.AttributesValidator;
+import org.dcm4chee.archive.common.IDWithIssuer;
+import org.dcm4chee.archive.common.QueryParam;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.pix.PIXConsumer;
-import org.dcm4chee.archive.query.util.IDWithIssuer;
-import org.dcm4chee.archive.query.util.QueryParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>

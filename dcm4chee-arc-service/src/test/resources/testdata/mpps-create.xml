@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NativeDicomModel xml-space="preserved">
+<DicomAttribute keyword="Modality" tag="00080060" vr="CS">
+<Value number="1">CT</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ReferencedPatientSequence" tag="00081120" vr="SQ"/>
+<DicomAttribute keyword="PatientName" tag="00100010" vr="PN">
+<PersonName number="1">
+<Alphabetic>
+<FamilyName>Test-StoreService</FamilyName>
+</Alphabetic>
+</PersonName>
+</DicomAttribute>
+<DicomAttribute keyword="PatientID" tag="00100020" vr="LO">
+<Value number="1">Test-StoreService-1234</Value>
+</DicomAttribute>
+<DicomAttribute keyword="IssuerOfPatientID" tag="00100021" vr="LO">
+<Value number="1">Test-StoreService</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PatientBirthDate" tag="00100030" vr="DA"/>
+<DicomAttribute keyword="PatientSex" tag="00100040" vr="CS"/>
+<DicomAttribute keyword="StudyID" tag="00200010" vr="SH">
+<Value number="1">TEST-20110607</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PerformedStationAETitle" tag="00400241" vr="AE">
+<Value number="1">SOURCE_AET</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PerformedStationName" tag="00400242" vr="SH"/>
+<DicomAttribute keyword="PerformedLocation" tag="00400243" vr="SH"/>
+<DicomAttribute keyword="PerformedProcedureStepStartDate" tag="00400244" vr="DA">
+<Value number="1">20120130</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PerformedProcedureStepStartTime" tag="00400245" vr="TM">
+<Value number="1">1050</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PerformedProcedureStepEndDate" tag="00400250" vr="DA"/>
+<DicomAttribute keyword="PerformedProcedureStepEndTime" tag="00400251" vr="TM"/>
+<DicomAttribute keyword="PerformedProcedureStepStatus" tag="00400252" vr="CS">
+<Value number="1">IN PROGRESS</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PerformedProcedureStepID" tag="00400253" vr="SH">
+<Value number="1">PPS-20120130</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PerformedProcedureStepDescription" tag="00400254" vr="LO"/>
+<DicomAttribute keyword="PerformedProcedureTypeDescription" tag="00400255" vr="LO"/>
+<DicomAttribute keyword="PerformedProtocolCodeSequence" tag="00400260" vr="SQ"/>
+<DicomAttribute keyword="ScheduledStepAttributesSequence" tag="00400270" vr="SQ">
+<Item number="1">
+<DicomAttribute keyword="AccessionNumber" tag="00080050" vr="SH">
+<Value number="1">A-20110607</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ReferencedStudySequence" tag="00081110" vr="SQ"/>
+<DicomAttribute keyword="StudyInstanceUID" tag="0020000D" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.20110607</Value>
+</DicomAttribute>
+<DicomAttribute keyword="RequestedProcedureDescription" tag="00321060" vr="LO"/>
+<DicomAttribute keyword="ScheduledProcedureStepDescription" tag="00400007" vr="LO"/>
+<DicomAttribute keyword="ScheduledProcedureStepID" tag="00400009" vr="SH">
+<Value number="1">SPS-20110607</Value>
+</DicomAttribute>
+<DicomAttribute keyword="RequestedProcedureID" tag="00401001" vr="SH">
+<Value number="1">P-20110607</Value>
+</DicomAttribute>
+</Item>
+</DicomAttribute>
+<DicomAttribute keyword="PerformedProcedureStepDiscontinuationReasonCodeSequence" tag="00400281" vr="SQ"/>
+<DicomAttribute keyword="PerformedSeriesSequence" tag="00400340" vr="SQ"/>
+</NativeDicomModel>

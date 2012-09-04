@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.query.util;
+package org.dcm4chee.archive.common;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Issuer;

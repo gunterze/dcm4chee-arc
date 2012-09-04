@@ -53,10 +53,10 @@ import javax.servlet.http.HttpServlet;
 import org.dcm4che.conf.api.hl7.HL7Configuration;
 import org.dcm4chee.archive.dao.CodeService;
 import org.dcm4chee.archive.dao.PatientService;
+import org.dcm4chee.archive.jms.JMSService;
 import org.dcm4chee.archive.mpps.dao.MPPSService;
 import org.dcm4chee.archive.retrieve.dao.RetrieveService;
 import org.dcm4chee.archive.stgcmt.dao.StgCmtService;
-import org.dcm4chee.archive.util.JMSService;
 
 @SuppressWarnings("serial")
 public class ArchiveServlet extends HttpServlet {

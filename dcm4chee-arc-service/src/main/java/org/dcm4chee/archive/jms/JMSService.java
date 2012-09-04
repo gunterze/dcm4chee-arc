@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.util;
+package org.dcm4chee.archive.jms;
 
 import java.util.IdentityHashMap;
 

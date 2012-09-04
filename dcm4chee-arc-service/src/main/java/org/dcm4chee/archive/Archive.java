@@ -57,6 +57,7 @@ import org.dcm4chee.archive.dao.CodeService;
 import org.dcm4chee.archive.dao.PatientService;
 import org.dcm4chee.archive.entity.Code;
 import org.dcm4chee.archive.hl7.PatientUpdateService;
+import org.dcm4chee.archive.jms.JMSService;
 import org.dcm4chee.archive.mpps.IANSCU;
 import org.dcm4chee.archive.mpps.MPPSSCP;
 import org.dcm4chee.archive.mpps.MPPSSCU;
@@ -70,7 +71,6 @@ import org.dcm4chee.archive.retrieve.dao.RetrieveService;
 import org.dcm4chee.archive.stgcmt.StgCmtSCP;
 import org.dcm4chee.archive.stgcmt.dao.StgCmtService;
 import org.dcm4chee.archive.store.CStoreSCP;
-import org.dcm4chee.archive.util.JMSService;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>

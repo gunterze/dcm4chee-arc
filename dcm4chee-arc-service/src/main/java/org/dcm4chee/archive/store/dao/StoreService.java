@@ -68,6 +68,7 @@ import org.dcm4che.net.Status;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.TagUtils;
+import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
 import org.dcm4chee.archive.conf.RejectionNote;
@@ -92,7 +93,6 @@ import org.dcm4chee.archive.entity.Series;
 import org.dcm4chee.archive.entity.Study;
 import org.dcm4chee.archive.entity.VerifyingObserver;
 import org.dcm4chee.archive.mpps.dao.IANQueryService;
-import org.dcm4chee.archive.store.StoreParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -509,13 +509,15 @@ public class StoreService {
         } else {
             checkRefPPS(data);
         }
-        updateEntities(series, data, availability);
+        Study study = series.getStudy();
+        mergeSeriesAttributes(series, data, availability);
+        mergeStudyAttributes(study, data, availability);
+        patientService.mergeAttributes(study.getPatient(), data, storeParam);
         return series;
     }
 
-    private void updateEntities(Series series, Attributes data,
+    private void mergeSeriesAttributes(Series series, Attributes data,
             Availability availability) {
-        updateEntities(series.getStudy(), data, availability);
         series.retainRetrieveAETs(storeParam.getRetrieveAETs());
         series.retainExternalRetrieveAET(storeParam.getExternalRetrieveAET());
         series.floorAvailability(availability);
@@ -652,10 +654,12 @@ public class StoreService {
         Study study;
         try {
             study = findStudy(data.getString(Tag.StudyInstanceUID, null));
-            updateEntities(study, data, availability);
+            mergeStudyAttributes(study, data, availability);
+            patientService.mergeAttributes(study.getPatient(), data, storeParam);
         } catch (NoResultException e) {
             study = new Study();
-            Patient patient = patientService.findUniqueOrCreatePatient(data, storeParam);
+            Patient patient = patientService.findUniqueOrCreatePatient(
+                    data, storeParam, true, true);
             study.setPatient(patient);
             study.setProcedureCodes(codeList(data, Tag.ProcedureCodeSequence));
             study.setIssuerOfAccessionNumber(issuer(
@@ -675,9 +679,8 @@ public class StoreService {
         return study;
     }
 
-    private void updateEntities(Study study, Attributes data,
+    private void mergeStudyAttributes(Study study, Attributes data,
             Availability availability) {
-        PatientService.updatePatient(study.getPatient(), data, storeParam);
         study.addModalityInStudy(data.getString(Tag.Modality, null));
         study.addSOPClassInStudy(data.getString(Tag.SOPClassUID, null));
         study.retainRetrieveAETs(storeParam.getRetrieveAETs());

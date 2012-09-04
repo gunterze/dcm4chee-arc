@@ -38,7 +38,7 @@
 
 package org.dcm4chee.archive.exception;
 
-import org.dcm4chee.archive.entity.Issuer;
+import org.dcm4chee.archive.common.IDWithIssuer;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -47,8 +47,8 @@ public class NonUniquePatientException extends RuntimeException {
 
     private static final long serialVersionUID = -770538934731527268L;
 
-    public NonUniquePatientException(String pid, Issuer issuer) {
-        super("Patient[id=" + pid + ", issuer=" + issuer + "]");
+    public NonUniquePatientException(IDWithIssuer pid) {
+        super(pid.toString());
     }
 
 }

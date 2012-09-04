@@ -48,9 +48,10 @@ import org.dcm4che.net.Association;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.BasicMPPSSCP;
 import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.mpps.dao.MPPSService;
-import org.dcm4chee.archive.store.StoreParam;
+import org.dcm4chee.archive.mpps.dao.PPSWithIAN;
 import org.dcm4chee.archive.store.Supplements;
 
 /**

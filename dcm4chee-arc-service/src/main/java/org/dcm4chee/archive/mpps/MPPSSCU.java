@@ -61,7 +61,7 @@ import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.conf.ArchiveDevice;
-import org.dcm4chee.archive.util.JMSService;
+import org.dcm4chee.archive.jms.JMSService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

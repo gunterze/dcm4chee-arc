@@ -68,8 +68,8 @@ import org.dcm4che.net.service.DicomService;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.conf.ArchiveDevice;
+import org.dcm4chee.archive.jms.JMSService;
 import org.dcm4chee.archive.stgcmt.dao.StgCmtService;
-import org.dcm4chee.archive.util.JMSService;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>

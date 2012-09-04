@@ -56,6 +56,7 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.BasicMPPSSCP;
 import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
 import org.dcm4chee.archive.conf.RejectionNote;
@@ -69,8 +70,6 @@ import org.dcm4chee.archive.entity.PerformedProcedureStep;
 import org.dcm4chee.archive.entity.ScheduledProcedureStep;
 import org.dcm4chee.archive.entity.Series;
 import org.dcm4chee.archive.entity.Study;
-import org.dcm4chee.archive.mpps.PPSWithIAN;
-import org.dcm4chee.archive.store.StoreParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -102,7 +101,8 @@ public class MPPSService {
                 .setUID(Tag.AffectedSOPInstanceUID, sopInstanceUID);
         } catch (NoResultException e) {}
         AttributeFilter filter = storeParam.getAttributeFilter(Entity.PerformedProcedureStep);
-        Patient patient = patService.findUniqueOrCreatePatient(attrs, storeParam);
+        Patient patient = patService.findUniqueOrCreatePatient(
+                attrs, storeParam, true, true);
         PerformedProcedureStep mpps = new PerformedProcedureStep();
         mpps.setSopInstanceUID(sopInstanceUID);
         mpps.setAttributes(attrs, filter);

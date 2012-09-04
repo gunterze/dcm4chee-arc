@@ -44,9 +44,9 @@ import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicQueryTask;
 import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4chee.archive.common.IDWithIssuer;
+import org.dcm4chee.archive.common.QueryParam;
 import org.dcm4chee.archive.mwl.dao.MWLQueryService;
-import org.dcm4chee.archive.query.util.IDWithIssuer;
-import org.dcm4chee.archive.query.util.QueryParam;
 import org.dcm4chee.archive.util.BeanLocator;
 
 /**

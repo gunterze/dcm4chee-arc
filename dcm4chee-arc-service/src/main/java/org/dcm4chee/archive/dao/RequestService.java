@@ -51,6 +51,7 @@ import javax.persistence.TypedQuery;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
 import org.dcm4chee.archive.entity.Issuer;
@@ -62,7 +63,6 @@ import org.dcm4chee.archive.entity.ServiceRequest;
 import org.dcm4chee.archive.entity.Visit;
 import org.dcm4chee.archive.exception.EntityAlreadyExistsException;
 import org.dcm4chee.archive.exception.PatientMismatchException;
-import org.dcm4chee.archive.store.StoreParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>

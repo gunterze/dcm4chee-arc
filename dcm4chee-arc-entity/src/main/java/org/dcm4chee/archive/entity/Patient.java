@@ -76,11 +76,7 @@ import org.hibernate.annotations.Index;
 @NamedQuery(
     name="Patient.findByPatientID",
     query="SELECT p FROM Patient p LEFT JOIN FETCH p.issuerOfPatientID " +
-          "WHERE p.patientID = ?1" ),
-@NamedQuery(
-    name="Patient.findByPatientIDWithIssuer",
-    query="SELECT p FROM Patient p " +
-          "WHERE p.patientID = ?1 AND p.issuerOfPatientID = ?2")
+          "WHERE p.patientID = ?1" )
 })
 @Entity
 @Table(name = "patient")
@@ -90,9 +86,6 @@ public class Patient implements Serializable {
 
     public static final String FIND_BY_PATIENT_ID =
             "Patient.findByPatientID";
-
-    public static final String FIND_BY_PATIENT_ID_WITH_ISSUER =
-            "Patient.findByPatientIDWithIssuer";
 
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)

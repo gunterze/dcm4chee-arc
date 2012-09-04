@@ -36,11 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.query.util;
+package org.dcm4chee.archive.util.query;
 
 import org.dcm4che.data.PersonName;
 import org.dcm4che.data.PersonName.Group;
 import org.dcm4che.soundex.FuzzyStr;
+import org.dcm4chee.archive.common.QueryParam;
 
 import com.mysema.query.BooleanBuilder;
 import com.mysema.query.types.ExpressionUtils;

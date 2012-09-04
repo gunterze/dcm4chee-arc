@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.store;
+package org.dcm4chee.archive.common;
 
 import java.util.List;
 

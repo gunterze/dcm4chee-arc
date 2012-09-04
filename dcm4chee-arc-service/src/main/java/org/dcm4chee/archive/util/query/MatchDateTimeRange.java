@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.query.util;
+package org.dcm4chee.archive.util.query;
 
 import java.util.Date;
 

@@ -56,7 +56,7 @@ import org.dcm4che.net.Status;
 import org.dcm4chee.archive.entity.Availability;
 import org.dcm4chee.archive.entity.QInstance;
 import org.dcm4chee.archive.entity.Utils;
-import org.dcm4chee.archive.query.util.Builder;
+import org.dcm4chee.archive.util.query.Builder;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.ejb.HibernateEntityManagerFactory;

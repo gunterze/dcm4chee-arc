@@ -59,6 +59,7 @@ import org.dcm4che.net.service.BasicCStoreSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
+import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.entity.FileSystem;
 import org.dcm4chee.archive.mpps.IANSCU;

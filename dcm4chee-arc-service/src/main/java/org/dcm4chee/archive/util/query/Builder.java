@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.query.util;
+package org.dcm4chee.archive.util.query;
 
 import java.util.List;
 
@@ -44,6 +44,8 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Issuer;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
+import org.dcm4chee.archive.common.IDWithIssuer;
+import org.dcm4chee.archive.common.QueryParam;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
 import org.dcm4chee.archive.entity.Code;

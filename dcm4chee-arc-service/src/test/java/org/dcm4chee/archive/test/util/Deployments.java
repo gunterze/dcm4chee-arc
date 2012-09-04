@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Agfa Healthcare.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,54 +36,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.dao;
+package org.dcm4chee.archive.test.util;
 
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-
-import org.dcm4chee.archive.entity.Issuer;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.jboss.shrinkwrap.resolver.api.DependencyResolvers;
+import org.jboss.shrinkwrap.resolver.api.maven.EffectivePomMavenDependencyResolver;
+import org.jboss.shrinkwrap.resolver.api.maven.MavenDependencyResolver;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ *
  */
-@Stateless
-public class IssuerService {
+public abstract class Deployments {
 
-    @PersistenceContext
-    private EntityManager em;
+    private static final String DCM4CHEE_ARC_CONF =
+            "org.dcm4che.dcm4chee-arc:dcm4chee-arc-conf";
+    private static final String DCM4CHEE_ARC_ENTITY =
+            "org.dcm4che.dcm4chee-arc:dcm4chee-arc-entity:jar:mysql:4.1.0-SNAPSHOT";
 
-    public Issuer findOrCreate(Issuer issuer) {
-        try {
-            String entityID = issuer.getLocalNamespaceEntityID();
-            String entityUID = issuer.getUniversalEntityID();
-            String entityUIDType = issuer.getUniversalEntityIDType();
-            TypedQuery<Issuer> query;
-            if (entityID == null) {
-                query = em.createNamedQuery(Issuer.FIND_BY_ENTITY_UID, Issuer.class)
-                    .setParameter(1, entityUID)
-                    .setParameter(2, entityUIDType);
-            } else if (entityUID == null) {
-                query = em.createNamedQuery(Issuer.FIND_BY_ENTITY_ID, Issuer.class)
-                    .setParameter(1, entityID);
-            } else {
-                query = em.createNamedQuery(Issuer.FIND_BY_ENTITY_ID_OR_UID, Issuer.class)
-                    .setParameter(1, entityID)
-                    .setParameter(2, entityUID)
-                    .setParameter(3, entityUIDType);
-            }
-            return query.getSingleResult();
-        } catch (NoResultException e) {
-            em.persist(issuer);
-            em.flush();
-            em.refresh(issuer);
-            return issuer;
-        }
-    }
+    public static WebArchive createWebArchive() {
+        final EffectivePomMavenDependencyResolver resolver =
+                DependencyResolvers
+                    .use(MavenDependencyResolver.class)
+                    .goOffline()
+                    .loadEffectivePom("pom.xml");
 
-    public void deleteIssuer(Issuer issuer) {
-        em.remove(em.merge(issuer));
+        return ShrinkWrap.create(WebArchive.class, "test.war")
+                .addAsLibraries(
+                        resolver.artifact(DCM4CHEE_ARC_CONF).resolveAsFiles())
+                .addAsLibraries(
+                        resolver.artifact(DCM4CHEE_ARC_ENTITY).resolveAsFiles());
     }
 }

@@ -41,11 +41,11 @@ package org.dcm4chee.archive.query.dao;
 import java.util.NoSuchElementException;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4chee.archive.common.QueryParam;
 import org.dcm4chee.archive.entity.QInstance;
 import org.dcm4chee.archive.entity.QSeries;
 import org.dcm4chee.archive.entity.Utils;
-import org.dcm4chee.archive.query.util.Builder;
-import org.dcm4chee.archive.query.util.QueryParam;
+import org.dcm4chee.archive.util.query.Builder;
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;

@@ -47,9 +47,9 @@ import org.dcm4che.hl7.HL7Segment;
 import org.dcm4che.net.Connection;
 import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.net.hl7.service.HL7Service;
+import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.conf.ArchiveHL7Application;
 import org.dcm4chee.archive.dao.PatientService;
-import org.dcm4chee.archive.store.StoreParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>

@@ -1,0 +1,22 @@
+<ejb-jar
+  xmlns="http://java.sun.com/xml/ns/javaee" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/ejb-jar_3_1.xsd"
+  version="3.1">
+  <module-name>service</module-name>
+  <enterprise-beans>
+    <session>
+      <ejb-name>QueryService</ejb-name>
+      <ejb-class>org.dcm4chee.archive.query.dao.QueryService</ejb-class>
+      <resource-ref>
+        <res-ref-name>jdbc/dataSource</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <mapped-name>${ds}</mapped-name>
+        <injection-target>
+          <injection-target-class>org.dcm4chee.archive.query.dao.QueryService</injection-target-class>
+          <injection-target-name>dataSource</injection-target-name>
+        </injection-target>
+      </resource-ref>
+    </session>
+  </enterprise-beans>
+</ejb-jar>

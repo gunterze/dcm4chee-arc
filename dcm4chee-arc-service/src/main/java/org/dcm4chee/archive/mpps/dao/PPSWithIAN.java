@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Agfa Healthcare.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,54 +36,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.dao;
+package org.dcm4chee.archive.mpps.dao;
 
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-
-import org.dcm4chee.archive.entity.Issuer;
+import org.dcm4che.data.Attributes;
+import org.dcm4chee.archive.entity.PerformedProcedureStep;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Stateless
-public class IssuerService {
+public class PPSWithIAN {
 
-    @PersistenceContext
-    private EntityManager em;
+    public final PerformedProcedureStep pps;
+    public final Attributes ian;
 
-    public Issuer findOrCreate(Issuer issuer) {
-        try {
-            String entityID = issuer.getLocalNamespaceEntityID();
-            String entityUID = issuer.getUniversalEntityID();
-            String entityUIDType = issuer.getUniversalEntityIDType();
-            TypedQuery<Issuer> query;
-            if (entityID == null) {
-                query = em.createNamedQuery(Issuer.FIND_BY_ENTITY_UID, Issuer.class)
-                    .setParameter(1, entityUID)
-                    .setParameter(2, entityUIDType);
-            } else if (entityUID == null) {
-                query = em.createNamedQuery(Issuer.FIND_BY_ENTITY_ID, Issuer.class)
-                    .setParameter(1, entityID);
-            } else {
-                query = em.createNamedQuery(Issuer.FIND_BY_ENTITY_ID_OR_UID, Issuer.class)
-                    .setParameter(1, entityID)
-                    .setParameter(2, entityUID)
-                    .setParameter(3, entityUIDType);
-            }
-            return query.getSingleResult();
-        } catch (NoResultException e) {
-            em.persist(issuer);
-            em.flush();
-            em.refresh(issuer);
-            return issuer;
-        }
-    }
-
-    public void deleteIssuer(Issuer issuer) {
-        em.remove(em.merge(issuer));
+    public PPSWithIAN(PerformedProcedureStep pps, Attributes ian) {
+        this.pps = pps;
+        this.ian = ian;
     }
 }
