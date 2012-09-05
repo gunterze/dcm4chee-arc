@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NativeDicomModel xml-space="preserved">
+<DicomAttribute keyword="SOPClassUID" tag="00080016" vr="UI">
+<Value number="1">1.2.840.10008.5.1.4.1.1.7</Value>
+</DicomAttribute>
+<DicomAttribute keyword="SOPInstanceUID" tag="00080018" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.20.1.1</Value>
+</DicomAttribute>
+<DicomAttribute keyword="Modality" tag="00080060" vr="CS">
+<Value number="1">OT</Value>
+</DicomAttribute>
+<DicomAttribute keyword="StudyDescription" tag="00081030" vr="LO">
+<Value number="1">Test data for Procedure Code Sequence</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ProcedureCodeSequence" tag="00081032" vr="SQ">
+<Item number="1">
+<DicomAttribute keyword="CodeValue" tag="00080100" vr="SH">
+<Value number="1">PROC_CODE_2</Value>
+</DicomAttribute>
+<DicomAttribute keyword="CodingSchemeDesignator" tag="00080102" vr="SH">
+<Value number="1">99DCM4CHEE_TEST</Value>
+</DicomAttribute>
+<DicomAttribute keyword="CodeMeaning" tag="00080104" vr="LO">
+<Value number="1">Meaning of PROC_CODE_2</Value>
+</DicomAttribute>
+</Item>
+</DicomAttribute><DicomAttribute keyword="PatientName" tag="00100010" vr="PN">
+<PersonName number="1">
+<Alphabetic>
+<FamilyName>Test Procedure Code Sequence</FamilyName>
+</Alphabetic>
+</PersonName>
+</DicomAttribute>
+<DicomAttribute keyword="PatientID" tag="00100020" vr="LO">
+<Value number="1">PROC_CODE_SEQ</Value>
+</DicomAttribute>
+<DicomAttribute keyword="IssuerOfPatientID" tag="00100021" vr="LO">
+<Value number="1">DCM4CHEE_TESTDATA</Value>
+</DicomAttribute>
+<DicomAttribute keyword="StudyInstanceUID" tag="0020000D" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.20</Value>
+</DicomAttribute>
+<DicomAttribute keyword="SeriesInstanceUID" tag="0020000E" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.20.1</Value>
+</DicomAttribute>
+<DicomAttribute keyword="StudyID" tag="00200010" vr="SH">
+<Value number="1">PROC_CODE_2</Value>
+</DicomAttribute>
+<DicomAttribute keyword="SeriesNumber" tag="00200011" vr="IS">
+<Value number="1">1</Value>
+</DicomAttribute>
+<DicomAttribute keyword="InstanceNumber" tag="00200013" vr="IS">
+<Value number="1">1</Value>
+</DicomAttribute>
+</NativeDicomModel>

@@ -44,6 +44,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.ejb.EJBException;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
@@ -75,7 +76,7 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class QueryService {
 
-    // injection specified in META-INF/ejb-jar.xml
+    @Resource(mappedName="java:/PacsDS")
     private DataSource dataSource;
 
     @PersistenceUnit

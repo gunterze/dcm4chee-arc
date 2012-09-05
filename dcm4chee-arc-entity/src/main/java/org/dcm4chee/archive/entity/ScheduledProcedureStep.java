@@ -178,7 +178,7 @@ public class ScheduledProcedureStep implements Serializable {
 
     @Override
     public String toString() {
-        return "RequestedProcedure[pk=" + pk
+        return "SPS[pk=" + pk
                 + ", id=" + scheduledProcedureStepID
                 + ", startDate=" + scheduledStartDate
                 + ", startTime=" + scheduledStartTime

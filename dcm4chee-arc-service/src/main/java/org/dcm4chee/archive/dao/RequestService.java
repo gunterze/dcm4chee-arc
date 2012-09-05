@@ -45,7 +45,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
@@ -78,29 +77,14 @@ public class RequestService {
 
     public ScheduledProcedureStep findOrCreateScheduledProcedureStep(
             Attributes attrs, Patient patient, StoreParam storeParam) {
-        String spsid = attrs.getString(Tag.ScheduledProcedureStepID);
-        String rpid = attrs.getString(Tag.RequestedProcedureID);
-        String accno = attrs.getString(Tag.AccessionNumber);
-        return findOrCreateScheduleProcedureStep(attrs, patient,
-                storeParam, spsid, rpid, accno);
+        return findOrCreateScheduleProcedureStep(attrs, patient, storeParam,
+                false);
     }
 
     public ScheduledProcedureStep createScheduledProcedureStep(
             Attributes attrs, Patient patient, StoreParam storeParam) {
-        String spsid = attrs.getString(Tag.ScheduledProcedureStepID);
-        String rpid = attrs.getString(Tag.RequestedProcedureID);
-        String accno = attrs.getString(Tag.AccessionNumber);
-        Issuer isserOfAccNo = issuer(
-                attrs.getNestedDataset(Tag.IssuerOfAccessionNumberSequence));
-        ScheduledProcedureStep sps = createScheduledProcedureStep(attrs, patient,
-                storeParam, spsid, rpid, accno, isserOfAccNo);
-        try {
-            findScheduledProcedureStep(spsid, rpid, accno, isserOfAccNo);
-        } catch (NonUniqueResultException e2) {
-            em.remove(sps);
-            throw new EntityAlreadyExistsException(sps.toString());
-        }
-        return sps;
+        return findOrCreateScheduleProcedureStep(attrs, patient, storeParam,
+                true);
     }
 
     private Issuer issuer(Attributes item) {
@@ -112,27 +96,24 @@ public class RequestService {
 
 
     private ScheduledProcedureStep findOrCreateScheduleProcedureStep(
-            Attributes attrs, Patient patient,
-            StoreParam storeParam, String spsid, String rpid, String accno) {
+            Attributes attrs, Patient patient, StoreParam storeParam,
+            boolean create) {
+        String spsid = attrs.getString(Tag.ScheduledProcedureStepID);
+        String rpid = attrs.getString(Tag.RequestedProcedureID);
+        String accno = attrs.getString(Tag.AccessionNumber);
         Issuer isserOfAccNo = issuer(
                 attrs.getNestedDataset(Tag.IssuerOfAccessionNumberSequence));
         try {
             ScheduledProcedureStep sps = findScheduledProcedureStep(
                     spsid, rpid, accno, isserOfAccNo);
+            if (create)
+                throw new EntityAlreadyExistsException(sps.toString());
             PatientMismatchException.check(sps, patient,
                     sps.getRequestedProcedure().getServiceRequest().getVisit().getPatient());
             return sps;
         } catch (NoResultException e) {
-            ScheduledProcedureStep sps = createScheduledProcedureStep(attrs, patient, 
+            return createScheduledProcedureStep(attrs, patient, 
                     storeParam, spsid, rpid, accno, isserOfAccNo);
-            try {
-                findScheduledProcedureStep(spsid, rpid, accno, isserOfAccNo);
-            } catch (NonUniqueResultException e2) {
-                em.remove(sps);
-                return findOrCreateScheduleProcedureStep(attrs, patient,
-                        storeParam, spsid, rpid, accno);
-            }
-            return sps;
         }
     }
 

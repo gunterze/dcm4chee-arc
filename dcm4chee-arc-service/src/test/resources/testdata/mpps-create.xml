@@ -7,15 +7,15 @@
 <DicomAttribute keyword="PatientName" tag="00100010" vr="PN">
 <PersonName number="1">
 <Alphabetic>
-<FamilyName>Test-StoreService</FamilyName>
+<FamilyName>Test StoreService</FamilyName>
 </Alphabetic>
 </PersonName>
 </DicomAttribute>
 <DicomAttribute keyword="PatientID" tag="00100020" vr="LO">
-<Value number="1">Test-StoreService-1234</Value>
+<Value number="1">STORE_SERVICE_TEST</Value>
 </DicomAttribute>
 <DicomAttribute keyword="IssuerOfPatientID" tag="00100021" vr="LO">
-<Value number="1">Test-StoreService</Value>
+<Value number="1">DCM4CHEE_TESTDATA</Value>
 </DicomAttribute>
 <DicomAttribute keyword="PatientBirthDate" tag="00100030" vr="DA"/>
 <DicomAttribute keyword="PatientSex" tag="00100040" vr="CS"/>

@@ -40,7 +40,6 @@ package org.dcm4chee.archive.mpps.dao;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -139,8 +138,8 @@ public class MPPSService {
             if (!attrs.containsValue(Tag.PerformedSeriesSequence))
                 throw new DicomServiceException(Status.MissingAttributeValue)
                         .setAttributeIdentifierList(Tag.PerformedSeriesSequence);
-            ian = ianQuery.createIANforMPPS(pps, storeParam.getHideConceptNameCodes(),
-                    Collections.<String> emptySet());
+            ian = ianQuery.createIANforMPPS(
+                    pps, storeParam.getRejectionNotes(), null);
             if (pps.isDiscontinued()) {
                 Attributes reasonCode = pps.getAttributes().getNestedDataset(
                         Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence);

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NativeDicomModel xml-space="preserved">
+<DicomAttribute keyword="SOPClassUID" tag="00080016" vr="UI">
+<Value number="1">1.2.840.10008.5.1.4.1.1.11.1</Value>
+</DicomAttribute>
+<DicomAttribute keyword="SOPInstanceUID" tag="00080018" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.20110607.2.1</Value>
+</DicomAttribute>
+<DicomAttribute keyword="AccessionNumber" tag="00080050" vr="SH">
+<Value number="1">A-20110607</Value>
+</DicomAttribute>
+<DicomAttribute keyword="Modality" tag="00080060" vr="CS">
+<Value number="1">PR</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PerformedProcedureStepSequence" tag="00081111" vr="SQ">
+<Item number="1">
+<DicomAttribute keyword="ReferencedSOPClassUID" tag="00081150" vr="UI">
+<Value number="1">1.2.840.10008.3.1.2.3.3</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ReferencedSOPInstanceUID" tag="00081155" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.20120130</Value>
+</DicomAttribute>
+</Item>
+</DicomAttribute>
+<DicomAttribute keyword="PatientName" tag="00100010" vr="PN">
+<PersonName number="1">
+<Alphabetic>
+<FamilyName>Test StoreService</FamilyName>
+</Alphabetic>
+</PersonName>
+</DicomAttribute>
+<DicomAttribute keyword="PatientID" tag="00100020" vr="LO">
+<Value number="1">STORE_SERVICE_TEST</Value>
+</DicomAttribute>
+<DicomAttribute keyword="IssuerOfPatientID" tag="00100021" vr="LO">
+<Value number="1">DCM4CHEE_TESTDATA</Value>
+</DicomAttribute>
+<DicomAttribute keyword="StudyInstanceUID" tag="0020000D" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.20110607</Value>
+</DicomAttribute>
+<DicomAttribute keyword="SeriesInstanceUID" tag="0020000E" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.20110607.2</Value>
+</DicomAttribute>
+<DicomAttribute keyword="StudyID" tag="00200010" vr="SH">
+<Value number="1">TEST-REPLACE</Value>
+</DicomAttribute>
+<DicomAttribute keyword="SeriesNumber" tag="00200011" vr="IS">
+<Value number="1">2</Value>
+</DicomAttribute>
+<DicomAttribute keyword="InstanceNumber" tag="00200013" vr="IS">
+<Value number="1">1</Value>
+</DicomAttribute>
+<DicomAttribute keyword="RequestAttributesSequence" tag="00400275" vr="SQ">
+<Item number="1">
+<DicomAttribute keyword="ScheduledProcedureStepID" tag="00400009" vr="SH">
+<Value number="1">SPS-20110607</Value>
+</DicomAttribute>
+<DicomAttribute keyword="RequestedProcedureID" tag="00401001" vr="SH">
+<Value number="1">P-20110607</Value>
+</DicomAttribute>
+</Item>
+</DicomAttribute>
+</NativeDicomModel>

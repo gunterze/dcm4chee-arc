@@ -60,6 +60,11 @@ public class IDWithIssuer {
         this.issuer = issuer;
     }
 
+    public IDWithIssuer(String id, String issuer) {
+        this.id = id;
+        this.issuer = issuer != null ? new Issuer(issuer, '&') : null;
+    }
+
     public IDWithIssuer(String cx) {
         String[] ss = StringUtils.split(cx, '^');
         this.id = ss[0];

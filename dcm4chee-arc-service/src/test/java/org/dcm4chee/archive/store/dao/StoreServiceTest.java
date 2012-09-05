@@ -38,11 +38,7 @@
 
 package org.dcm4chee.archive.store.dao;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
@@ -53,7 +49,6 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.io.SAXReader;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.StoreParam;
-import org.dcm4chee.archive.dao.IssuerService;
 import org.dcm4chee.archive.dao.PatientService;
 import org.dcm4chee.archive.entity.Availability;
 import org.dcm4chee.archive.entity.Instance;
@@ -64,7 +59,6 @@ import org.dcm4chee.archive.mpps.dao.MPPSService;
 import org.dcm4chee.archive.mpps.dao.PPSWithIAN;
 import org.dcm4chee.archive.test.util.Deployments;
 import org.dcm4chee.archive.test.util.StoreParamFactory;
-import org.dcm4chee.archive.util.BeanLocator;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
@@ -79,17 +73,13 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class StoreServiceTest {
 
-    private static final String PID = "Test-StoreService-1234^^^Test-StoreService";
-
     private static final String MPPS_IUID = "1.2.40.0.13.1.1.99.20120130";
-
-    private static final String SOURCE_AET = "StoreServiceTest";
 
     @EJB
     private PatientService patientService;
 
     @EJB
-    private IssuerService issuerService;
+    private StoreService storeService;
 
     @EJB
     private MPPSService mppsService;
@@ -97,7 +87,6 @@ public class StoreServiceTest {
     @Deployment
     public static WebArchive createDeployment() {
         WebArchive arc = Deployments.createWebArchive()
-                .addClass(BeanLocator.class)
                 .addClass(StoreParamFactory.class)
                 .addPackage("org.dcm4chee.archive.common")
                 .addPackage("org.dcm4chee.archive.dao")
@@ -105,80 +94,77 @@ public class StoreServiceTest {
                 .addPackage("org.dcm4chee.archive.mpps.dao")
                 .addPackage("org.dcm4chee.archive.store.dao")
                 .addPackage("org.dcm4chee.archive.util.query")
-                .addAsResource("testdata/ct-1.xml")
-                .addAsResource("testdata/ct-2.xml")
-                .addAsResource("testdata/pr-1.xml")
+                .addAsResource("testdata/store-ct-1.xml")
+                .addAsResource("testdata/store-ct-2.xml")
+                .addAsResource("testdata/store-pr-1.xml")
                 .addAsResource("testdata/mpps-create.xml")
                 .addAsResource("testdata/mpps-set.xml")
-                .addAsWebInfResource("store-ejb-jar.xml", "ejb-jar.xml")
                 .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml");
         return arc;
     }
 
-    private void clearData() {
-        patientService.deletePatient(new IDWithIssuer(PID));
+    private void clearData(IDWithIssuer pid) {
+        patientService.deletePatient(pid);
     }
 
     @Test
     public void testNewInstance() throws Exception {
-        clearData();
+        Attributes mpps_create = load("testdata/mpps-create.xml");
+        IDWithIssuer pid = IDWithIssuer.pidWithIssuer(mpps_create, null);
+        String sourceAET = mpps_create.getString(Tag.PerformedStationAETitle);
+        clearData(pid);
         StoreParam storeParam = StoreParamFactory.create();
         PerformedProcedureStep pps = mppsService.createPerformedProcedureStep(
-                MPPS_IUID, load("testdata/mpps-create.xml"), storeParam);
+                MPPS_IUID, mpps_create, storeParam);
         assertTrue(pps.isInProgress());
         PPSWithIAN ppsWithIAN = mppsService.updatePerformedProcedureStep(
                 MPPS_IUID, load("testdata/mpps-set.xml"), storeParam);
         assertTrue(ppsWithIAN.pps.isCompleted());
-        StoreService store = BeanLocator.lookup(StoreService.class);
-        try {
-            store.setStoreParam(storeParam);
-            storeParam.setRetrieveAETs("AET_1","AET_2");
-            storeParam.setExternalRetrieveAET("AET_3");
-            Attributes modified1 = new Attributes();
-            Instance ct1 = store.newInstance(SOURCE_AET,
-                    load("testdata/ct-1.xml"), modified1, Availability.ONLINE);
-            assertTrue(modified1.isEmpty());
-            storeParam.setRetrieveAETs("AET_2");
-            storeParam.setExternalRetrieveAET("AET_3");
-            Attributes modified2 = new Attributes();
-            Instance ct2 = store.newInstance(SOURCE_AET,
-                    load("testdata/ct-2.xml"), modified2, Availability.NEARLINE);
-            assertEquals(2, modified2.size());
-            assertEquals("TEST-REPLACE", modified2.getString(Tag.StudyID));
-            assertEquals("0", modified2.getString(Tag.SeriesNumber));
-            storeParam.setRetrieveAETs("AET_1","AET_2");
-            storeParam.setExternalRetrieveAET("AET_4");
-            Attributes modified3 = new Attributes();
-            Instance pr1 = store.newInstance(SOURCE_AET,
-                    load("testdata/pr-1.xml"), modified3, Availability.ONLINE);
-            assertEquals(1, modified3.size());
-            assertEquals("TEST-REPLACE", modified3.getString(Tag.StudyID));
-            Attributes ian = store.createIANforCurrentMPPS();
-            assertNotNull(ian);
+        storeService.setStoreParam(storeParam);
+        storeParam.setRetrieveAETs("AET_1","AET_2");
+        storeParam.setExternalRetrieveAET("AET_3");
+        Attributes modified1 = new Attributes();
+        Instance ct1 = storeService.newInstance(sourceAET,
+                load("testdata/store-ct-1.xml"), modified1, Availability.ONLINE);
+        assertTrue(modified1.isEmpty());
+        storeParam.setRetrieveAETs("AET_2");
+        storeParam.setExternalRetrieveAET("AET_3");
+        Attributes modified2 = new Attributes();
+        Instance ct2 = storeService.newInstance(sourceAET,
+                load("testdata/store-ct-2.xml"), modified2, Availability.NEARLINE);
+        assertEquals(2, modified2.size());
+        assertEquals("TEST-REPLACE", modified2.getString(Tag.StudyID));
+        assertEquals("0", modified2.getString(Tag.SeriesNumber));
+        storeParam.setRetrieveAETs("AET_1","AET_2");
+        storeParam.setExternalRetrieveAET("AET_4");
+        Attributes modified3 = new Attributes();
+        Instance pr1 = storeService.newInstance(sourceAET,
+                load("testdata/store-pr-1.xml"), modified3, Availability.ONLINE);
+        assertEquals(1, modified3.size());
+        assertEquals("TEST-REPLACE", modified3.getString(Tag.StudyID));
+        Attributes ian = storeService.createIANforCurrentMPPS();
+        assertNotNull(ian);
 
-            Series ctSeries = ct1.getSeries();
-            Series prSeries = pr1.getSeries();
-            Study study = ctSeries.getStudy();
-            assertEquals(ctSeries, ct2.getSeries());
-            assertEquals(study, prSeries.getStudy());
-            assertArrayEquals(new String[]{"CT", "PR" }, sort(study.getModalitiesInStudy()));
-            assertArrayEquals(
-                    new String[]{
-                            "1.2.840.10008.5.1.4.1.1.11.1",
-                            "1.2.840.10008.5.1.4.1.1.2" },
-                    sort(study.getSOPClassesInStudy()));
-            assertArrayEquals(new String[]{"AET_2"}, ctSeries.getRetrieveAETs());
-            assertArrayEquals(new String[]{"AET_1", "AET_2"}, sort(prSeries.getRetrieveAETs()));
-            assertArrayEquals(new String[]{"AET_2"}, study.getRetrieveAETs());
-            assertEquals("AET_3", ctSeries.getExternalRetrieveAET());
-            assertEquals("AET_4", prSeries.getExternalRetrieveAET());
-            assertNull(study.getExternalRetrieveAET());
-            assertEquals(Availability.NEARLINE, ctSeries.getAvailability());
-            assertEquals(Availability.ONLINE, prSeries.getAvailability());
-            assertEquals(Availability.NEARLINE, study.getAvailability());
-        } finally {
-            store.close();
-        }
+        Series ctSeries = ct1.getSeries();
+        Series prSeries = pr1.getSeries();
+        Study study = ctSeries.getStudy();
+        assertEquals(ctSeries, ct2.getSeries());
+        assertEquals(study, prSeries.getStudy());
+        assertArrayEquals(new String[]{"CT", "PR" }, sort(study.getModalitiesInStudy()));
+        assertArrayEquals(
+                new String[]{
+                        "1.2.840.10008.5.1.4.1.1.11.1",
+                        "1.2.840.10008.5.1.4.1.1.2" },
+                sort(study.getSOPClassesInStudy()));
+        assertArrayEquals(new String[]{"AET_2"}, ctSeries.getRetrieveAETs());
+        assertArrayEquals(new String[]{"AET_1", "AET_2"}, sort(prSeries.getRetrieveAETs()));
+        assertArrayEquals(new String[]{"AET_2"}, study.getRetrieveAETs());
+        assertEquals("AET_3", ctSeries.getExternalRetrieveAET());
+        assertEquals("AET_4", prSeries.getExternalRetrieveAET());
+        assertNull(study.getExternalRetrieveAET());
+        assertEquals(Availability.NEARLINE, ctSeries.getAvailability());
+        assertEquals(Availability.ONLINE, prSeries.getAvailability());
+        assertEquals(Availability.NEARLINE, study.getAvailability());
     }
 
     private Attributes load(String name) throws Exception {

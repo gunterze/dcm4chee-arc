@@ -141,7 +141,7 @@ public class StoreService {
 
     public Attributes createIANforPreviousMPPS() throws DicomServiceException {
         try {
-            return createIANforMPPS(prevMpps, Collections.<String> emptySet());
+            return createIANforMPPS(prevMpps, null);
         } finally {
             prevMpps = null;
         }
@@ -150,7 +150,7 @@ public class StoreService {
     public Attributes createIANforCurrentMPPS()
             throws DicomServiceException {
         try {
-            return createIANforMPPS(curMpps, Collections.<String> emptySet());
+            return createIANforMPPS(curMpps, null);
         } finally {
             curMpps = null;
         }
@@ -161,8 +161,8 @@ public class StoreService {
         if (pps == null || pps.isInProgress())
             return null;
 
-        return ianQuery.createIANforMPPS(pps,
-                storeParam.getHideConceptNameCodes(), rejectedIUIDs);
+        return ianQuery.createIANforMPPS(
+                pps, storeParam.getRejectionNotes(), rejectedIUIDs);
     }
 
     public boolean addFileRef(String sourceAET, Attributes data, Attributes modified,
@@ -372,7 +372,8 @@ public class StoreService {
         try {
             List<Attributes> ians = new ArrayList<Attributes>(rejectedInstances.size());
             for (Entry<String, HashSet<String>> entry : rejectedInstances.entrySet()) {
-                Attributes ian = createIANforMPPS(findPPS(entry.getKey()), entry.getValue());
+                PerformedProcedureStep mpps = findPPS(entry.getKey());
+                Attributes ian = createIANforMPPS(mpps, entry.getValue());
                 if (ian != null)
                     ians.add(ian);
             }

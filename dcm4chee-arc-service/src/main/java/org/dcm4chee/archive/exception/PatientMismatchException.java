@@ -12,7 +12,7 @@ public class PatientMismatchException extends RuntimeException {
     }
 
     public static void check(Object source, Patient expected, Patient actual) {
-        if (actual != expected)
+        if (actual.getPk() != expected.getPk())
             throw new PatientMismatchException(source, expected, actual);
     }
 }

@@ -68,24 +68,24 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class PatientServiceTest {
 
-    private static final String PID_1234 = "Test-PatientService-1234";
-    private static final String PID_5678 = "Test-PatientService-5678";
-    private static final String ISSUER_X = "Test-PatientService-X";
-    private static final String ISSUER_Y = "Test-PatientService-Y";
-    private static final String TEST_1234 = "Test-PatientService-1234";
-    private static final String TEST_1234_X = "Test-PatientService-1234-X";
-    private static final String TEST_1234_Y = "Test-PatientService-1234-Y";
-    private static final String TEST_5678_X = "Test-PatientService-5678-X";
+    private static final String PID_1234 = "PATIENT_SERVICE_TEST-1234";
+    private static final String PID_5678 = "PATIENT_SERVICE_TEST-5678";
+    private static final String ISSUER_X = "DCM4CHEE_TESTDATA_X";
+    private static final String ISSUER_Y = "DCM4CHEE_TESTDATA_Y";
+    private static final String TEST_1234 = "Test PatientService 1234";
+    private static final String TEST_1234_X = "Test PatientService 1234-X";
+    private static final String TEST_1234_Y = "Test PatientService 1234-Y";
+    private static final String TEST_5678_X = "Test PatientService 5678-X";
 
     private static final String NULL_MERGE_FK =
             "update Patient p set p.mergedWith=NULL " +
-            "where p.patientID like 'Test-PatientService-%'";
+            "where p.patientID like 'PATIENT_SERVICE_TEST-%'";
     private static final String CLEAR_PATIENTS =
             "delete from Patient p " +
-            "where p.patientID like 'Test-PatientService-%'";
+            "where p.patientID like 'PATIENT_SERVICE_TEST-%'";
     private static final String CLEAR_ISSUERS = 
             "delete from Issuer i " +
-            "where i.localNamespaceEntityID like 'Test-PatientService-%'";
+            "where i.localNamespaceEntityID like 'PATIENT_SERVICE_TEST-%'";
 
     private final StoreParam storeParam = StoreParamFactory.create();
 

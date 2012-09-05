@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NativeDicomModel xml-space="preserved">
+<DicomAttribute keyword="SOPClassUID" tag="00080016" vr="UI">
+<Value number="1">1.2.840.10008.5.1.4.1.1.88.11</Value>
+</DicomAttribute>
+<DicomAttribute keyword="SOPInstanceUID" tag="00080018" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.23.1.3</Value>
+</DicomAttribute>
+<DicomAttribute keyword="StudyDate" tag="00080020" vr="DA">
+<Value number="1">20110629</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ContentDate" tag="00080023" vr="DA">
+<Value number="1">20110701</Value>
+</DicomAttribute>
+<DicomAttribute keyword="StudyTime" tag="00080030" vr="TM">
+<Value number="1">1300</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ContentTime" tag="00080033" vr="TM">
+<Value number="1">0830</Value>
+</DicomAttribute>
+<DicomAttribute keyword="Modality" tag="00080060" vr="CS">
+<Value number="1">SR</Value>
+</DicomAttribute>
+<DicomAttribute keyword="StudyDescription" tag="00081030" vr="LO">
+<Value number="1">Test Verifying Observer Sequence </Value>
+</DicomAttribute>
+<DicomAttribute keyword="PatientName" tag="00100010" vr="PN">
+<PersonName number="1">
+<Alphabetic>
+<FamilyName>Test Verifying Observer Sequence</FamilyName>
+</Alphabetic>
+</PersonName>
+</DicomAttribute>
+<DicomAttribute keyword="PatientID" tag="00100020" vr="LO">
+<Value number="1">VERIFYING_OBSERVER_SEQ</Value>
+</DicomAttribute>
+<DicomAttribute keyword="IssuerOfPatientID" tag="00100021" vr="LO">
+<Value number="1">DCM4CHEE_TESTDATA</Value>
+</DicomAttribute>
+<DicomAttribute keyword="StudyInstanceUID" tag="0020000D" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.23</Value>
+</DicomAttribute>
+<DicomAttribute keyword="SeriesInstanceUID" tag="0020000E" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.23.1</Value>
+</DicomAttribute>
+<DicomAttribute keyword="StudyID" tag="00200010" vr="SH">
+<Value number="1">VERIFYING_OBSERV</Value>
+</DicomAttribute>
+<DicomAttribute keyword="SeriesNumber" tag="00200011" vr="IS">
+<Value number="1">1</Value>
+</DicomAttribute>
+<DicomAttribute keyword="InstanceNumber" tag="00200013" vr="IS">
+<Value number="1">3</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ConceptNameCodeSequence" tag="0040A043" vr="SQ">
+<Item number="1">
+<DicomAttribute keyword="CodeValue" tag="00080100" vr="SH">
+<Value number="1">CONCEPT_NAME_1</Value>
+</DicomAttribute>
+<DicomAttribute keyword="CodingSchemeDesignator" tag="00080102" vr="SH">
+<Value number="1">99DCM4CHEE_TEST</Value>
+</DicomAttribute>
+<DicomAttribute keyword="CodeMeaning" tag="00080104" vr="LO">
+<Value number="1">Meaning of CONCEPT_NAME_1</Value>
+</DicomAttribute>
+</Item>
+</DicomAttribute>
+<DicomAttribute keyword="VerifyingObserverSequence" tag="0040A073" vr="SQ">
+<Item number="1">
+<DicomAttribute keyword="VerifyingOrganization" tag="0040A027" vr="LO">
+<Value number="1">OrganizationXY</Value>
+</DicomAttribute>
+<DicomAttribute keyword="VerificationDateTime" tag="0040A030" vr="DT">
+<Value number="1">201106300830</Value>
+</DicomAttribute>
+<DicomAttribute keyword="VerifyingObserverName" tag="0040A075" vr="PN">
+<PersonName number="1">
+<Alphabetic>
+<FamilyName>VerifyingObserver1</FamilyName>
+</Alphabetic>
+</PersonName>
+</DicomAttribute>
+<DicomAttribute keyword="VerifyingObserverIdentificationCodeSequence" tag="0040A088" vr="SQ"/>
+</Item>
+<Item number="2">
+<DicomAttribute keyword="VerifyingOrganization" tag="0040A027" vr="LO">
+<Value number="1">OrganizationXY</Value>
+</DicomAttribute>
+<DicomAttribute keyword="VerificationDateTime" tag="0040A030" vr="DT">
+<Value number="1">201107010830</Value>
+</DicomAttribute>
+<DicomAttribute keyword="VerifyingObserverName" tag="0040A075" vr="PN">
+<PersonName number="1">
+<Alphabetic>
+<FamilyName>VerifyingObserver2</FamilyName>
+</Alphabetic>
+</PersonName>
+</DicomAttribute>
+<DicomAttribute keyword="VerifyingObserverIdentificationCodeSequence" tag="0040A088" vr="SQ"/>
+</Item>
+</DicomAttribute>
+<DicomAttribute keyword="CompletionFlag" tag="0040A491" vr="CS">
+<Value number="1">COMPLETE</Value>
+</DicomAttribute>
+<DicomAttribute keyword="VerificationFlag" tag="0040A493" vr="CS">
+<Value number="1">VERIFIED</Value>
+</DicomAttribute>
+</NativeDicomModel>

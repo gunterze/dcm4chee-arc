@@ -48,7 +48,6 @@ import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
 import org.dcm4chee.archive.conf.RejectionNote;
 import org.dcm4chee.archive.conf.StoreDuplicate;
-import org.dcm4chee.archive.entity.Code;
 
 
 /**
@@ -63,9 +62,6 @@ public class StoreParam {
     private String[] retrieveAETs;
     private String externalRetrieveAET;
     private List<StoreDuplicate> storeDuplicates;
-    private List<Code> hideConceptNameCodes;
-    private List<Code> hideRejectionCodes;
-    private List<Code> notAcceptSubsequenceOccurrenceCodes;
     private List<RejectionNote> rejectionNotes;
 
     public final boolean isStoreOriginalAttributes() {
@@ -132,24 +128,16 @@ public class StoreParam {
         return StoreDuplicate.Action.IGNORE;
     }
 
-    public List<Code> getHideConceptNameCodes() {
-        return hideConceptNameCodes;
+    public final List<RejectionNote> getRejectionNotes() {
+        return rejectionNotes;
     }
 
-    public List<Code> getHideRejectionCodes() {
-        return hideRejectionCodes;
-    }
-
-    public List<Code> getNotAcceptSubsequenceOccurrenceCodes() {
-        return notAcceptSubsequenceOccurrenceCodes;
-    }
-
-    public void setRejectionNotes(List<RejectionNote> rejectionNotes) {
+    public final void setRejectionNotes(List<RejectionNote> rejectionNotes) {
         this.rejectionNotes = rejectionNotes;
     }
 
     public RejectionNote getRejectionNote(org.dcm4che.data.Code code) {
-       if (code != null)
+       if (rejectionNotes != null && code != null)
            for (RejectionNote rn : rejectionNotes) {
                 if (rn.getCode().equalsIgnoreMeaning(code))
                    return rn;

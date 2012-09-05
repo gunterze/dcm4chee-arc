@@ -38,6 +38,8 @@
 
 package org.dcm4chee.archive.mpps.dao;
 
+import static org.dcm4chee.archive.conf.RejectionNote.Action.HIDE_REJECTION_NOTE;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -45,7 +47,6 @@ import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
-
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 
@@ -56,6 +57,7 @@ import org.dcm4che.data.UID;
 import org.dcm4che.data.VR;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4chee.archive.conf.RejectionNote;
 import org.dcm4chee.archive.entity.Availability;
 import org.dcm4chee.archive.entity.Code;
 import org.dcm4chee.archive.entity.PerformedProcedureStep;
@@ -94,7 +96,7 @@ public class IANQueryService {
     }
 
     public Attributes createIANforMPPS(PerformedProcedureStep mpps,
-            List<Code> hideConceptNameCodes, Set<String> rejectedIUIDs)
+            List<RejectionNote> rejectionNotes, Set<String> rejectedIUIDs)
             throws DicomServiceException {
         Sequence perfSeriesSeq = mpps.getAttributes()
                 .getSequence(Tag.PerformedSeriesSequence);
@@ -172,10 +174,10 @@ public class IANQueryService {
             refSeries.setString(Tag.SeriesInstanceUID, VR.UI, seriesIUID);
             if (refImgs != null)
                 remaining -= addAllTo(studyIUID, seriesIUID, refImgs, map,
-                        refSOPs, rejectedIUIDs, hideConceptNameCodes);
+                        refSOPs, rejectionNotes, rejectedIUIDs);
             if (refNonImgs != null)
                 remaining -= addAllTo(studyIUID, seriesIUID, refNonImgs, map,
-                        refSOPs, rejectedIUIDs, hideConceptNameCodes);
+                        refSOPs, rejectionNotes, rejectedIUIDs);
             if (!refSOPs.isEmpty())
                 refSeriesSeq.add(refSeries);
         }
@@ -184,7 +186,7 @@ public class IANQueryService {
 
     private static int addAllTo(String studyIUD, String seriesIUID,
             Sequence ppsRefs, HashMap<String, Object[]> map, Sequence refSOPs,
-            Set<String> rejected, List<Code> hideConceptNameCodes)
+            List<RejectionNote> rejectionNotes, Set<String> rejected)
             throws DicomServiceException {
         int count = 0;
         for (Attributes ppsRef : ppsRefs) {
@@ -199,9 +201,9 @@ public class IANQueryService {
                 if (!ppsRef.getString(Tag.ReferencedSOPClassUID).equals(a[2]))
                     new DicomServiceException(Status.ProcessingFailure,
                                 "Mismatch of SOP Class UID of referenced Instance");
-                if (!contains(hideConceptNameCodes, (Long) a[7]))
+                if (!hide(rejectionNotes, (Long) a[7]))
                     refSOPs.add(refSOP(ppsRef, (String) a[4], (String) a[5], 
-                            rejected.contains(ppsRef.getString(Tag.ReferencedSOPInstanceUID))
+                            rejected != null && rejected.contains(ppsRef.getString(Tag.ReferencedSOPInstanceUID))
                                     ? Availability.UNAVAILABLE
                                     : (Availability) a[6]));
                 count++;
@@ -210,12 +212,12 @@ public class IANQueryService {
         return count;
     }
 
-    private static boolean contains(List<Code> hideConceptNameCodes, Long codePk) {
-        if (codePk != null) {
+    private static boolean hide(List<RejectionNote> rejectionNotes, Long codePk) {
+        if (codePk != null && rejectionNotes != null) {
             long pk = codePk.longValue();
-            for (Code code : hideConceptNameCodes)
-                if (code.getPk() == pk)
-                    return true;
+            for (RejectionNote rn : rejectionNotes)
+                if (((Code) rn.getCode()).getPk() == pk)
+                    return rn.getActions().contains(HIDE_REJECTION_NOTE);
         }
         return false;
     }

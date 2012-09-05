@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NativeDicomModel xml-space="preserved">
+<DicomAttribute keyword="AccessionNumber" tag="00080050" vr="SH">
+<Value number="1">MWL_TEST</Value>
+</DicomAttribute>
+<DicomAttribute keyword="Modality" tag="00080060" vr="CS">
+<Value number="1">MR</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PatientName" tag="00100010" vr="PN">
+<PersonName number="1">
+<Alphabetic>
+<FamilyName>Test Modality Worklist</FamilyName>
+</Alphabetic>
+</PersonName>
+</DicomAttribute>
+<DicomAttribute keyword="PatientID" tag="00100020" vr="LO">
+<Value number="1">MWL_TEST</Value>
+</DicomAttribute>
+<DicomAttribute keyword="IssuerOfPatientID" tag="00100021" vr="LO">
+<Value number="1">DCM4CHEE_TESTDATA</Value>
+</DicomAttribute>
+<DicomAttribute keyword="StudyInstanceUID" tag="0020000D" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.34</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ScheduledStationAETitle" tag="00400001" vr="AE">
+<Value number="1">AET_MR1</Value>
+<Value number="2">AET_MR2</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ScheduledProcedureStepStartDate" tag="00400002" vr="DA">
+<Value number="1">20111025</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ScheduledProcedureStepStartTime" tag="00400003" vr="TM">
+<Value number="1">1430</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ScheduledPerformingPhysicianName" tag="00400006" vr="PN">
+<PersonName number="1">
+<Alphabetic>
+<FamilyName>ScheduledPerformingPhysicianName2</FamilyName>
+</Alphabetic>
+</PersonName>
+</DicomAttribute>
+<DicomAttribute keyword="ScheduledProcedureStepID" tag="00400009" vr="SH">
+<Value number="1">9934.1</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ScheduledProcedureStepStatus" tag="00400020" vr="CS">
+<Value number="1">READY</Value>
+</DicomAttribute>
+<DicomAttribute keyword="RequestedProcedureID" tag="00401001" vr="SH">
+<Value number="1">P-9934</Value>
+</DicomAttribute>
+</NativeDicomModel>
