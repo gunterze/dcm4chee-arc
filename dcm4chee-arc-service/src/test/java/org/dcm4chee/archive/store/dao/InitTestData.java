@@ -48,7 +48,7 @@ import org.dcm4chee.archive.dao.RequestService;
 import org.dcm4chee.archive.entity.Availability;
 import org.dcm4chee.archive.entity.Patient;
 import org.dcm4chee.archive.test.util.Deployments;
-import org.dcm4chee.archive.test.util.StoreParamFactory;
+import org.dcm4chee.archive.test.util.ParamFactory;
 import org.dcm4chee.archive.util.BeanLocator;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -121,14 +121,11 @@ public class InitTestData {
     @EJB
     private RequestService requestService;
 
-    @EJB
-    private StoreService storeService;
-
     @Deployment
     public static WebArchive createDeployment() {
         WebArchive arc = Deployments.createWebArchive()
                 .addClass(BeanLocator.class)
-                .addClass(StoreParamFactory.class)
+                .addClass(ParamFactory.class)
                 .addPackage("org.dcm4chee.archive.common")
                 .addPackage("org.dcm4chee.archive.dao")
                 .addPackage("org.dcm4chee.archive.exception")
@@ -143,10 +140,16 @@ public class InitTestData {
         return arc;
     }
 
+    private StoreService storeService() {
+        return BeanLocator.lookup(StoreService.class,
+                "java:/global/test/StoreService");
+    }
+
     @Test
     public void initTestData() throws Exception {
-        StoreParam storeParam = StoreParamFactory.create();
+        StoreParam storeParam = ParamFactory.createStoreParam();
         storeParam.setRetrieveAETs(RETRIEVE_AETS);
+        StoreService storeService = storeService();
         storeService.setStoreParam(storeParam);
         for (String res : INSTANCES)
             storeService.newInstance(SOURCE_AET, load(res), new Attributes(),
@@ -159,6 +162,7 @@ public class InitTestData {
                         ds, storeParam, false, false);
             requestService.createScheduledProcedureStep(ds, mwlPat, storeParam);
         }
+        storeService.close();
     }
 
     private Attributes load(String name) throws Exception {

@@ -38,7 +38,7 @@
 <Value number="1">1.2.40.0.13.1.1.99.5.1</Value>
 </DicomAttribute>
 <DicomAttribute keyword="StudyID" tag="00200010" vr="SH">
-<Value number="1">PRIOR AM</Value>
+<Value number="1">DT_20100620_1030</Value>
 </DicomAttribute>
 <DicomAttribute keyword="SeriesNumber" tag="00200011" vr="IS">
 <Value number="1">1</Value>

@@ -33,7 +33,7 @@
 </PersonName>
 </DicomAttribute>
 <DicomAttribute keyword="PatientID" tag="00100020" vr="LO">
-<Value number="1">PERSON_NAME</Value>
+<Value number="1">OOMIYA_SHOUGO</Value>
 </DicomAttribute>
 <DicomAttribute keyword="IssuerOfPatientID" tag="00100021" vr="LO">
 <Value number="1">DCM4CHEE_TESTDATA</Value>

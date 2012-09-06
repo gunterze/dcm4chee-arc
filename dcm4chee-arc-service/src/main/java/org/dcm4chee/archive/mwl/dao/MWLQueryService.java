@@ -109,6 +109,8 @@ public class MWLQueryService {
 
     public void findScheduledProcedureSteps(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
+        if (results != null)
+            results.close();
         BooleanBuilder builder = new BooleanBuilder();
         Builder.addPatientLevelPredicates(builder, pids, keys, queryParam);
         Builder.addServiceRequestPredicates(builder, keys, queryParam);

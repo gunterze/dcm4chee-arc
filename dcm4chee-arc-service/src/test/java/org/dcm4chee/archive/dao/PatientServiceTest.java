@@ -52,7 +52,7 @@ import org.dcm4che.data.VR;
 import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.entity.Patient;
 import org.dcm4chee.archive.test.util.Deployments;
-import org.dcm4chee.archive.test.util.StoreParamFactory;
+import org.dcm4chee.archive.test.util.ParamFactory;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
@@ -87,7 +87,7 @@ public class PatientServiceTest {
             "delete from Issuer i " +
             "where i.localNamespaceEntityID like 'PATIENT_SERVICE_TEST-%'";
 
-    private final StoreParam storeParam = StoreParamFactory.create();
+    private final StoreParam storeParam = ParamFactory.createStoreParam();
 
     @PersistenceContext
     EntityManager em;
@@ -101,7 +101,7 @@ public class PatientServiceTest {
     @Deployment
     public static WebArchive createDeployment() {
         WebArchive arc = Deployments.createWebArchive()
-                .addClass(StoreParamFactory.class)
+                .addClass(ParamFactory.class)
                 .addPackage("org.dcm4chee.archive.common")
                 .addPackage("org.dcm4chee.archive.dao")
                 .addPackage("org.dcm4chee.archive.exception")

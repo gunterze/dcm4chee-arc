@@ -43,7 +43,7 @@ import javax.ejb.EJB;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.dao.PatientService;
 import org.dcm4chee.archive.test.util.Deployments;
-import org.dcm4chee.archive.test.util.StoreParamFactory;
+import org.dcm4chee.archive.test.util.ParamFactory;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
@@ -85,7 +85,7 @@ public class ClearTestData {
     @Deployment
     public static WebArchive createDeployment() {
         WebArchive arc = Deployments.createWebArchive()
-                .addClass(StoreParamFactory.class)
+                .addClass(ParamFactory.class)
                 .addPackage("org.dcm4chee.archive.common")
                 .addPackage("org.dcm4chee.archive.dao")
                 .addPackage("org.dcm4chee.archive.exception")

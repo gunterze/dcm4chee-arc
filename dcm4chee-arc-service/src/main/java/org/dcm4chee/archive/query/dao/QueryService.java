@@ -126,21 +126,29 @@ public class QueryService {
 
     public void findPatients(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
+        if (query != null)
+            query.closeResults();
         query = new PatientQuery(session, pids, keys, queryParam);
     }
 
     public void findStudies(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
+        if (query != null)
+            query.closeResults();
         query = new StudyQuery(session, pids, keys, queryParam);
     }
 
     public void findSeries(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
+        if (query != null)
+            query.closeResults();
         query = new SeriesQuery(session, pids, keys, queryParam);
     }
 
     public void findInstances(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
+        if (query != null)
+            query.closeResults();
         query = new InstanceQuery(session, pids, keys, queryParam);
     }
 

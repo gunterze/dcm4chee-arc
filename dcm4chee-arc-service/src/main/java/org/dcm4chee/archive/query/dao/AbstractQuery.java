@@ -92,6 +92,10 @@ abstract class AbstractQuery {
         hasNext = results.next();
     }
 
+    public void closeResults() {
+        results.close();
+    }
+
     public final boolean optionalKeyNotSupported() {
         return optionalKeyNotSupported;
     }

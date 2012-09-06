@@ -58,7 +58,8 @@ import org.dcm4chee.archive.entity.Study;
 import org.dcm4chee.archive.mpps.dao.MPPSService;
 import org.dcm4chee.archive.mpps.dao.PPSWithIAN;
 import org.dcm4chee.archive.test.util.Deployments;
-import org.dcm4chee.archive.test.util.StoreParamFactory;
+import org.dcm4chee.archive.test.util.ParamFactory;
+import org.dcm4chee.archive.util.BeanLocator;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
@@ -79,15 +80,13 @@ public class StoreServiceTest {
     private PatientService patientService;
 
     @EJB
-    private StoreService storeService;
-
-    @EJB
     private MPPSService mppsService;
 
     @Deployment
     public static WebArchive createDeployment() {
         WebArchive arc = Deployments.createWebArchive()
-                .addClass(StoreParamFactory.class)
+                .addClass(ParamFactory.class)
+                .addClass(BeanLocator.class)
                 .addPackage("org.dcm4chee.archive.common")
                 .addPackage("org.dcm4chee.archive.dao")
                 .addPackage("org.dcm4chee.archive.exception")
@@ -107,19 +106,25 @@ public class StoreServiceTest {
         patientService.deletePatient(pid);
     }
 
+    private StoreService storeService() {
+        return BeanLocator.lookup(StoreService.class,
+                "java:/global/test/StoreService");
+    }
+
     @Test
     public void testNewInstance() throws Exception {
         Attributes mpps_create = load("testdata/mpps-create.xml");
         IDWithIssuer pid = IDWithIssuer.pidWithIssuer(mpps_create, null);
         String sourceAET = mpps_create.getString(Tag.PerformedStationAETitle);
         clearData(pid);
-        StoreParam storeParam = StoreParamFactory.create();
+        StoreParam storeParam = ParamFactory.createStoreParam();
         PerformedProcedureStep pps = mppsService.createPerformedProcedureStep(
                 MPPS_IUID, mpps_create, storeParam);
         assertTrue(pps.isInProgress());
         PPSWithIAN ppsWithIAN = mppsService.updatePerformedProcedureStep(
                 MPPS_IUID, load("testdata/mpps-set.xml"), storeParam);
         assertTrue(ppsWithIAN.pps.isCompleted());
+        StoreService storeService = storeService();
         storeService.setStoreParam(storeParam);
         storeParam.setRetrieveAETs("AET_1","AET_2");
         storeParam.setExternalRetrieveAET("AET_3");
@@ -165,6 +170,7 @@ public class StoreServiceTest {
         assertEquals(Availability.NEARLINE, ctSeries.getAvailability());
         assertEquals(Availability.ONLINE, prSeries.getAvailability());
         assertEquals(Availability.NEARLINE, study.getAvailability());
+        storeService.close();
     }
 
     private Attributes load(String name) throws Exception {
