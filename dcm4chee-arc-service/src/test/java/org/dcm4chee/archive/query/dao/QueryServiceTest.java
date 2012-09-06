@@ -43,6 +43,7 @@ import static org.junit.Assert.*;
 import java.util.TreeSet;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4chee.archive.common.IDWithIssuer;
@@ -83,7 +84,7 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindPatientByPatientID() throws Exception {
+    public void testFindPatientByPatientID() {
         QueryParam queryParam = ParamFactory.createQueryParam();
         IDWithIssuer[] pids = { new IDWithIssuer("DOB*") };
         QueryService queryService = queryService();
@@ -98,7 +99,7 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindPatientByPatientName() throws Exception {
+    public void testFindPatientByPatientName() {
         QueryParam queryParam = ParamFactory.createQueryParam();
         QueryService queryService = queryService();
         try {
@@ -113,13 +114,13 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindPatientByJapanesePatientName1() throws Exception {
+    public void testFindPatientByJapanesePatientName1() {
         testFindPatientByJapanesePatientName(
                 "OOMIYA^SHOUGO=大宮^省吾=オオミヤ^ショウゴ","OOMIYA_SHOUGO");
     }
 
     @Test
-    public void testFindPatientByJapanesePatientName2() throws Exception {
+    public void testFindPatientByJapanesePatientName2() {
         testFindPatientByJapanesePatientName("大宮^省吾", "OOMIYA_SHOUGO");
     }
 
@@ -140,30 +141,30 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindPatientByPatientNameFuzzy1() throws Exception {
+    public void testFindPatientByPatientNameFuzzy1() {
         testFindPatientByFuzzyPatientName("LUCAS^GEORGE", false, 
                 "FUZZY_GEORGE", "FUZZY_JOERG");
     }
 
     @Test
-    public void testFindPatientByPatientNameFuzzy2() throws Exception {
+    public void testFindPatientByPatientNameFuzzy2() {
         testFindPatientByFuzzyPatientName("LUCAS^JÖRG", false,
                 "FUZZY_GEORGE", "FUZZY_JOERG");
     }
 
     @Test
-    public void testFindPatientByPatientNameFuzzy3() throws Exception {
+    public void testFindPatientByPatientNameFuzzy3() {
         testFindPatientByFuzzyPatientName("LUKE", false, "FUZZY_LUKE");
     }
 
     @Test
-    public void testFindPatientByPatientNameFuzzy4() throws Exception {
+    public void testFindPatientByPatientNameFuzzy4() {
         testFindPatientByFuzzyPatientName("LU*", false, 
                 "FUZZY_GEORGE", "FUZZY_JOERG", "FUZZY_LUKE");
     }
 
     @Test
-    public void testFindPatientByPatientNameFuzzy5() throws Exception {
+    public void testFindPatientByPatientNameFuzzy5() {
         testFindPatientByFuzzyPatientName("LU*", true,
                 "FUZZY_GEORGE", "FUZZY_JOERG", "FUZZY_LUKE",
                 "FUZZY_NONE", "FUZZY_NUMERICAL");
@@ -187,24 +188,24 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindPatientByPatientBirthDate() throws Exception {
+    public void testFindPatientByPatientBirthDate() {
         testFindPatientByPatientBirthDate("20010101", false, "DOB_20010101");
     }
 
     @Test
-    public void testFindPatientByPatientBirthDateRange() throws Exception {
+    public void testFindPatientByPatientBirthDateRange() {
         testFindPatientByPatientBirthDate("20010101-20020202", false,
                 "DOB_20010101", "DOB_20020202");
     }
 
     @Test
-    public void testFindPatientByPatientBirthDateMatchUnknown() throws Exception {
+    public void testFindPatientByPatientBirthDateMatchUnknown() {
         testFindPatientByPatientBirthDate("20010101", true,
                 "DOB_20010101", "DOB_NONE");
     }
 
     @Test
-    public void testFindPatientByPatientBirthDateRangeMatchUnknown() throws Exception {
+    public void testFindPatientByPatientBirthDateRangeMatchUnknown() {
         testFindPatientByPatientBirthDate("20010101-20020202", true,
                 "DOB_20010101", "DOB_20020202", "DOB_NONE");
     }
@@ -225,13 +226,13 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindStudyByModalitiesInStudyPR() throws Exception {
+    public void testFindStudyByModalitiesInStudyPR() {
         testFindStudyByModalitiesInStudy("PR", false,
                 "CT+PR", "MR+PR");
     }
 
     @Test
-    public void testFindStudyByModalitiesInStudyMatchUnknownPR() throws Exception {
+    public void testFindStudyByModalitiesInStudyMatchUnknownPR() {
         testFindStudyByModalitiesInStudy("PR", true,
                 "CT+PR",
                 "MR+PR",
@@ -239,13 +240,13 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindStudyByModalitiesInStudyCT() throws Exception {
+    public void testFindStudyByModalitiesInStudyCT() {
         testFindStudyByModalitiesInStudy("CT", false,
                 "CT+PR");
     }
 
     @Test
-    public void testFindStudyByModalitiesInStudyMatchUnknownCT() throws Exception {
+    public void testFindStudyByModalitiesInStudyMatchUnknownCT() {
         testFindStudyByModalitiesInStudy("CT", true,
                 "CT+PR",
                 "NO_MODALITY");
@@ -267,13 +268,13 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindStudyByDateTime() throws Exception {
+    public void testFindStudyByDateTime() {
         testFindStudyByDateTime("20110620", "103000.000", false, false,
                 "DT_20110620_1030");
     }
 
     @Test
-    public void testFindStudyByOpenEndTime() throws Exception {
+    public void testFindStudyByOpenEndTime() {
         testFindStudyByDateTime(null, "1030-", false, false,
                 "DT_20100620_1030",
                 "DT_20100620_1430",
@@ -282,7 +283,7 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindStudyByOpenStartTime() throws Exception {
+    public void testFindStudyByOpenStartTime() {
        testFindStudyByDateTime(null, "-1430", false, false,
                 "DT_20100620_1030",
                 "DT_20100620_1430",
@@ -291,7 +292,7 @@ public class QueryServiceTest {
     }
     
     @Test
-    public void testFindStudyByDateTimeMatchUnknown() throws Exception {
+    public void testFindStudyByDateTimeMatchUnknown() {
         testFindStudyByDateTime("20110620", "103000.000", true, false,
                 "DT_20110620",
                 "DT_20110620_1030",
@@ -299,7 +300,7 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindStudyByTimeRange() throws Exception {
+    public void testFindStudyByTimeRange() {
         testFindStudyByDateTime(null, "1030-1430", false, false,
                 "DT_20100620_1030",
                 "DT_20100620_1430",
@@ -308,7 +309,7 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindStudyByDateRange() throws Exception {
+    public void testFindStudyByDateRange() {
         testFindStudyByDateTime("20100620-20110620", null, false, false,
                 "DT_20100620",
                 "DT_20100620_1030",
@@ -319,7 +320,7 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindStudyByDateTimeRange() throws Exception {
+    public void testFindStudyByDateTimeRange() {
         testFindStudyByDateTime("20100620-20110620", "1030-1430", false, false,
                 "DT_20100620_1030",
                 "DT_20100620_1430",
@@ -328,7 +329,7 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindStudyByDateTimeRangeCombined() throws Exception {
+    public void testFindStudyByDateTimeRangeCombined() {
         testFindStudyByDateTime("20100620-20110620", "1040-1430", false, true,
                 "DT_20100620",
                 "DT_20100620_1430",
@@ -338,7 +339,7 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindStudyByDateTimeRangeCombinedOpenEndRange() throws Exception {
+    public void testFindStudyByDateTimeRangeCombinedOpenEndRange() {
         testFindStudyByDateTime("20100620-", "1040-", false, true,
                 "DT_20100620",
                 "DT_20100620_1430",
@@ -348,7 +349,7 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindStudyByDateTimeRangeCombinedOpenStartRange() throws Exception {
+    public void testFindStudyByDateTimeRangeCombinedOpenStartRange() {
         testFindStudyByDateTime("-20110620", "-1420", false, true,
                 "DT_20100620",
                 "DT_20100620_1030",
@@ -358,7 +359,7 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindStudyByDateTimeRangeCombinedMatchUnknown() throws Exception {
+    public void testFindStudyByDateTimeRangeCombinedMatchUnknown() {
         testFindStudyByDateTime("20100620-20110620", "1040-1430", true, true,
                 "DT_20100620",
                 "DT_20100620_1430",
@@ -390,14 +391,14 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindStudyByIssuerOfAccessionNumber() throws Exception {
+    public void testFindStudyByIssuerOfAccessionNumber() {
         testFindStudyByIssuerOfAccessionNumber(
                 "A1234", "DCM4CHEE_TESTDATA_ACCNO_ISSUER_1", false,
                 "ACCNO_ISSUER_1");
     }
 
     @Test
-    public void testFindStudyByIssuerOfAccessionNumberMatchUnknown() throws Exception {
+    public void testFindStudyByIssuerOfAccessionNumberMatchUnknown() {
         testFindStudyByIssuerOfAccessionNumber(
                 "A1234", "DCM4CHEE_TESTDATA_ACCNO_ISSUER_2", true,
                 "ACCNO_ISSUER_2", "NO_ACCNO_ISSUER");
@@ -423,13 +424,13 @@ public class QueryServiceTest {
     }
 
     @Test
-    public void testFindStudyByProcedureCodes() throws Exception {
+    public void testFindStudyByProcedureCodes() {
         testFindStudyByProcedureCodes("PROC_CODE_1", "99DCM4CHEE_TEST", false,
                 "PROC_CODE_1");
     }
     
     @Test
-    public void testFindStudyByProcedureCodesMatchUnknown() throws Exception {
+    public void testFindStudyByProcedureCodesMatchUnknown() {
         testFindStudyByProcedureCodes("PROC_CODE_2", "99DCM4CHEE_TEST", true,
                 "NO_PROC_CODE", "PROC_CODE_2");
     }
@@ -455,7 +456,7 @@ public class QueryServiceTest {
     }
 
 //    @Test
-//    public void testFindStudyByStudyPermission() throws Exception {
+//    public void testFindStudyByStudyPermission() {
 //        String suids[] = {
 //                "1.2.40.0.13.1.1.99.10",
 //                "1.2.40.0.13.1.1.99.11",
@@ -474,6 +475,272 @@ public class QueryServiceTest {
 //                mgr.revokeStudyPermission(suid, "DCM4CHEE_TEST", StudyPermissionAction.QUERY);
 //        }
 //    }
+
+    @Test
+    public void testFindSeriesByModality() {
+        QueryParam queryParam = ParamFactory.createQueryParam();
+        IDWithIssuer[] pids = { new IDWithIssuer("MODS_IN_STUDY") };
+        QueryService queryService = queryService();
+        try {
+            queryService.findSeries(pids, attrs(Tag.Modality, VR.CS, "PR"), queryParam);
+            assertArrayEquals(
+                    new String[] { 
+                            "1.2.40.0.13.1.1.99.16.2",
+                            "1.2.40.0.13.1.1.99.17.2" },
+                    matches(queryService, Tag.SeriesInstanceUID));
+        } finally {
+            queryService.close();
+        }
+    }
+
+    @Test
+    public void testFindSeriesByModalitiesInStudyPR() {
+        testFindSeriesByModalitiesInStudy("PR", false,
+                "1.2.40.0.13.1.1.99.16.1",
+                "1.2.40.0.13.1.1.99.16.2",
+                "1.2.40.0.13.1.1.99.17.1",
+                "1.2.40.0.13.1.1.99.17.2");
+    }
+
+    @Test
+    public void testFindSeriesByModalitiesInStudyMatchUnknownPR() {
+        testFindSeriesByModalitiesInStudy("PR", true,
+                "1.2.40.0.13.1.1.99.16.1",
+                "1.2.40.0.13.1.1.99.16.2",
+                "1.2.40.0.13.1.1.99.17.1",
+                "1.2.40.0.13.1.1.99.17.2",
+                "1.2.40.0.13.1.1.99.18.1");
+    }
+    
+    @Test
+    public void testFindSeriesByModalitiesInStudyCT() {
+        testFindSeriesByModalitiesInStudy("CT", false,
+                "1.2.40.0.13.1.1.99.16.1",
+                "1.2.40.0.13.1.1.99.16.2");
+    }
+
+    @Test
+    public void testFindSeriesByModalitiesInStudyMatchUnknownCT() {
+        testFindSeriesByModalitiesInStudy("CT", true,
+                "1.2.40.0.13.1.1.99.16.1",
+                "1.2.40.0.13.1.1.99.16.2",
+                "1.2.40.0.13.1.1.99.18.1");
+    }
+
+    private void testFindSeriesByModalitiesInStudy(String modality,
+            boolean matchUnknown, String... expected_ids) {
+        QueryParam queryParam = ParamFactory.createQueryParam();
+        queryParam.setMatchUnknown(matchUnknown);
+        IDWithIssuer[] pids = { new IDWithIssuer("MODS_IN_STUDY") };
+        QueryService queryService = queryService();
+        try {
+            queryService.findSeries(pids,
+                    attrs(Tag.ModalitiesInStudy, VR.CS, modality), queryParam);
+            assertArrayEquals(expected_ids, matches(queryService, Tag.SeriesInstanceUID));
+        } finally {
+            queryService.close();
+        }
+    }
+
+    @Test
+    public void testFindSeriesByRequestAttributesSequence() {
+        QueryParam queryParam = ParamFactory.createQueryParam();
+        IDWithIssuer[] pids = { new IDWithIssuer("REQ_ATTRS_SEQ") };
+        Attributes keys = new Attributes(1);
+        Attributes item = new Attributes(4);
+        keys.newSequence(Tag.RequestAttributesSequence, 1).add(item);
+        item.setString(Tag.RequestedProcedureID, VR.SH, "P-9913");
+        item.setString(Tag.ScheduledProcedureStepID, VR.SH, "9913.1");
+        item.setString(Tag.AccessionNumber, VR.SH, "A1234");
+        Attributes issuer = new Attributes(1);
+        item.newSequence(Tag.IssuerOfAccessionNumberSequence, 1).add(issuer);
+        issuer.setString(Tag.LocalNamespaceEntityID, VR.UT, "DCM4CHEE_TESTDATA_ACCNO_ISSUER_1");
+        
+        QueryService queryService = queryService();
+        try {
+            queryService.findSeries(pids, keys, queryParam);
+            assertArrayEquals(new String[] { "1.2.40.0.13.1.1.99.13.1" }, 
+                    matches(queryService, Tag.SeriesInstanceUID));
+        } finally {
+            queryService.close();
+        }
+    }
+
+    @Test
+    public void testFindInstanceByVerificationFlag() {
+        QueryParam queryParam = ParamFactory.createQueryParam();
+        IDWithIssuer[] pids = { new IDWithIssuer("VERIFYING_OBSERVER_SEQ") };
+        Attributes keys = new Attributes(2);
+        keys.setString(Tag.Modality, VR.CS, "SR");
+        keys.setString(Tag.VerificationFlag, VR.CS, "VERIFIED");
+        QueryService queryService = queryService();
+        try {
+            queryService.findInstances(pids, keys, queryParam);
+            assertArrayEquals(
+                    new String[] { 
+                            "1.2.40.0.13.1.1.99.23.1.2",
+                            "1.2.40.0.13.1.1.99.23.1.3" }, 
+                    matches(queryService, Tag.SOPInstanceUID));
+        } finally {
+            queryService.close();
+        }
+    }
+
+    @Test
+    public void testFindInstanceByConceptCodeSequence() {
+        testFindInstanceByConceptCodeSequence(
+                "CONCEPT_NAME_1", "99DCM4CHEE_TEST", false,
+                "1.2.40.0.13.1.1.99.22.1.1");
+    }
+
+    @Test
+    public void testFindInstanceByConceptCodeSequenceMatchUnknown() {
+        testFindInstanceByConceptCodeSequence(
+                "CONCEPT_NAME_2", "99DCM4CHEE_TEST", true,
+                "1.2.40.0.13.1.1.99.22.1.2", "1.2.40.0.13.1.1.99.22.1.3");
+    }
+
+    private void testFindInstanceByConceptCodeSequence(
+            String code, String designator, boolean matchUnknown,
+            String... expected_uids) {
+        QueryParam queryParam = ParamFactory.createQueryParam();
+        queryParam.setMatchUnknown(matchUnknown);
+        IDWithIssuer[] pids = { new IDWithIssuer("CONCEPT_NAME_CODE_SEQ") };
+        Attributes keys = new Attributes(1);
+        Attributes item = new Attributes(3);
+        item.setString(Tag.CodeValue, VR.SH, code);
+        item.setString(Tag.CodingSchemeDesignator, VR.SH, designator);
+        keys.newSequence(Tag.ConceptNameCodeSequence, 1).add(item);
+        QueryService queryService = queryService();
+        try {
+            queryService.findInstances(pids, keys, queryParam);
+            assertArrayEquals(expected_uids,
+                    matches(queryService, Tag.SOPInstanceUID));
+        } finally {
+            queryService.close();
+        }
+    }
+
+    @Test
+    public void testFindInstanceByVerifyingObserver() {
+        testFindInstanceByVerifyingObserver(
+                "201106300830", "VERIFYINGOBSERVER1", false,
+                "1.2.40.0.13.1.1.99.23.1.2",
+                "1.2.40.0.13.1.1.99.23.1.3");
+    }
+
+    @Test
+    public void testFindInstanceByVerifyingObserverMatchUnknown() {
+        testFindInstanceByVerifyingObserver(
+                "201106300830", "VERIFYINGOBSERVER1", true,
+                "1.2.40.0.13.1.1.99.23.1.1",
+                "1.2.40.0.13.1.1.99.23.1.2",
+                "1.2.40.0.13.1.1.99.23.1.3");
+    }
+
+    @Test
+    public void testFindInstanceByVerifyingObserverRange() {
+        testFindInstanceByVerifyingObserver(
+                "201106300000-20110701235900", null, false,
+                "1.2.40.0.13.1.1.99.23.1.2",
+                "1.2.40.0.13.1.1.99.23.1.3");
+    }
+    
+    private void testFindInstanceByVerifyingObserver(
+            String dateTime, String name, boolean matchUnknown,
+            String... expected_uids) {
+        QueryParam queryParam = ParamFactory.createQueryParam();
+        queryParam.setMatchUnknown(matchUnknown);
+        IDWithIssuer[] pids = { new IDWithIssuer("VERIFYING_OBSERVER_SEQ") };
+        Attributes keys = new Attributes(1);
+        Attributes item = new Attributes(2);
+        item.setString(Tag.VerificationDateTime, VR.DT, dateTime);
+        item.setString(Tag.VerifyingObserverName, VR.PN, name);
+        keys.newSequence(Tag.VerifyingObserverSequence, 1).add(item);
+        QueryService queryService = queryService();
+        try {
+            queryService.findInstances(pids, keys, queryParam);
+            assertArrayEquals(expected_uids,
+                    matches(queryService, Tag.SOPInstanceUID));
+        } finally {
+            queryService.close();
+        }
+    }
+
+    @Test
+    public void testFindInstanceByContentItem() {
+        QueryParam queryParam = ParamFactory.createQueryParam();
+        IDWithIssuer[] pids = { new IDWithIssuer("TF_INFO") };
+        Attributes keys = new Attributes(1);
+        Sequence contentSeq = keys.newSequence(Tag.ContentSequence, 2);
+        contentSeq.add(contentSequenceItem("TCE101", "IHERADTF", null,
+                "CONTAINS", "Max"));
+        contentSeq.add(contentSequenceItem("TCE104", "IHERADTF", null,
+                "CONTAINS", "Max's Abstract"));
+        QueryService queryService = queryService();
+        try {
+            queryService.findInstances(pids, keys, queryParam);
+            assertArrayEquals(
+                    new String[] { "1.2.40.0.13.1.1.99.27.1.1" },
+                    matches(queryService, Tag.SOPInstanceUID));
+        } finally {
+            queryService.close();
+        }
+    }
+    
+    @Test
+    public void testFindInstanceByContentItemSequence() {
+        QueryParam queryParam = ParamFactory.createQueryParam();
+        IDWithIssuer[] pids = { new IDWithIssuer("TF_INFO") };
+        Attributes keys = new Attributes(1);
+        Sequence contentSeq = keys.newSequence(Tag.ContentSequence, 2);
+        contentSeq.add(contentSequenceItem("TCE104", "IHERADTF", null,
+                "CONTAINS", "Moritz's Abstract"));
+        contentSeq.add(contentSequenceCodeItem("TCE105", "IHERADTF", null,
+                "466.0", "I9C", null, "CONTAINS"));
+        QueryService queryService = queryService();
+        try {
+            queryService.findInstances(pids, keys, queryParam);
+            assertArrayEquals(
+                    new String[] { "1.2.40.0.13.1.1.99.27.1.2" },
+                    matches(queryService, Tag.SOPInstanceUID));
+        } finally {
+            queryService.close();
+        }
+    }
+
+    private Attributes contentSequenceCodeItem(String value, String designator,
+            String version, String value2, String designator2, String version2,
+            String relationshipType) {
+        Attributes item = new Attributes(4);
+        item.setString(Tag.RelationshipType, VR.CS, relationshipType);
+        item.setString(Tag.ValueType, VR.CS, "CODE");
+        Attributes conceptName = new Attributes(3);
+        conceptName.setString(Tag.CodeValue, VR.SH, value);
+        conceptName.setString(Tag.CodingSchemeDesignator, VR.SH, designator);
+        conceptName.setString(Tag.CodingSchemeVersion, VR.SH, version);
+        item.newSequence(Tag.ConceptNameCodeSequence, 1).add(conceptName);
+        Attributes conceptCode = new Attributes(3);
+        conceptCode.setString(Tag.CodeValue, VR.SH, value2);
+        conceptCode.setString(Tag.CodingSchemeDesignator, VR.SH, designator2);
+        conceptCode.setString(Tag.CodingSchemeVersion, VR.SH, version2);
+        item.newSequence(Tag.ConceptCodeSequence, 1).add(conceptCode);
+        return item;
+    }
+
+    private Attributes contentSequenceItem(String value, String designator,
+            String version, String relationshipType, String textValue) {
+        Attributes item = new Attributes(4);
+        item.setString(Tag.RelationshipType, VR.CS, relationshipType);
+        item.setString(Tag.TextValue, VR.UT, textValue);
+        item.setString(Tag.ValueType, VR.CS, "TEXT");
+        Attributes nestedDs = new Attributes(3);
+        nestedDs.setString(Tag.CodeValue, VR.SH, value);
+        nestedDs.setString(Tag.CodingSchemeDesignator, VR.SH, designator);
+        nestedDs.setString(Tag.CodingSchemeVersion, VR.SH, version);
+        item.newSequence(Tag.ConceptNameCodeSequence, 1).add(nestedDs);
+        return item;
+    }
 
     private Attributes attrs(int tag, VR vr, String value) {
         Attributes attrs = new Attributes(1);
