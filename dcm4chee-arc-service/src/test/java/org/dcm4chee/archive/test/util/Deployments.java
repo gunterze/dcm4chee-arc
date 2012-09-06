@@ -52,8 +52,14 @@ public abstract class Deployments {
 
     private static final String DCM4CHEE_ARC_CONF =
             "org.dcm4che.dcm4chee-arc:dcm4chee-arc-conf";
+
     private static final String DCM4CHEE_ARC_ENTITY =
-            "org.dcm4che.dcm4chee-arc:dcm4chee-arc-entity:jar:mysql:4.1.0-SNAPSHOT";
+            "org.dcm4che.dcm4chee-arc:dcm4chee-arc-entity:jar:"
+                    + classifier() + ":4.1.0-SNAPSHOT";
+
+    private static String classifier() {
+        return System.getProperty("db", "mysql");
+    }
 
     public static WebArchive createWebArchive() {
         final EffectivePomMavenDependencyResolver resolver =
@@ -68,4 +74,5 @@ public abstract class Deployments {
                 .addAsLibraries(
                         resolver.artifact(DCM4CHEE_ARC_ENTITY).resolveAsFiles());
     }
+
 }
