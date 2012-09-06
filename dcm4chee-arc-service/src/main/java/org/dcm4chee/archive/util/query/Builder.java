@@ -115,46 +115,45 @@ public abstract class Builder {
 
     public static void addStudyLevelPredicates(BooleanBuilder builder, Attributes keys,
             QueryParam queryParam) {
-        if (keys == null)
-            return;
-
-        boolean matchUnknown = queryParam.isMatchUnknown();
-        boolean combinedDatetimeMatching = queryParam.isCombinedDatetimeMatching();
-        builder.and(uids(QStudy.study.studyInstanceUID, keys.getStrings(Tag.StudyInstanceUID), false));
-        builder.and(wildCard(QStudy.study.studyID, keys.getString(Tag.StudyID, "*"), matchUnknown, false));
-        builder.and(MatchDateTimeRange.rangeMatch(QStudy.study.studyDate, QStudy.study.studyTime, 
-                Tag.StudyDate, Tag.StudyTime, Tag.StudyDateAndTime, 
-                keys, combinedDatetimeMatching, matchUnknown));
-        builder.and(MatchPersonName.match(QStudy.study.referringPhysicianName,
-                QStudy.study.referringPhysicianIdeographicName,
-                QStudy.study.referringPhysicianPhoneticName,
-                QStudy.study.referringPhysicianFamilyNameSoundex,
-                QStudy.study.referringPhysicianGivenNameSoundex,
-                keys.getString(Tag.ReferringPhysicianName, "*"),
-                queryParam));
-        builder.and(wildCard(QStudy.study.studyDescription,
-                keys.getString(Tag.StudyDescription, "*"), matchUnknown, true));
-        String accNo = keys.getString(Tag.AccessionNumber, "*");
-        builder.and(wildCard(QStudy.study.accessionNumber, accNo, matchUnknown, false));
-        if(!accNo.equals("*"))
-            builder.and(issuer(QStudy.study.issuerOfAccessionNumber,
-                    keys.getNestedDataset(Tag.IssuerOfAccessionNumberSequence),
-                    queryParam.getDefaultIssuerOfAccessionNumber(),
-                    matchUnknown));
-        builder.and(modalitiesInStudy(
-                keys.getString(Tag.ModalitiesInStudy, "*").toUpperCase(), matchUnknown));
-        builder.and(code(QStudy.study.procedureCodes,
-                keys.getNestedDataset(Tag.ProcedureCodeSequence), matchUnknown));
-        AttributeFilter attrFilter = queryParam.getAttributeFilters()[Entity.Study.ordinal()];
-        builder.and(wildCard(QStudy.study.studyCustomAttribute1,
-                AttributeFilter.selectStringValue(keys, attrFilter.getCustomAttribute1(), "*"),
-                matchUnknown, true));
-        builder.and(wildCard(QStudy.study.studyCustomAttribute2,
-                AttributeFilter.selectStringValue(keys, attrFilter.getCustomAttribute2(), "*"),
-                matchUnknown, true));
-        builder.and(wildCard(QStudy.study.studyCustomAttribute3,
-                AttributeFilter.selectStringValue(keys, attrFilter.getCustomAttribute3(), "*"),
-                matchUnknown, true));
+        if (keys != null) {
+            boolean matchUnknown = queryParam.isMatchUnknown();
+            boolean combinedDatetimeMatching = queryParam.isCombinedDatetimeMatching();
+            builder.and(uids(QStudy.study.studyInstanceUID, keys.getStrings(Tag.StudyInstanceUID), false));
+            builder.and(wildCard(QStudy.study.studyID, keys.getString(Tag.StudyID, "*"), matchUnknown, false));
+            builder.and(MatchDateTimeRange.rangeMatch(QStudy.study.studyDate, QStudy.study.studyTime, 
+                    Tag.StudyDate, Tag.StudyTime, Tag.StudyDateAndTime, 
+                    keys, combinedDatetimeMatching, matchUnknown));
+            builder.and(MatchPersonName.match(QStudy.study.referringPhysicianName,
+                    QStudy.study.referringPhysicianIdeographicName,
+                    QStudy.study.referringPhysicianPhoneticName,
+                    QStudy.study.referringPhysicianFamilyNameSoundex,
+                    QStudy.study.referringPhysicianGivenNameSoundex,
+                    keys.getString(Tag.ReferringPhysicianName, "*"),
+                    queryParam));
+            builder.and(wildCard(QStudy.study.studyDescription,
+                    keys.getString(Tag.StudyDescription, "*"), matchUnknown, true));
+            String accNo = keys.getString(Tag.AccessionNumber, "*");
+            builder.and(wildCard(QStudy.study.accessionNumber, accNo, matchUnknown, false));
+            if(!accNo.equals("*"))
+                builder.and(issuer(QStudy.study.issuerOfAccessionNumber,
+                        keys.getNestedDataset(Tag.IssuerOfAccessionNumberSequence),
+                        queryParam.getDefaultIssuerOfAccessionNumber(),
+                        matchUnknown));
+            builder.and(modalitiesInStudy(
+                    keys.getString(Tag.ModalitiesInStudy, "*").toUpperCase(), matchUnknown));
+            builder.and(code(QStudy.study.procedureCodes,
+                    keys.getNestedDataset(Tag.ProcedureCodeSequence), matchUnknown));
+            AttributeFilter attrFilter = queryParam.getAttributeFilters()[Entity.Study.ordinal()];
+            builder.and(wildCard(QStudy.study.studyCustomAttribute1,
+                    AttributeFilter.selectStringValue(keys, attrFilter.getCustomAttribute1(), "*"),
+                    matchUnknown, true));
+            builder.and(wildCard(QStudy.study.studyCustomAttribute2,
+                    AttributeFilter.selectStringValue(keys, attrFilter.getCustomAttribute2(), "*"),
+                    matchUnknown, true));
+            builder.and(wildCard(QStudy.study.studyCustomAttribute3,
+                    AttributeFilter.selectStringValue(keys, attrFilter.getCustomAttribute3(), "*"),
+                    matchUnknown, true));
+        }
         builder.and(permission(queryParam.getRoles(), StudyPermissionAction.QUERY));
     }
 

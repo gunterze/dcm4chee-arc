@@ -42,12 +42,16 @@ import static org.junit.Assert.*;
 
 import java.util.TreeSet;
 
+import javax.ejb.EJB;
+
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
+import org.dcm4chee.archive.dao.StudyPermissionService;
+import org.dcm4chee.archive.entity.StudyPermissionAction;
 import org.dcm4chee.archive.test.util.Deployments;
 import org.dcm4chee.archive.test.util.ParamFactory;
 import org.dcm4chee.archive.util.BeanLocator;
@@ -67,6 +71,9 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class QueryServiceTest {
 
+    @EJB
+    private StudyPermissionService studyPermissionService;
+    
     private QueryService queryService;
 
     @Deployment
@@ -74,6 +81,7 @@ public class QueryServiceTest {
         WebArchive arc = Deployments.createWebArchive()
                 .addClass(ParamFactory.class)
                 .addClass(BeanLocator.class)
+                .addClass(StudyPermissionService.class)
                 .addPackage("org.dcm4chee.archive.common")
                 .addPackage("org.dcm4chee.archive.exception")
                 .addPackage("org.dcm4chee.archive.query.dao")
@@ -420,26 +428,31 @@ public class QueryServiceTest {
         assertArrayEquals(expected_ids, matches(queryService, Tag.StudyID));
     }
 
-//    @Test
-//    public void testFindStudyByStudyPermission() {
-//        String suids[] = {
-//                "1.2.40.0.13.1.1.99.10",
-//                "1.2.40.0.13.1.1.99.11",
-//                "1.2.40.0.13.1.1.99.12" };
-//        for (String suid : suids)
-//            mgr.grantStudyPermission(suid, "DCM4CHEE_TEST", StudyPermissionAction.QUERY);
-//        try {
-//            queryService.findStudies(null, new Attributes(),
-//                    queryParam(false, false, "DCM4CHEE_TEST", "FooBar"));
-//            assertSetEquals(studyIUIDResultList(query), suids);
-//            queryService.findStudies(null, new Attributes(), queryParam(false, false, "FooBar"));
-//            assertTrue(studyIUIDResultList(query).isEmpty());
-//        } finally {
-//            queryService.close();
-//            for (String suid : suids)
-//                mgr.revokeStudyPermission(suid, "DCM4CHEE_TEST", StudyPermissionAction.QUERY);
-//        }
-//    }
+    @Test
+    public void testFindStudyByStudyPermission() {
+        final String SUIDS[] = {
+                "1.2.40.0.13.1.1.99.10",
+                "1.2.40.0.13.1.1.99.11",
+                "1.2.40.0.13.1.1.99.12" };
+        for (String suid : SUIDS)
+            studyPermissionService.grantStudyPermission(
+                    suid, "DCM4CHEE_TEST", StudyPermissionAction.QUERY);
+        try {
+            QueryParam queryParam = ParamFactory.createQueryParam();
+            queryParam.setRoles("FooBar");
+            queryService.findStudies(null, null, queryParam);
+            assertArrayEquals(new String[] {},
+                    matches(queryService, Tag.StudyInstanceUID));
+            queryParam.setRoles("DCM4CHEE_TEST", "FooBar");
+            queryService.findStudies(null, null, queryParam);
+            assertArrayEquals(SUIDS,
+                    matches(queryService, Tag.StudyInstanceUID));
+        } finally {
+            for (String suid : SUIDS)
+                studyPermissionService.revokeStudyPermission(
+                        suid, "DCM4CHEE_TEST", StudyPermissionAction.QUERY);
+        }
+    }
 
     @Test
     public void testFindSeriesByModality() {
