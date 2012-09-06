@@ -45,7 +45,6 @@ import static org.dcm4chee.archive.entity.StudyPermissionAction.*;
 import javax.ejb.EJB;
 
 import org.dcm4chee.archive.test.util.Deployments;
-import org.dcm4chee.archive.test.util.ParamFactory;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;

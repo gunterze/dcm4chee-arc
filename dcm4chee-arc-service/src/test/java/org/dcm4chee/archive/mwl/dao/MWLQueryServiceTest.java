@@ -55,6 +55,8 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -80,180 +82,128 @@ public class MWLQueryServiceTest {
 
     private final QueryParam queryParam = ParamFactory.createQueryParam();
 
-    private MWLQueryService queryService() {
-        return BeanLocator.lookup(MWLQueryService.class,
+    private MWLQueryService queryService;
+
+    @Before
+    public void initQueryService() {
+        queryService = BeanLocator.lookup(MWLQueryService.class,
                 "java:global/test/MWLQueryService");
     }
 
-   @Test
+    @After
+    public void closeQueryService() {
+        queryService.close();
+    }
+
+    @Test
     public void testByPatientID() throws Exception {
         IDWithIssuer[] pids = { new IDWithIssuer("MWL_TEST") };
-        MWLQueryService queryService = queryService();
-        try {
-            queryService.findScheduledProcedureSteps(pids, new Attributes(), queryParam);
-            assertArrayEquals(new String[] { "9933.1", "9934.1", "9934.2" }, 
-                    spsids(queryService));
-        } finally {
-            queryService.close();
-        }
+        queryService.findScheduledProcedureSteps(pids, new Attributes(), queryParam);
+        assertArrayEquals(new String[] { "9933.1", "9934.1", "9934.2" }, 
+                spsids(queryService));
      }
 
     @Test
     public void testByModality() throws Exception {
-        MWLQueryService queryService = queryService();
-        try {
-            queryService.findScheduledProcedureSteps(
-                    null,
-                    sps(Tag.Modality, VR.CS, "CT"),
-                    queryParam);
-            assertArrayEquals(new String[] { "9933.1" }, spsids(queryService));
-        } finally {
-            queryService.close();
-        }
+        queryService.findScheduledProcedureSteps(
+                null,
+                sps(Tag.Modality, VR.CS, "CT"),
+                queryParam);
+        assertArrayEquals(new String[] { "9933.1" }, spsids(queryService));
     }
 
     @Test
     public void testByAccessionNumber() throws Exception {
-        MWLQueryService queryService = queryService();
-        try {
-            queryService.findScheduledProcedureSteps(
-                    null,
-                    attrs(Tag.AccessionNumber, VR.SH, "MWL_TEST"),
-                    queryParam);
-            assertArrayEquals(
-                    new String[] { "9933.1", "9934.1", "9934.2" },
-                    spsids(queryService));
-        } finally {
-            queryService.close();
-        }
+        queryService.findScheduledProcedureSteps(
+                null,
+                attrs(Tag.AccessionNumber, VR.SH, "MWL_TEST"),
+                queryParam);
+        assertArrayEquals(
+                new String[] { "9933.1", "9934.1", "9934.2" },
+                spsids(queryService));
     }
 
     @Test
     public void testByStudyInstanceUID() throws Exception {
-        MWLQueryService queryService = queryService();
-        try {
-            queryService.findScheduledProcedureSteps(
-                    null,
-                    attrs(Tag.StudyInstanceUID, VR.UI, "1.2.40.0.13.1.1.99.33"),
-                    queryParam);
-            assertArrayEquals(new String[] { "9933.1" }, spsids(queryService));
-        } finally {
-            queryService.close();
-        }
+        queryService.findScheduledProcedureSteps(
+                null,
+                attrs(Tag.StudyInstanceUID, VR.UI, "1.2.40.0.13.1.1.99.33"),
+                queryParam);
+        assertArrayEquals(new String[] { "9933.1" }, spsids(queryService));
     }
 
     @Test
     public void testByRequestedProcedureID() throws Exception {
-        MWLQueryService queryService = queryService();
-        try {
-            queryService.findScheduledProcedureSteps(
-                    null,
-                    attrs(Tag.RequestedProcedureID, VR.SH, "P-9934"),
-                    queryParam);
-            assertArrayEquals(new String[] { "9934.1", "9934.2" }, spsids(queryService));
-        } finally {
-            queryService.close();
-        }
+        queryService.findScheduledProcedureSteps(
+                null,
+                attrs(Tag.RequestedProcedureID, VR.SH, "P-9934"),
+                queryParam);
+        assertArrayEquals(new String[] { "9934.1", "9934.2" }, spsids(queryService));
     }
 
     @Test
     public void testByScheduledProcedureID() throws Exception {
-        MWLQueryService queryService = queryService();
-        try {
-            queryService.findScheduledProcedureSteps(
-                    null,
-                    sps(Tag.ScheduledProcedureStepID, VR.SH, "9934.2"),
-                    queryParam);
-            assertArrayEquals(new String[] { "9934.2" }, spsids(queryService));
-        } finally {
-            queryService.close();
-        }
+        queryService.findScheduledProcedureSteps(
+                null,
+                sps(Tag.ScheduledProcedureStepID, VR.SH, "9934.2"),
+                queryParam);
+        assertArrayEquals(new String[] { "9934.2" }, spsids(queryService));
     }
 
     @Test
     public void testByStatus() throws Exception {
-        MWLQueryService queryService = queryService();
-        try {
-            queryService.findScheduledProcedureSteps(
-                    null,
-                    sps(Tag.ScheduledProcedureStepStatus, VR.CS, 
-                            ScheduledProcedureStep.ARRIVED, ScheduledProcedureStep.READY),
-                    queryParam);
-            assertArrayEquals(new String[] { "9934.1" }, spsids(queryService));
-        } finally {
-            queryService.close();
-        }
+        queryService.findScheduledProcedureSteps(
+                null,
+                sps(Tag.ScheduledProcedureStepStatus, VR.CS, 
+                        ScheduledProcedureStep.ARRIVED, ScheduledProcedureStep.READY),
+                queryParam);
+        assertArrayEquals(new String[] { "9934.1" }, spsids(queryService));
     }
 
     @Test
     public void testByAET1() throws Exception {
-        MWLQueryService queryService = queryService();
-        try {
-            queryService.findScheduledProcedureSteps(
-                    null,
-                    sps(Tag.ScheduledStationAETitle, VR.AE, "AET_MR1"),
-                    queryParam);
-            assertArrayEquals(new String[] { "9934.1" }, spsids(queryService));
-        } finally {
-            queryService.close();
-        }
+        queryService.findScheduledProcedureSteps(
+                null,
+                sps(Tag.ScheduledStationAETitle, VR.AE, "AET_MR1"),
+                queryParam);
+        assertArrayEquals(new String[] { "9934.1" }, spsids(queryService));
     }
 
     @Test
     public void testByAET2() throws Exception {
-        MWLQueryService queryService = queryService();
-        try {
-            queryService.findScheduledProcedureSteps(
-                    null,
-                    sps(Tag.ScheduledStationAETitle, VR.AE, "AET_MR2"),
-                    queryParam);
-            assertArrayEquals(new String[] { "9934.1", "9934.2" }, spsids(queryService));
-        } finally {
-            queryService.close();
-        }
+        queryService.findScheduledProcedureSteps(
+                null,
+                sps(Tag.ScheduledStationAETitle, VR.AE, "AET_MR2"),
+                queryParam);
+        assertArrayEquals(new String[] { "9934.1", "9934.2" }, spsids(queryService));
     }
 
     @Test
     public void testByPerformingPhysican() throws Exception {
-        MWLQueryService queryService = queryService();
-        try {
-            queryService.findScheduledProcedureSteps(
-                    null,
-                    sps(Tag.ScheduledPerformingPhysicianName, VR.PN,
-                            "ScheduledPerformingPhysicianName3"),
-                    queryParam);
-            assertArrayEquals(new String[] { "9934.2" }, spsids(queryService));
-        } finally {
-            queryService.close();
-        }
+        queryService.findScheduledProcedureSteps(
+                null,
+                sps(Tag.ScheduledPerformingPhysicianName, VR.PN,
+                        "ScheduledPerformingPhysicianName3"),
+                queryParam);
+        assertArrayEquals(new String[] { "9934.2" }, spsids(queryService));
     }
 
     @Test
     public void testByStartDate() throws Exception {
-        MWLQueryService queryService = queryService();
-        try {
-            queryService.findScheduledProcedureSteps(
-                    null,
-                    sps(Tag.ScheduledProcedureStepStartDate, VR.DA, "20111025"),
-                    queryParam);
-            assertArrayEquals(new String[] { "9934.1", "9934.2" }, spsids(queryService));
-        } finally {
-            queryService.close();
-        }
+        queryService.findScheduledProcedureSteps(
+                null,
+                sps(Tag.ScheduledProcedureStepStartDate, VR.DA, "20111025"),
+                queryParam);
+        assertArrayEquals(new String[] { "9934.1", "9934.2" }, spsids(queryService));
     }
 
     @Test
     public void testByStartDateTime() throws Exception {
-        MWLQueryService queryService = queryService();
-        try {
-            queryService.findScheduledProcedureSteps(
-                    null,
-                    spsStartDateTime("20111025", "1400-1500"),
-                    queryParam);
-            assertArrayEquals(new String[] { "9934.1" }, spsids(queryService));
-        } finally {
-            queryService.close();
-        }
+        queryService.findScheduledProcedureSteps(
+                null,
+                spsStartDateTime("20111025", "1400-1500"),
+                queryParam);
+        assertArrayEquals(new String[] { "9934.1" }, spsids(queryService));
     }
 
     private Attributes attrs(int tag, VR vr, String value) {

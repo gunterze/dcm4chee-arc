@@ -102,8 +102,9 @@ public class PatientServiceTest {
     public static WebArchive createDeployment() {
         WebArchive arc = Deployments.createWebArchive()
                 .addClass(ParamFactory.class)
+                .addClass(PatientService.class)
+                .addClass(IssuerService.class)
                 .addPackage("org.dcm4chee.archive.common")
-                .addPackage("org.dcm4chee.archive.dao")
                 .addPackage("org.dcm4chee.archive.exception")
                 .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml");
         return arc;

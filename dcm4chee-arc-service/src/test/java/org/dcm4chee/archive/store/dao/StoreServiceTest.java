@@ -64,6 +64,8 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -81,6 +83,8 @@ public class StoreServiceTest {
 
     @EJB
     private MPPSService mppsService;
+
+    private StoreService storeService;
 
     @Deployment
     public static WebArchive createDeployment() {
@@ -106,9 +110,15 @@ public class StoreServiceTest {
         patientService.deletePatient(pid);
     }
 
-    private StoreService storeService() {
-        return BeanLocator.lookup(StoreService.class,
+    @Before
+    public void initStoreService() {
+        storeService = BeanLocator.lookup(StoreService.class,
                 "java:/global/test/StoreService");
+    }
+
+    @After
+    public void closeStoreService() {
+        storeService.close();
     }
 
     @Test
@@ -124,7 +134,6 @@ public class StoreServiceTest {
         PPSWithIAN ppsWithIAN = mppsService.updatePerformedProcedureStep(
                 MPPS_IUID, load("testdata/mpps-set.xml"), storeParam);
         assertTrue(ppsWithIAN.pps.isCompleted());
-        StoreService storeService = storeService();
         storeService.setStoreParam(storeParam);
         storeParam.setRetrieveAETs("AET_1","AET_2");
         storeParam.setExternalRetrieveAET("AET_3");
@@ -170,7 +179,6 @@ public class StoreServiceTest {
         assertEquals(Availability.NEARLINE, ctSeries.getAvailability());
         assertEquals(Availability.ONLINE, prSeries.getAvailability());
         assertEquals(Availability.NEARLINE, study.getAvailability());
-        storeService.close();
     }
 
     private Attributes load(String name) throws Exception {

@@ -54,6 +54,8 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -121,6 +123,8 @@ public class InitTestData {
     @EJB
     private RequestService requestService;
 
+    private StoreService storeService;
+
     @Deployment
     public static WebArchive createDeployment() {
         WebArchive arc = Deployments.createWebArchive()
@@ -140,16 +144,21 @@ public class InitTestData {
         return arc;
     }
 
-    private StoreService storeService() {
-        return BeanLocator.lookup(StoreService.class,
+    @Before
+    public void initStoreService() {
+        storeService = BeanLocator.lookup(StoreService.class,
                 "java:/global/test/StoreService");
+    }
+
+    @After
+    public void closeStoreService() {
+        storeService.close();
     }
 
     @Test
     public void initTestData() throws Exception {
         StoreParam storeParam = ParamFactory.createStoreParam();
         storeParam.setRetrieveAETs(RETRIEVE_AETS);
-        StoreService storeService = storeService();
         storeService.setStoreParam(storeParam);
         for (String res : INSTANCES)
             storeService.newInstance(SOURCE_AET, load(res), new Attributes(),
@@ -162,7 +171,6 @@ public class InitTestData {
                         ds, storeParam, false, false);
             requestService.createScheduledProcedureStep(ds, mwlPat, storeParam);
         }
-        storeService.close();
     }
 
     private Attributes load(String name) throws Exception {

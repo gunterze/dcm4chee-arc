@@ -55,6 +55,8 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -64,6 +66,8 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Arquillian.class)
 public class QueryServiceTest {
+
+    private QueryService queryService;
 
     @Deployment
     public static WebArchive createDeployment() {
@@ -78,39 +82,35 @@ public class QueryServiceTest {
         return arc;
     }
 
-    private QueryService queryService() {
-        return BeanLocator.lookup(QueryService.class,
+    @Before
+    public void initQueryService() {
+        queryService = BeanLocator.lookup(QueryService.class,
                 "java:global/test/QueryService");
+    }
+
+    @After
+    public void closeQueryService() {
+        queryService.close();
     }
 
     @Test
     public void testFindPatientByPatientID() {
         QueryParam queryParam = ParamFactory.createQueryParam();
         IDWithIssuer[] pids = { new IDWithIssuer("DOB*") };
-        QueryService queryService = queryService();
-        try {
-            queryService.findPatients(pids, null, queryParam);
-            assertArrayEquals(
-                    new String[] { "DOB_20010101", "DOB_20020202", "DOB_NONE" },
-                    matches(queryService, Tag.PatientID));
-        } finally {
-            queryService.close();
-        }
+        queryService.findPatients(pids, null, queryParam);
+        assertArrayEquals(
+                new String[] { "DOB_20010101", "DOB_20020202", "DOB_NONE" },
+                matches(queryService, Tag.PatientID));
     }
 
     @Test
     public void testFindPatientByPatientName() {
         QueryParam queryParam = ParamFactory.createQueryParam();
-        QueryService queryService = queryService();
-        try {
-            queryService.findPatients(null, 
-                    attrs(Tag.PatientName, VR.PN, "OOMIYA^SHOUGO"),
-                    queryParam);
-            assertArrayEquals(new String[] { "OOMIYA_SHOUGO" },
-                    matches(queryService, Tag.PatientID));
-        } finally {
-            queryService.close();
-        }
+        queryService.findPatients(null, 
+                attrs(Tag.PatientName, VR.PN, "OOMIYA^SHOUGO"),
+                queryParam);
+        assertArrayEquals(new String[] { "OOMIYA_SHOUGO" },
+                matches(queryService, Tag.PatientID));
     }
 
     @Test
@@ -131,13 +131,8 @@ public class QueryServiceTest {
         keys.setString(Tag.SpecificCharacterSet, VR.CS,
                 "ISO 2022 IR 6", "ISO 2022 IR 87");
         keys.setString(Tag.PatientName, VR.PN, name);
-        QueryService queryService = queryService();
-        try {
-            queryService.findPatients(null, keys, queryParam);
-            assertArrayEquals(expected_ids, matches(queryService, Tag.PatientID));
-        } finally {
-            queryService.close();
-        }
+        queryService.findPatients(null, keys, queryParam);
+        assertArrayEquals(expected_ids, matches(queryService, Tag.PatientID));
     }
 
     @Test
@@ -176,15 +171,10 @@ public class QueryServiceTest {
         queryParam.setFuzzySemanticMatching(true);
         queryParam.setMatchUnknown(matchUnknown);
         IDWithIssuer[] pids = { new IDWithIssuer("FUZZY*") };
-        QueryService queryService = queryService();
-        try {
-            queryService.findPatients(pids,
-                    attrs(Tag.PatientName, VR.PN, name),
-                    queryParam);
-            assertArrayEquals(expected_ids, matches(queryService, Tag.PatientID));
-        } finally {
-            queryService.close();
-        }
+        queryService.findPatients(pids,
+                attrs(Tag.PatientName, VR.PN, name),
+                queryParam);
+        assertArrayEquals(expected_ids, matches(queryService, Tag.PatientID));
     }
 
     @Test
@@ -215,14 +205,9 @@ public class QueryServiceTest {
         QueryParam queryParam = ParamFactory.createQueryParam();
         queryParam.setMatchUnknown(matchUnknown);
         IDWithIssuer[] pids = { new IDWithIssuer("DOB*") };
-        QueryService queryService = queryService();
-        try {
-            queryService.findPatients(pids,
-                    attrs(Tag.PatientBirthDate, VR.DA, date), queryParam);
-            assertArrayEquals(expected_ids, matches(queryService, Tag.PatientID));
-        } finally {
-            queryService.close();
-        }
+        queryService.findPatients(pids,
+                attrs(Tag.PatientBirthDate, VR.DA, date), queryParam);
+        assertArrayEquals(expected_ids, matches(queryService, Tag.PatientID));
     }
 
     @Test
@@ -257,14 +242,9 @@ public class QueryServiceTest {
         QueryParam queryParam = ParamFactory.createQueryParam();
         queryParam.setMatchUnknown(matchUnknown);
         IDWithIssuer[] pids = { new IDWithIssuer("MODS_IN_STUDY") };
-        QueryService queryService = queryService();
-        try {
-            queryService.findStudies(pids,
-                    attrs(Tag.ModalitiesInStudy, VR.CS, modality), queryParam);
-            assertArrayEquals(expected_ids, matches(queryService, Tag.StudyID));
-        } finally {
-            queryService.close();
-        }
+        queryService.findStudies(pids,
+                attrs(Tag.ModalitiesInStudy, VR.CS, modality), queryParam);
+        assertArrayEquals(expected_ids, matches(queryService, Tag.StudyID));
     }
 
     @Test
@@ -381,13 +361,8 @@ public class QueryServiceTest {
             keys.setString(Tag.StudyDate, VR.DA, date);
         if (time != null)
             keys.setString(Tag.StudyTime, VR.TM, time);
-        QueryService queryService = queryService();
-        try {
-            queryService.findStudies(pids, keys, queryParam);
-            assertArrayEquals(expected_ids, matches(queryService, Tag.StudyID));
-        } finally {
-            queryService.close();
-        }
+        queryService.findStudies(pids, keys, queryParam);
+        assertArrayEquals(expected_ids, matches(queryService, Tag.StudyID));
     }
 
     @Test
@@ -414,13 +389,8 @@ public class QueryServiceTest {
         keys.setString(Tag.AccessionNumber, VR.SH, accno);
         keys.newSequence(Tag.IssuerOfAccessionNumberSequence, 1)
             .add(attrs(Tag.LocalNamespaceEntityID, VR.UT, issuer));
-        QueryService queryService = queryService();
-        try {
-            queryService.findStudies(pids, keys, queryParam);
-            assertArrayEquals(expected_ids, matches(queryService, Tag.StudyID));
-        } finally {
-            queryService.close();
-        }
+        queryService.findStudies(pids, keys, queryParam);
+        assertArrayEquals(expected_ids, matches(queryService, Tag.StudyID));
     }
 
     @Test
@@ -446,13 +416,8 @@ public class QueryServiceTest {
         item.setString(Tag.CodeValue, VR.SH, code);
         item.setString(Tag.CodingSchemeDesignator, VR.SH, designator);
         keys.newSequence(Tag.ProcedureCodeSequence, 1).add(item);
-        QueryService queryService = queryService();
-        try {
-            queryService.findStudies(pids, keys, queryParam);
-            assertArrayEquals(expected_ids, matches(queryService, Tag.StudyID));
-        } finally {
-            queryService.close();
-        }
+        queryService.findStudies(pids, keys, queryParam);
+        assertArrayEquals(expected_ids, matches(queryService, Tag.StudyID));
     }
 
 //    @Test
@@ -480,17 +445,12 @@ public class QueryServiceTest {
     public void testFindSeriesByModality() {
         QueryParam queryParam = ParamFactory.createQueryParam();
         IDWithIssuer[] pids = { new IDWithIssuer("MODS_IN_STUDY") };
-        QueryService queryService = queryService();
-        try {
-            queryService.findSeries(pids, attrs(Tag.Modality, VR.CS, "PR"), queryParam);
-            assertArrayEquals(
-                    new String[] { 
-                            "1.2.40.0.13.1.1.99.16.2",
-                            "1.2.40.0.13.1.1.99.17.2" },
-                    matches(queryService, Tag.SeriesInstanceUID));
-        } finally {
-            queryService.close();
-        }
+        queryService.findSeries(pids, attrs(Tag.Modality, VR.CS, "PR"), queryParam);
+        assertArrayEquals(
+                new String[] { 
+                        "1.2.40.0.13.1.1.99.16.2",
+                        "1.2.40.0.13.1.1.99.17.2" },
+                matches(queryService, Tag.SeriesInstanceUID));
     }
 
     @Test
@@ -532,14 +492,9 @@ public class QueryServiceTest {
         QueryParam queryParam = ParamFactory.createQueryParam();
         queryParam.setMatchUnknown(matchUnknown);
         IDWithIssuer[] pids = { new IDWithIssuer("MODS_IN_STUDY") };
-        QueryService queryService = queryService();
-        try {
-            queryService.findSeries(pids,
-                    attrs(Tag.ModalitiesInStudy, VR.CS, modality), queryParam);
-            assertArrayEquals(expected_ids, matches(queryService, Tag.SeriesInstanceUID));
-        } finally {
-            queryService.close();
-        }
+        queryService.findSeries(pids,
+                attrs(Tag.ModalitiesInStudy, VR.CS, modality), queryParam);
+        assertArrayEquals(expected_ids, matches(queryService, Tag.SeriesInstanceUID));
     }
 
     @Test
@@ -556,14 +511,9 @@ public class QueryServiceTest {
         item.newSequence(Tag.IssuerOfAccessionNumberSequence, 1).add(issuer);
         issuer.setString(Tag.LocalNamespaceEntityID, VR.UT, "DCM4CHEE_TESTDATA_ACCNO_ISSUER_1");
         
-        QueryService queryService = queryService();
-        try {
-            queryService.findSeries(pids, keys, queryParam);
-            assertArrayEquals(new String[] { "1.2.40.0.13.1.1.99.13.1" }, 
-                    matches(queryService, Tag.SeriesInstanceUID));
-        } finally {
-            queryService.close();
-        }
+        queryService.findSeries(pids, keys, queryParam);
+        assertArrayEquals(new String[] { "1.2.40.0.13.1.1.99.13.1" }, 
+                matches(queryService, Tag.SeriesInstanceUID));
     }
 
     @Test
@@ -573,17 +523,12 @@ public class QueryServiceTest {
         Attributes keys = new Attributes(2);
         keys.setString(Tag.Modality, VR.CS, "SR");
         keys.setString(Tag.VerificationFlag, VR.CS, "VERIFIED");
-        QueryService queryService = queryService();
-        try {
-            queryService.findInstances(pids, keys, queryParam);
-            assertArrayEquals(
-                    new String[] { 
-                            "1.2.40.0.13.1.1.99.23.1.2",
-                            "1.2.40.0.13.1.1.99.23.1.3" }, 
-                    matches(queryService, Tag.SOPInstanceUID));
-        } finally {
-            queryService.close();
-        }
+        queryService.findInstances(pids, keys, queryParam);
+        assertArrayEquals(
+                new String[] { 
+                        "1.2.40.0.13.1.1.99.23.1.2",
+                        "1.2.40.0.13.1.1.99.23.1.3" }, 
+                matches(queryService, Tag.SOPInstanceUID));
     }
 
     @Test
@@ -611,14 +556,9 @@ public class QueryServiceTest {
         item.setString(Tag.CodeValue, VR.SH, code);
         item.setString(Tag.CodingSchemeDesignator, VR.SH, designator);
         keys.newSequence(Tag.ConceptNameCodeSequence, 1).add(item);
-        QueryService queryService = queryService();
-        try {
-            queryService.findInstances(pids, keys, queryParam);
-            assertArrayEquals(expected_uids,
-                    matches(queryService, Tag.SOPInstanceUID));
-        } finally {
-            queryService.close();
-        }
+        queryService.findInstances(pids, keys, queryParam);
+        assertArrayEquals(expected_uids,
+                matches(queryService, Tag.SOPInstanceUID));
     }
 
     @Test
@@ -657,14 +597,9 @@ public class QueryServiceTest {
         item.setString(Tag.VerificationDateTime, VR.DT, dateTime);
         item.setString(Tag.VerifyingObserverName, VR.PN, name);
         keys.newSequence(Tag.VerifyingObserverSequence, 1).add(item);
-        QueryService queryService = queryService();
-        try {
-            queryService.findInstances(pids, keys, queryParam);
-            assertArrayEquals(expected_uids,
-                    matches(queryService, Tag.SOPInstanceUID));
-        } finally {
-            queryService.close();
-        }
+        queryService.findInstances(pids, keys, queryParam);
+        assertArrayEquals(expected_uids,
+                matches(queryService, Tag.SOPInstanceUID));
     }
 
     @Test
@@ -677,15 +612,10 @@ public class QueryServiceTest {
                 "CONTAINS", "Max"));
         contentSeq.add(contentSequenceItem("TCE104", "IHERADTF", null,
                 "CONTAINS", "Max's Abstract"));
-        QueryService queryService = queryService();
-        try {
-            queryService.findInstances(pids, keys, queryParam);
-            assertArrayEquals(
-                    new String[] { "1.2.40.0.13.1.1.99.27.1.1" },
-                    matches(queryService, Tag.SOPInstanceUID));
-        } finally {
-            queryService.close();
-        }
+        queryService.findInstances(pids, keys, queryParam);
+        assertArrayEquals(
+                new String[] { "1.2.40.0.13.1.1.99.27.1.1" },
+                matches(queryService, Tag.SOPInstanceUID));
     }
     
     @Test
@@ -698,15 +628,10 @@ public class QueryServiceTest {
                 "CONTAINS", "Moritz's Abstract"));
         contentSeq.add(contentSequenceCodeItem("TCE105", "IHERADTF", null,
                 "466.0", "I9C", null, "CONTAINS"));
-        QueryService queryService = queryService();
-        try {
-            queryService.findInstances(pids, keys, queryParam);
-            assertArrayEquals(
-                    new String[] { "1.2.40.0.13.1.1.99.27.1.2" },
-                    matches(queryService, Tag.SOPInstanceUID));
-        } finally {
-            queryService.close();
-        }
+        queryService.findInstances(pids, keys, queryParam);
+        assertArrayEquals(
+                new String[] { "1.2.40.0.13.1.1.99.27.1.2" },
+                matches(queryService, Tag.SOPInstanceUID));
     }
 
     private Attributes contentSequenceCodeItem(String value, String designator,
@@ -752,6 +677,6 @@ public class QueryServiceTest {
         TreeSet<String> patids = new TreeSet<String>();
         while (queryService.hasMoreMatches())
             patids.add(queryService.nextMatch().getString(tag));
-        return patids.toArray(new String[patids.size()]) ;
+        return patids.toArray(new String[patids.size()]);
     }
 }
