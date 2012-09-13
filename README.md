@@ -12,6 +12,7 @@ Requirements
 * JDK 6 (or newer)
 * maven [http://maven.apache.org]
 * dcm4che [https://github.com/dcm4che/dcm4che]
+* dcm4che-jboss-modules [https://github.com/dcm4che/dcm4che/tree/master/dcm4che-jboss-modules]
 * schema-export [https://github.com/dcm4che/schema-export]
 * querydsl-jboss-modules [https://github.com/dcm4che/querydsl-jboss-modules]
 
