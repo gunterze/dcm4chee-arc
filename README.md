@@ -12,9 +12,7 @@ Requirements
 * JDK 6 (or newer)
 * maven [http://maven.apache.org]
 * dcm4che [https://github.com/dcm4che/dcm4che]
-* dcm4che-jboss-modules [https://github.com/dcm4che/dcm4che/tree/master/dcm4che-jboss-modules]
 * schema-export [https://github.com/dcm4che/schema-export]
-* querydsl-jboss-modules [https://github.com/dcm4che/querydsl-jboss-modules]
 
 Build Instructions
 ------------------
@@ -49,6 +47,16 @@ Maven parameters for specific database backends: `-D db={db2|firebird|h2|mssql|m
 The default datasource expected to be configured in the JBoss AS7 configuration is `java:/PacsDS`.
 
 To change to a different datasource, use: `-D ds=java:/NewDatasource`
+
+Install
+=======
+
+Requirements
+------------
+
+* JBoss AS7 [http://www.jboss.org/as7]
+* dcm4che-jboss-modules [https://github.com/dcm4che/dcm4che/tree/master/dcm4che-jboss-modules]
+* querydsl-jboss-modules [https://github.com/dcm4che/querydsl-jboss-modules]
 
 Install Instructions
 --------------------
