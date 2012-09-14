@@ -95,9 +95,10 @@ Use the `xml2prefs` tool from the dcm4che library to import a sample configurati
 3. Setup datasource
     * Install JDBC driver ([Admin Guide](https://docs.jboss.org/author/display/AS7/Admin+Guide#AdminGuide-Datasources), [Developer Guide](https://docs.jboss.org/author/display/AS7/Developer+Guide#DeveloperGuide-InstalltheJDBCdriver))
     * Connect to JBoss instance (using `jboss-cli.sh` as above)
-    * execute: 
-        * `data-source add --name=PacsDS --jndi-name=java:/PacsDS --connection-url=<jdbc url>  
-          --driver-name=<driver name> --user-name=<db user> --password=<db pwd>`
+    * execute:
+        ```
+        data-source add --name=PacsDS --jndi-name=java:/PacsDS --connection-url=<jdbc url> --driver-name=<driver name> --user-name=<db user> --password=<db pwd>
+        ```
 4. Deploy archive
     * Connect to JBoss instance (using `jboss-cli.sh` as above)
     * execute: 
