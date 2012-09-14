@@ -10,23 +10,23 @@ Requirements
 ------------
 
 * JDK 6 (or newer)
-* maven [http://maven.apache.org]
-* dcm4che [https://github.com/dcm4che/dcm4che]
-* schema-export [https://github.com/dcm4che/schema-export]
+* [maven] (http://maven.apache.org)
+* [dcm4che] (https://github.com/dcm4che/dcm4che)
+* [schema-export] (https://github.com/dcm4che/schema-export)
 
 Build Instructions
 ------------------
 
-### Quick and dirty
+### Quick Start
 
 To compile dcm4chee-arc, run maven with the following parameters in the source root directory:
 `mvn [clean] install -D db={db2|firebird|h2|mssql|mysql|oracle|psql} [-D ldap={slapd|opends|apacheds}] [-D ds=java:/PacsDS]`
 
 ### Detailed
 
-#### DicomConfiguration
+#### Dicom Configuration
 
-dcm4chee-arc supports 2 ways for storing configuration data: i) XML Preferences and ii) LDAP data.
+dcm4chee-arc supports 2 ways for storing configuration data: i) Java Preferences and ii) LDAP data.
 
 Maven parameters for specific configuration backends:
 
@@ -54,9 +54,9 @@ Install
 Requirements
 ------------
 
-* JBoss AS7 [http://www.jboss.org/as7]
-* dcm4che-jboss-modules [https://github.com/dcm4che/dcm4che/tree/master/dcm4che-jboss-modules]
-* querydsl-jboss-modules [https://github.com/dcm4che/querydsl-jboss-modules]
+* [JBoss AS7] (http://www.jboss.org/as7)
+* [dcm4che-jboss-modules] (https://github.com/dcm4che/dcm4che/tree/master/dcm4che-jboss-modules)
+* [querydsl-jboss-modules] (https://github.com/dcm4che/querydsl-jboss-modules)
 
 Install Instructions
 --------------------
@@ -80,7 +80,7 @@ Use the `xml2prefs` tool from the dcm4che library to import a sample configurati
 
 ### Configure database
 
-1. Create a user (default _pacs/pacs_) and database (default _pacsdb_) for the archive
+1. Create a user and database for the archive
 2. Create tables by importing the `create*.ddl` script from the _dcm4chee-arc/dcm4chee-arc-entity/target/_ directory (Oracle example: `SQL> @create-oracle.ddl`).
 
 ### Configure JBoss AS7
@@ -93,10 +93,12 @@ Use the `xml2prefs` tool from the dcm4che library to import a sample configurati
         * `jms-queue add --queue-address=stgcmtscpQueue --entries=queue/stgcmtscp`
         * `jms-queue add --queue-address=mppsscuQueue --entries=queue/mppsscu`
 3. Setup datasource
-    * Connect to `jboss-cli.sh` as above
+    * Install JDBC driver ([Admin Guide](https://docs.jboss.org/author/display/AS7/Admin+Guide#AdminGuide-Datasources), [Developer Guide](https://docs.jboss.org/author/display/AS7/Developer+Guide#DeveloperGuide-InstalltheJDBCdriver))
+    * Connect to JBoss instance (using `jboss-cli.sh` as above)
     * execute: 
-        * `data-source add --name=PacsDS --jndi-name=java:/PacsDS --connection-url=<jdbc url> --driver-name=<driver name> --user-name=pacs --password=pacs`
+        * `data-source add --name=PacsDS --jndi-name=java:/PacsDS --connection-url=<jdbc url>  
+          --driver-name=<driver name> --user-name=<db user> --password=<db pwd>`
 4. Deploy archive
-    * Connect to `jboss-cli.sh` as above
+    * Connect to JBoss instance (using `jboss-cli.sh` as above)
     * execute: 
         * `deploy <path to dcm4chee-arc>/dcm4chee-arc-service/target/dcm4chee-arc-4.1.0-SNAPSHOT-oracle.war`
