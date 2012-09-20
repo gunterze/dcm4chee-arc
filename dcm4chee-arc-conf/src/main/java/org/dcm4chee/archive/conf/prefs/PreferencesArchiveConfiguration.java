@@ -232,7 +232,7 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
 
     @Override
     protected void loadFrom(Device device, Preferences prefs)
-            throws CertificateException {
+            throws CertificateException, BackingStoreException {
         super.loadFrom(device, prefs);
         if (!(device instanceof ArchiveDevice))
             return;
