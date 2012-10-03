@@ -60,7 +60,6 @@ import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.RetrieveTask;
-import org.dcm4che.util.AttributesValidator;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
@@ -94,13 +93,12 @@ public class CMoveSCP extends BasicCMoveSCP {
     @Override
     protected RetrieveTask calculateMatches(Association as, PresentationContext pc,
             final Attributes rq, Attributes keys) throws DicomServiceException {
-        AttributesValidator validator = new AttributesValidator(keys);
-        QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(validator, qrLevels);
+        QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(keys, qrLevels);
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
         boolean relational = queryOpts.contains(QueryOption.RELATIONAL);
-        level.validateRetrieveKeys(validator, rootLevel, relational);
+        level.validateRetrieveKeys(keys, rootLevel, relational);
 
         try {
             String dest = rq.getString(Tag.MoveDestination);

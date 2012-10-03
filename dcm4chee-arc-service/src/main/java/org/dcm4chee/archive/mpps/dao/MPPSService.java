@@ -125,9 +125,7 @@ public class MPPSService {
                 .setUID(Tag.AffectedSOPInstanceUID, sopInstanceUID);
         }
         if (!pps.isInProgress())
-            throw new DicomServiceException(Status.ProcessingFailure,
-                            BasicMPPSSCP.MAY_NO_LONGER_BE_UPDATED)
-                        .setErrorID(BasicMPPSSCP.MAY_NO_LONGER_BE_UPDATED_ERROR_ID);
+            BasicMPPSSCP.mayNoLongerBeUpdated();
 
         AttributeFilter filter = storeParam.getAttributeFilter(Entity.PerformedProcedureStep);
         Attributes attrs = pps.getAttributes();
