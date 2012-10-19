@@ -41,6 +41,7 @@ package org.dcm4chee.archive.entity.dialect;
 import java.sql.Types;
 
 import org.hibernate.dialect.MySQL5InnoDBDialect;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Torsten Krah
@@ -51,6 +52,27 @@ public class PatchedMySQL5InnoDBDialect extends MySQL5InnoDBDialect {
 
     public PatchedMySQL5InnoDBDialect() {
         registerColumnType(Types.BOOLEAN, "bit");
+    }
+
+    // Avoid explicit creation of index, so MySQL will drop the implicit
+    // created index on later explicit creation of another index that can be
+    // used to enforce the foreign key constraint.
+    @Override
+    public String getAddForeignKeyConstraintString(String constraintName,
+            String[] foreignKey, String referencedTable, String[] primaryKey,
+            boolean referencesPrimaryKey) {
+        String cols = StringHelper.join(", ", foreignKey);
+        return new StringBuilder(30)
+                .append(" add constraint ")
+                .append(constraintName)
+                .append(" foreign key (")
+                .append(cols)
+                .append(") references ")
+                .append(referencedTable)
+                .append(" (")
+                .append( StringHelper.join(", ", primaryKey) )
+                .append(')')
+                .toString();
     }
 
 }

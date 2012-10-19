@@ -40,8 +40,8 @@ package org.dcm4chee.archive.dao;
 
 import static org.junit.Assert.*;
 
+import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.transaction.UserTransaction;
@@ -92,7 +92,7 @@ public class PatientServiceTest {
     @PersistenceContext
     EntityManager em;
     
-    @Inject
+    @Resource
     UserTransaction utx;
 
     @EJB

@@ -181,6 +181,7 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         device.reconfigure(dicomConfiguration.findDevice(device.getDeviceName()));
         setConfigurationStaleTimeout();
         loadRejectionNoteCodes();
+        device.rebindConnections();
     }
 
     private void setConfigurationStaleTimeout() {

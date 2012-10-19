@@ -59,7 +59,6 @@ import javax.persistence.Transient;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.conf.AttributeFilter;
-import org.hibernate.annotations.Index;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -72,9 +71,6 @@ import org.hibernate.annotations.Index;
 })
 @Entity
 @Table(name = "pps")
-@org.hibernate.annotations.Table(appliesTo = "pps", 
-indexes = { @Index(name = "pps_idx", 
-    columnNames = { "sop_iuid", "pps_status" } ) } )
 public class PerformedProcedureStep implements Serializable {
 
     private static final long serialVersionUID = 4127487385799077653L;

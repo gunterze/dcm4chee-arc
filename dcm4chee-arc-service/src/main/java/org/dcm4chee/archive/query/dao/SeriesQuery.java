@@ -60,9 +60,12 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
  */
 class SeriesQuery extends AbstractQuery {
 
-    public SeriesQuery(StatelessSession session, IDWithIssuer[] pids,
+    private Long studyPk;
+    private Attributes studyAttrs;
+
+    public SeriesQuery(QueryService queryService, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {
-        super(session, query(session, pids, keys, queryParam), queryParam, false);
+        super(queryService, query(queryService.session(), pids, keys, queryParam), queryParam, false);
     }
 
     private static ScrollableResults query(StatelessSession session, IDWithIssuer[] pids,
@@ -96,28 +99,21 @@ class SeriesQuery extends AbstractQuery {
     protected Attributes toAttributes(ScrollableResults results) {
         Long studyPk = results.getLong(0);
         Long seriesPk = results.getLong(1);
-        int numberOfStudyRelatedSeries = results.getInteger(2);
-        int numberOfStudyRelatedInstances = results.getInteger(3);
-        int numberOfSeriesRelatedInstances = results.getInteger(4);
-        String modalitiesInStudy = results.getString(5);
-        String sopClassesInStudy = results.getString(6);
+        int seriesRelatedInstances = results.getInteger(4);
         String retrieveAETs = results.getString(7);
         String externalRetrieveAET = results.getString(8);
         Availability availability = (Availability) results.get(9);
         byte[] seriesAttributes = results.getBinary(10);
-        byte[] studyAttributes = results.getBinary(11);
-        byte[] patientAttributes = results.getBinary(12);
-        Attributes attrs = new Attributes();
-        Utils.decodeAttributes(attrs, patientAttributes);
-        Utils.decodeAttributes(attrs, studyAttributes);
+        if (!studyPk.equals(this.studyPk)) {
+            this.studyAttrs = toStudyAttributes(studyPk, results);
+            this.studyPk = studyPk;
+        }
+        Attributes attrs = new Attributes(studyAttrs);
         Utils.decodeAttributes(attrs, seriesAttributes);
-        super.setStudyQueryAttributes(studyPk, attrs,
-                numberOfStudyRelatedSeries,
-                numberOfStudyRelatedInstances,
-                modalitiesInStudy,
-                sopClassesInStudy);
-        super.setSeriesQueryAttributes(seriesPk, attrs,
-                numberOfSeriesRelatedInstances);
+        if (seriesRelatedInstances == -1)
+            seriesRelatedInstances = queryService.seriesService()
+                    .calculateNumberOfSeriesRelatedInstances(seriesPk, queryParam);
+        Utils.setSeriesQueryAttributes(attrs, seriesRelatedInstances);
         Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
         Utils.setAvailability(attrs, availability);
         // skip match for empty Series
@@ -126,4 +122,27 @@ class SeriesQuery extends AbstractQuery {
         return attrs;
     }
 
+    private Attributes toStudyAttributes(Long studyPk, ScrollableResults results) {
+        int studyRelatedSeries = results.getInteger(2);
+        int studyRelatedInstances = results.getInteger(3);
+        String modalitiesInStudy = results.getString(5);
+        String sopClassesInStudy = results.getString(6);
+        byte[] studyAttributes = results.getBinary(11);
+        byte[] patientAttributes = results.getBinary(12);
+        Attributes attrs = new Attributes();
+        Utils.decodeAttributes(attrs, patientAttributes);
+        Utils.decodeAttributes(attrs, studyAttributes);
+        if (studyRelatedInstances == -1) {
+            int[] a = queryService.seriesService()
+                    .calculateNumberOfStudyRelatedSeriesAndInstances(studyPk, queryParam);
+            studyRelatedSeries = a[0];
+            studyRelatedInstances = a[1];
+        };
+        Utils.setStudyQueryAttributes(attrs,
+                studyRelatedSeries,
+                studyRelatedInstances,
+                modalitiesInStudy,
+                sopClassesInStudy);
+        return attrs;
+    }
 }

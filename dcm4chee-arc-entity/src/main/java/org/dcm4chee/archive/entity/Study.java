@@ -69,7 +69,6 @@ import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.DateUtils;
 import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.conf.AttributeFilter;
-import org.hibernate.annotations.Index;
 
 
 /**
@@ -83,26 +82,22 @@ import org.hibernate.annotations.Index;
     name="Study.findByStudyInstanceUID",
     query="SELECT s FROM Study s WHERE s.studyInstanceUID = ?1"),
 @NamedQuery(
-    name="Study.modalitiesInStudy",
-    query="SELECT DISTINCT(s.modality) FROM Series s WHERE s.study = ?1"),
-@NamedQuery(
-    name="Study.sopClassesInStudy",
-    query="SELECT DISTINCT(i.sopClassUID) FROM Instance i WHERE i.series.study = ?1 AND i.replaced = false"),
+    name="Study.countRejectedInstances",
+    query="SELECT COUNT(i) FROM Instance i WHERE i.series.study.pk = ?1 "
+        + "AND i.replaced = FALSE AND i.rejectionCode IS NOT NULL"),
 @NamedQuery(
     name="Study.countRelatedSeries",
-    query="SELECT COUNT(s) FROM Series s WHERE s.study = ?1 AND s.numberOfSeriesRelatedInstances != 0"),
+    query="SELECT COUNT(s) FROM Series s WHERE s.study.pk = ?1 AND EXISTS ("
+        + "SELECT 1 FROM Instance i WHERE i.series = s AND i.replaced = FALSE)"),
 @NamedQuery(
     name="Study.countRelatedInstances",
-    query="SELECT SUM(s.numberOfSeriesRelatedInstances) FROM Series s WHERE s.study = ?1"),
+    query="SELECT COUNT(i) FROM Instance i WHERE i.series.study.pk = ?1 "
+        + "AND i.replaced = FALSE"),
 @NamedQuery(
-    name="Study.retrieveAETs",
-    query="SELECT DISTINCT(s.retrieveAETs) FROM Series s WHERE s.study = ?1"),
-@NamedQuery(
-    name="Study.externalRetrieveAET",
-    query="SELECT DISTINCT(s.externalRetrieveAET) FROM Series s WHERE s.study = ?1"),
-@NamedQuery(
-    name="Study.availability",
-    query="SELECT MAX(s.availability) FROM Series s WHERE s.study = ?1")
+    name="Study.updateNumberOfStudyRelatedSeriesAndInstances",
+    query="UPDATE Study s "
+        + "SET s.numberOfStudyRelatedSeries = ?1, s.numberOfStudyRelatedInstances = ?2 "
+        + "WHERE s.pk = ?3")
 })
 @Entity
 @Table(name = "study")
@@ -111,13 +106,10 @@ public class Study implements Serializable {
     private static final long serialVersionUID = -6358525535057418771L;
 
     public static final String FIND_BY_STUDY_INSTANCE_UID = "Study.findByStudyInstanceUID";
-    public static final String MODALITIES_IN_STUDY = "Study.modalitiesInStudy";
-    public static final String SOP_CLASSES_IN_STUDY = "Study.sopClassesInStudy";
+    public static final String COUNT_REJECTED_INSTANCES = "Study.countRejectedInstances";
     public static final String COUNT_RELATED_SERIES = "Study.countRelatedSeries";
     public static final String COUNT_RELATED_INSTANCES = "Study.countRelatedInstances";
-    public static final String RETRIEVE_AETS = "Study.retrieveAETs";
-    public static final String EXTERNAL_RETRIEVE_AET = "Study.externalRetrieveAET";
-    public static final String AVAILABILITY = "Study.availability";
+    public static final String UPDATE_NUMBER_OF_STUDY_RELATED_SERIES_AND_INSTANCES = "Study.updateNumberOfStudyRelatedSeriesAndInstances";
 
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -134,27 +126,22 @@ public class Study implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "study_iuid", updatable = false)
-    @Index(name="study_iuid_idx")
     private String studyInstanceUID;
 
     @Basic(optional = false)
     @Column(name = "study_id")
-    @Index(name="study_id_idx")
     private String studyID;
 
     @Basic(optional = false)
     @Column(name = "study_date")
-    @Index(name="study_date_idx")
     private String studyDate;
 
     @Basic(optional = false)
     @Column(name = "study_time")
-    @Index(name="study_time_idx")
     private String studyTime;
 
     @Basic(optional = false)
     @Column(name = "accession_no")
-    @Index(name="accession_no_idx")
     private String accessionNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -163,47 +150,38 @@ public class Study implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "ref_physician")
-    @Index(name="ref_physician_idx")
     private String referringPhysicianName;
     
     @Basic(optional = false)
     @Column(name = "ref_phys_fn_sx")
-    @Index(name="ref_phys_fn_sx_idx")
     private String referringPhysicianFamilyNameSoundex;
     
     @Basic(optional = false)
     @Column(name = "ref_phys_gn_sx")
-    @Index(name="ref_phys_gn_sx_idx")
     private String referringPhysicianGivenNameSoundex;
 
     @Basic(optional = false)
     @Column(name = "ref_phys_i_name")
-    @Index(name="ref_phys_i_name_idx")
     private String referringPhysicianIdeographicName;
 
     @Basic(optional = false)
     @Column(name = "ref_phys_p_name")
-    @Index(name="ref_phys_p_name_idx")
     private String referringPhysicianPhoneticName;
 
     @Basic(optional = false)
     @Column(name = "study_desc")
-    @Index(name="study_desc_idx")
     private String studyDescription;
 
     @Basic(optional = false)
     @Column(name = "study_custom1")
-    @Index(name="study_custom1_idx")
     private String studyCustomAttribute1;
 
     @Basic(optional = false)
     @Column(name = "study_custom2")
-    @Index(name="study_custom2_idx")
     private String studyCustomAttribute2;
 
     @Basic(optional = false)
     @Column(name = "study_custom3")
-    @Index(name="study_custom3_idx")
     private String studyCustomAttribute3;
 
     @Basic(optional = false)

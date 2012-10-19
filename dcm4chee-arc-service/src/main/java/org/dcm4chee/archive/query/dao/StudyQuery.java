@@ -59,9 +59,9 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
  */
 class StudyQuery extends AbstractQuery {
 
-    public StudyQuery(StatelessSession session, IDWithIssuer[] pids,
+    public StudyQuery(QueryService queryService, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {
-        super(session, query(session, pids, keys, queryParam),
+        super(queryService, query(queryService.session(), pids, keys, queryParam),
                 queryParam, false);
     }
 
@@ -90,8 +90,8 @@ class StudyQuery extends AbstractQuery {
     @Override
     protected Attributes toAttributes(ScrollableResults results) {
         Long studyPk = results.getLong(0);
-        int numberOfStudyRelatedSeries = results.getInteger(1);
-        int numberOfStudyRelatedInstances = results.getInteger(2);
+        int studyRelatedSeries = results.getInteger(1);
+        int studyRelatedInstances = results.getInteger(2);
         String modalitiesInStudy = results.getString(3);
         String sopClassesInStudy = results.getString(4);
         String retrieveAETs = results.getString(5);
@@ -102,9 +102,15 @@ class StudyQuery extends AbstractQuery {
         Attributes attrs = new Attributes();
         Utils.decodeAttributes(attrs, patientAttributes);
         Utils.decodeAttributes(attrs, studyAttributes);
-        super.setStudyQueryAttributes(studyPk, attrs,
-                numberOfStudyRelatedSeries,
-                numberOfStudyRelatedInstances,
+        if (studyRelatedInstances == -1) {
+            int[] a = queryService.seriesService()
+                    .calculateNumberOfStudyRelatedSeriesAndInstances(studyPk, queryParam);
+            studyRelatedSeries = a[0];
+            studyRelatedInstances = a[1];
+        };
+        Utils.setStudyQueryAttributes(attrs,
+                studyRelatedSeries,
+                studyRelatedInstances,
                 modalitiesInStudy,
                 sopClassesInStudy);
         Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);

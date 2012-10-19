@@ -54,7 +54,6 @@ import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Tag;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.DateUtils;
-import org.hibernate.annotations.Index;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
@@ -75,32 +74,26 @@ public class VerifyingObserver implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "verify_datetime")
-    @Index(name="verify_datetime_idx")
     private String verificationDateTime;
 
     @Basic(optional = false)
     @Column(name = "observer_name")
-    @Index(name="observer_name_idx")
     private String verifyingObserverName;
     
     @Basic(optional = false)
     @Column(name = "observer_fn_sx")
-    @Index(name="observer_fn_sx_idx")
     private String verifyingObserverFamilyNameSoundex;
     
     @Basic(optional = false)
     @Column(name = "observer_gn_sx")
-    @Index(name="observer_gn_sx_idx")
     private String verifyingObserverGivenNameSoundex;
 
     @Basic(optional = false)
     @Column(name = "observer_i_name")
-    @Index(name="observer_i_name_idx")
     private String verifyingObserverIdeographicName;
 
     @Basic(optional = false)
     @Column(name = "observer_p_name")
-    @Index(name="observer_p_name_idx")
     private String verifyingObserverPhoneticName;
 
     public VerifyingObserver() {}

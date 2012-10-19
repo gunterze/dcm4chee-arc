@@ -64,7 +64,6 @@ import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Tag;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4chee.archive.conf.AttributeFilter;
-import org.hibernate.annotations.Index;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
@@ -102,7 +101,6 @@ public class Patient implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "pat_id")
-    @Index(name="pat_id_idx")
     private String patientID;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -111,52 +109,42 @@ public class Patient implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "pat_name")
-    @Index(name="pat_name_idx")
     private String patientName;
 
     @Basic(optional = false)
     @Column(name = "pat_fn_sx")
-    @Index(name="pat_fn_sx_idx")
     private String patientFamilyNameSoundex;
 
     @Basic(optional = false)
     @Column(name = "pat_gn_sx")
-    @Index(name="pat_gn_sx_idx")
     private String patientGivenNameSoundex;
 
     @Basic(optional = false)
     @Column(name = "pat_i_name")
-    @Index(name="pat_i_name_idx")
     private String patientIdeographicName;
 
     @Basic(optional = false)
     @Column(name = "pat_p_name")
-    @Index(name="pat_p_name_idx")
     private String patientPhoneticName;
 
     @Basic(optional = false)
     @Column(name = "pat_birthdate")
-    @Index(name="pat_birthdate_idx")
     private String patientBirthDate;
 
     @Basic(optional = false)
     @Column(name = "pat_sex")
-    @Index(name="pat_sex_idx")
     private String patientSex;
 
     @Basic(optional = false)
     @Column(name = "pat_custom1")
-    @Index(name="pat_custom1_idx")
     private String patientCustomAttribute1;
 
     @Basic(optional = false)
     @Column(name = "pat_custom2")
-    @Index(name="pat_custom2_idx")
     private String patientCustomAttribute2;
 
     @Basic(optional = false)
     @Column(name = "pat_custom3")
-    @Index(name="pat_custom3_idx")
     private String patientCustomAttribute3;
 
     @Basic(optional = false)
@@ -217,7 +205,6 @@ public class Patient implements Serializable {
         return updatedTime;
     }
 
-    @Index(name="patient_id_idx")
     public String getPatientID() {
         return patientID;
     }

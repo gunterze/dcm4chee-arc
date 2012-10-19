@@ -64,7 +64,6 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.DateUtils;
 import org.dcm4chee.archive.conf.AttributeFilter;
-import org.hibernate.annotations.Index;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -111,51 +110,41 @@ public class ScheduledProcedureStep implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "sps_id")
-    @Index(name = "sps_id_idx")
     private String scheduledProcedureStepID;
 
     @Column(name = "modality", nullable = false)
-    @Index(name = "sps_modality_idx")
     private String modality;
 
     @Basic(optional = false)
-    @Column(name = "scheduledStartDate")
-    @Index(name = "scheduledStartDate_idx")
+    @Column(name = "sps_start_date")
     private String scheduledStartDate;
 
     @Basic(optional = false)
-    @Column(name = "scheduledStartTtime")
-    @Index(name = "scheduledStartTtime_idx")
+    @Column(name = "sps_start_time")
     private String scheduledStartTime;
 
     @Basic(optional = false)
     @Column(name = "perf_phys_name")
-    @Index(name = "sps_perf_phys_name_idx")
     private String scheduledPerformingPhysicianName;
     
     @Basic(optional = false)
     @Column(name = "perf_phys_i_name")
-    @Index(name = "sps_perf_phys_i_name_idx")
     private String scheduledPerformingPhysicianIdeographicName;
 
     @Basic(optional = false)
     @Column(name = "perf_phys_p_name")
-    @Index(name = "sps_perf_phys_p_name_idx")
     private String scheduledPerformingPhysicianPhoneticName;
 
     @Basic(optional = false)
     @Column(name = "perf_phys_fn_sx")
-    @Index(name = "sps_perf_phys_fn_sx_idx")
     private String scheduledPerformingPhysicianFamilyNameSoundex;
     
     @Basic(optional = false)
     @Column(name = "perf_phys_gn_sx")
-    @Index(name = "sps_perf_phys_gn_sx_idx")
     private String scheduledPerformingPhysicianGivenNameSoundex;
 
     @Basic(optional = false)
     @Column(name = "sps_status")
-    @Index(name = "sps_status_idx")
     private String status;
 
     @Basic(optional = false)

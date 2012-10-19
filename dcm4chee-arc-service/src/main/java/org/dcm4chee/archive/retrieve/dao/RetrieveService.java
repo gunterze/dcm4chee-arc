@@ -44,6 +44,7 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
@@ -53,6 +54,7 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
+import org.dcm4chee.archive.dao.SeriesService;
 import org.dcm4chee.archive.entity.QFileRef;
 import org.dcm4chee.archive.entity.QFileSystem;
 import org.dcm4chee.archive.entity.QInstance;
@@ -61,7 +63,6 @@ import org.dcm4chee.archive.entity.QSeries;
 import org.dcm4chee.archive.entity.QStudy;
 import org.dcm4chee.archive.entity.Utils;
 import org.dcm4chee.archive.util.query.Builder;
-import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
@@ -76,24 +77,18 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
 @Stateless
 public class RetrieveService {
 
-    private static final String QUERY_SERIES_ATTRS = "select " +
-            "s.encodedAttributes, " +
-            "s.study.encodedAttributes, " +
-            "s.study.patient.encodedAttributes " +
-            "from Series s " +
-            "where s.pk = ?";
-
     @PersistenceUnit
     private EntityManagerFactory emf;
 
     private StatelessSession session;
-    private Query seriesQuery;
+
+    @EJB
+    private SeriesService seriesService;
 
     @PostConstruct
     public void init() {
         SessionFactory sessionFactory = ((HibernateEntityManagerFactory) emf).getSessionFactory();
         session = sessionFactory.openStatelessSession();
-        seriesQuery = session.createQuery(QUERY_SERIES_ATTRS);
     }
 
     @PreDestroy
@@ -149,7 +144,7 @@ public class RetrieveService {
             long nextSeriesPk = (Long) tuple[3];
             long nextInstPk = (Long) tuple[4];
             if (seriesPk != nextSeriesPk) {
-                seriesAttrs = fetchSeriesAttrs(nextSeriesPk);
+                seriesAttrs = seriesService.getAttributes(nextSeriesPk, null);
                 seriesPk = nextSeriesPk;
             }
             if (instPk != nextInstPk) {
@@ -183,18 +178,6 @@ public class RetrieveService {
             }
         }
         return locators ;
-    }
-
-    private Attributes fetchSeriesAttrs(long seriesPk) {
-        Object[] tuple = (Object[]) seriesQuery.setParameter(0, seriesPk).uniqueResult();
-        byte[] seriesAttributes = (byte[]) tuple[0];
-        byte[] studyAttributes = (byte[]) tuple[1];
-        byte[] patientAttributes = (byte[]) tuple[2];
-        Attributes attrs = new Attributes();
-        Utils.decodeAttributes(attrs, patientAttributes);
-        Utils.decodeAttributes(attrs, studyAttributes);
-        Utils.decodeAttributes(attrs, seriesAttributes);
-        return attrs;
     }
 
     public String[] patientNamesOf(IDWithIssuer[] pids) {

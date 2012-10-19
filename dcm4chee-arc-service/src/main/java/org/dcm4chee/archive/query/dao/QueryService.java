@@ -44,12 +44,10 @@ import java.util.HashSet;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
+import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 import javax.sql.DataSource;
@@ -59,6 +57,7 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
+import org.dcm4chee.archive.dao.SeriesService;
 import org.dcm4chee.archive.entity.QPatient;
 import org.dcm4chee.archive.entity.Utils;
 import org.dcm4chee.archive.util.query.Builder;
@@ -73,10 +72,9 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @Stateful
-@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class QueryService {
 
-    @Resource(mappedName="java:/PacsDS")
+    // injection configured in ejb-jar.xml
     private DataSource dataSource;
 
     @PersistenceUnit
@@ -88,6 +86,17 @@ public class QueryService {
 
     private AbstractQuery query;
 
+    @EJB
+    private SeriesService seriesService;
+
+    final StatelessSession session() {
+        return session;
+    }
+
+    final SeriesService seriesService() {
+        return seriesService;
+    }
+
     @PostConstruct
     protected void init() {
         SessionFactory sessionFactory = 
@@ -98,10 +107,6 @@ public class QueryService {
             throw new EJBException(e);
         }
         session = sessionFactory.openStatelessSession(connection);
-    }
-
-    final StatelessSession session() {
-        return session;
     }
 
     public void find(QueryRetrieveLevel qrlevel, IDWithIssuer[] pids,
@@ -126,30 +131,26 @@ public class QueryService {
 
     public void findPatients(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        if (query != null)
-            query.closeResults();
-        query = new PatientQuery(session, pids, keys, queryParam);
+        checkNoResults();
+        query = new PatientQuery(this, pids, keys, queryParam);
     }
 
     public void findStudies(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        if (query != null)
-            query.closeResults();
-        query = new StudyQuery(session, pids, keys, queryParam);
+        checkNoResults();
+        query = new StudyQuery(this, pids, keys, queryParam);
     }
 
     public void findSeries(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        if (query != null)
-            query.closeResults();
-        query = new SeriesQuery(session, pids, keys, queryParam);
+        checkNoResults();
+        query = new SeriesQuery(this, pids, keys, queryParam);
     }
 
     public void findInstances(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        if (query != null)
-            query.closeResults();
-        query = new InstanceQuery(session, pids, keys, queryParam);
+        checkNoResults();
+        query = new InstanceQuery(this, pids, keys, queryParam);
     }
 
     public boolean optionalKeyNotSupported() {
@@ -165,6 +166,11 @@ public class QueryService {
     public Attributes nextMatch() {
         checkResults();
         return query.nextMatch();
+    }
+
+    private void checkNoResults() {
+        if (query != null)
+            throw new IllegalStateException("results already initalized");
     }
 
     private void checkResults() {
@@ -204,4 +210,5 @@ public class QueryService {
             //TODO
         }
     }
+
 }

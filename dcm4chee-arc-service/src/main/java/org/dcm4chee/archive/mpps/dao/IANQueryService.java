@@ -79,14 +79,14 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
 @Stateless
 public class IANQueryService {
 
-    @PersistenceUnit(unitName = "dcm4chee-arc")
+    @PersistenceUnit
     private EntityManagerFactory emf;
+
     private StatelessSession session;
 
     @PostConstruct
     public void init() {
-        SessionFactory sessionFactory =
-                ((HibernateEntityManagerFactory) emf).getSessionFactory();
+        SessionFactory sessionFactory = ((HibernateEntityManagerFactory) emf).getSessionFactory();
         session = sessionFactory.openStatelessSession();
     }
 

@@ -48,7 +48,6 @@ import org.dcm4chee.archive.entity.QSeries;
 import org.dcm4chee.archive.entity.QStudy;
 import org.dcm4chee.archive.entity.Utils;
 import org.dcm4chee.archive.util.query.Builder;
-import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;
@@ -61,26 +60,12 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
  */
 class InstanceQuery extends AbstractQuery {
 
-    private static final String QUERY_SERIES_ATTRS = "select "
-            + "s.study.pk, "
-            + "s.study.numberOfStudyRelatedSeries, "
-            + "s.study.numberOfStudyRelatedInstances, "
-            + "s.numberOfSeriesRelatedInstances, "
-            + "s.study.modalitiesInStudy, "
-            + "s.study.sopClassesInStudy, "
-            + "s.encodedAttributes, "
-            + "s.study.encodedAttributes, "
-            + "s.study.patient.encodedAttributes "
-            + "from Series s "
-            + "where s.pk = ?";
     private Long seriesPk;
     private Attributes seriesAttrs;
-    private Query seriesQuery;
 
-    public InstanceQuery(StatelessSession session, IDWithIssuer[] pids,
+    public InstanceQuery(QueryService queryService, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {
-        super(session, query(session, pids, keys, queryParam), queryParam, false);
-        seriesQuery = session.createQuery(QUERY_SERIES_ATTRS);
+        super(queryService, query(queryService.session(), pids, keys, queryParam), queryParam, false);
     }
 
     private static ScrollableResults query(StatelessSession session, IDWithIssuer[] pids,
@@ -112,7 +97,8 @@ class InstanceQuery extends AbstractQuery {
         Availability availability = (Availability) results.get(3);
         byte[] instAttributes = results.getBinary(4);
         if (!seriesPk.equals(this.seriesPk)) {
-            this.seriesAttrs = querySeriesAttrs(seriesPk);
+            this.seriesAttrs = queryService.seriesService()
+                    .getAttributes(seriesPk, queryParam);
             this.seriesPk = seriesPk;
         }
         Attributes attrs = new Attributes(seriesAttrs);
@@ -122,27 +108,4 @@ class InstanceQuery extends AbstractQuery {
         return attrs;
     }
 
-    private Attributes querySeriesAttrs(Long seriesPk) {
-        Object[] tuple = (Object[]) seriesQuery.setParameter(0, seriesPk).uniqueResult();
-        Long studyPk = (Long) tuple[0];
-        int numberOfStudyRelatedSeries = (Integer) tuple[1];
-        int numberOfStudyRelatedInstances = (Integer) tuple[2];
-        int numberOfSeriesRelatedInstances = (Integer) tuple[3];
-        String modalitiesInStudy = (String) tuple[4];
-        String sopClassesInStudy = (String) tuple[5];
-        byte[] seriesAttributes = (byte[]) tuple[6];
-        byte[] studyAttributes = (byte[]) tuple[7];
-        byte[] patientAttributes = (byte[]) tuple[8];
-        Attributes attrs = new Attributes();
-        Utils.decodeAttributes(attrs, patientAttributes);
-        Utils.decodeAttributes(attrs, studyAttributes);
-        Utils.decodeAttributes(attrs, seriesAttributes);
-        super.setStudyQueryAttributes(studyPk, attrs,
-                numberOfStudyRelatedSeries,
-                numberOfStudyRelatedInstances,
-                modalitiesInStudy,
-                sopClassesInStudy);
-        super.setSeriesQueryAttributes(seriesPk, attrs, numberOfSeriesRelatedInstances);
-        return attrs;
-    }
 }

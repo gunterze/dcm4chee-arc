@@ -76,6 +76,7 @@ public class MWLQueryServiceTest {
                 .addPackage("org.dcm4chee.archive.exception")
                 .addPackage("org.dcm4chee.archive.mwl.dao")
                 .addPackage("org.dcm4chee.archive.util.query")
+                .addAsWebInfResource("mwlquery-ejb-jar.xml", "ejb-jar.xml")
                 .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml");
         return arc;
     }

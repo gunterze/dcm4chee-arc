@@ -69,7 +69,6 @@ import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.DateUtils;
 import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.conf.AttributeFilter;
-import org.hibernate.annotations.Index;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
@@ -82,31 +81,29 @@ import org.hibernate.annotations.Index;
     name="Series.findBySeriesInstanceUID",
     query="SELECT s FROM Series s WHERE s.seriesInstanceUID = ?1"),
 @NamedQuery(
-    name="Series.encodedAttributes",
-    query="SELECT s.encodedAttributes, " +
-                 "s.study.encodedAttributes, " +
-                 "s.study.patient.encodedAttributes " +
-          "FROM Series s WHERE s.pk = ?1"),
+    name="Series.patientStudySeriesAttributes",
+    query="SELECT NEW org.dcm4chee.archive.entity.PatientStudySeriesAttributes("
+            + "s.study.pk, "
+            + "s.study.numberOfStudyRelatedSeries, "
+            + "s.study.numberOfStudyRelatedInstances, "
+            + "s.numberOfSeriesRelatedInstances, "
+            + "s.study.modalitiesInStudy, "
+            + "s.study.sopClassesInStudy, "
+            + "s.encodedAttributes, "
+            + "s.study.encodedAttributes, "
+            + "s.study.patient.encodedAttributes) "
+            + "FROM Series s WHERE s.pk = ?1"),
 @NamedQuery(
-    name="Series.encodedAttributes2",
-    query="SELECT s.study.numberOfStudyRelatedSeries, " +
-                 "s.study.numberOfStudyRelatedInstances, " +
-                 "s.numberOfSeriesRelatedInstances, " +
-                 "s.study.modalitiesInStudy, " +
-                 "s.study.sopClassesInStudy, " +
-                 "s.encodedAttributes, " +
-                 "s.study.encodedAttributes, " +
-                 "s.study.patient.encodedAttributes " +
-          "FROM Series s WHERE s.pk = ?1"),
+    name="Series.countRejectedInstances",
+    query="SELECT COUNT(i) FROM Instance i WHERE i.series.pk = ?1 "
+            + "AND i.replaced = FALSE AND i.rejectionCode IS NOT NULL"),
 @NamedQuery(
-    name="Series.retrieveAETs",
-    query="SELECT DISTINCT(i.retrieveAETs) FROM Instance i WHERE i.series = ?1 AND i.replaced = false"),
+    name="Series.countRelatedInstances",
+    query="SELECT COUNT(i) FROM Instance i WHERE i.series.pk = ?1 "
+            + "AND i.replaced = FALSE"),
 @NamedQuery(
-    name="Series.externalRetrieveAET",
-    query="SELECT DISTINCT(i.externalRetrieveAET) FROM Instance i WHERE i.series = ?1 AND i.replaced = false"),
-@NamedQuery(
-    name="Series.availability",
-    query="SELECT MAX(i.availability) FROM Instance i WHERE i.series = ?1 AND i.replaced = false")
+    name="Series.updateNumberOfSeriesRelatedInstances",
+    query="UPDATE Series s SET s.numberOfSeriesRelatedInstances = ?1 WHERE s.pk = ?2")
 })
 @Entity
 @Table(name = "series")
@@ -115,11 +112,10 @@ public class Series implements Serializable {
     private static final long serialVersionUID = -8317105475421750944L;
 
     public static final String FIND_BY_SERIES_INSTANCE_UID = "Series.findBySeriesInstanceUID";
-    public static final String ENCODED_ATTRIBUTES = "Series.encodedAttributes";
-    public static final String ENCODED_ATTRIBUTES2 = "Series.encodedAttributes2";
-    public static final String RETRIEVE_AETS = "Series.retrieveAETs";
-    public static final String EXTERNAL_RETRIEVE_AET = "Series.externalRetrieveAET";
-    public static final String AVAILABILITY = "Series.availability";
+    public static final String PATIENT_STUDY_SERIES_ATTRIBUTES = "Series.patientStudySeriesAttributes";
+    public static final String COUNT_REJECTED_INSTANCES = "Series.countRejectedInstances";
+    public static final String COUNT_RELATED_INSTANCES = "Series.countRelatedInstances";
+    public static final String UPDATE_NUMBER_OF_SERIES_RELATED_INSTANCES = "Series.updateNumberOfSeriesRelatedInstances";
 
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -136,82 +132,66 @@ public class Series implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "series_iuid", updatable = false)
-    @Index(name="series_iuid_idx")
     private String seriesInstanceUID;
 
     @Basic(optional = false)
     @Column(name = "series_no")
-    @Index(name="series_no_idx")
     private String seriesNumber;
 
     @Basic(optional = false)
     @Column(name = "series_desc")
-    @Index(name="series_desc_idx")
     private String seriesDescription;
 
     @Basic(optional = false)
     @Column(name = "modality")
-    @Index(name="modality_idx")
     private String modality;
 
     @Basic(optional = false)
     @Column(name = "department")
-    @Index(name="department_idx")
     private String institutionalDepartmentName;
 
     @Basic(optional = false)
     @Column(name = "institution")
-    @Index(name="institution_idx")
     private String institutionName;
 
     @Basic(optional = false)
     @Column(name = "station_name")
-    @Index(name="station_name_idx")
     private String stationName;
 
     @Basic(optional = false)
     @Column(name = "body_part")
-    @Index(name="body_part_idx")
     private String bodyPartExamined;
 
     @Basic(optional = false)
     @Column(name = "laterality")
-    @Index(name="laterality_idx")
     private String laterality;
 
     @Basic(optional = false)
     @Column(name = "perf_phys_name")
-    @Index(name="perf_phys_name_idx")
     private String performingPhysicianName;
     
     @Basic(optional = false)
     @Column(name = "perf_phys_fn_sx")
-    @Index(name="perf_phys_fn_sx_idx")
     private String performingPhysicianFamilyNameSoundex;
     
     @Basic(optional = false)
     @Column(name = "perf_phys_gn_sx")
-    @Index(name="perf_phys_gn_sx_idx")
     private String performingPhysicianGivenNameSoundex;
 
     @Basic(optional = false)
     @Column(name = "perf_phys_i_name")
-    @Index(name="perf_phys_i_name_idx")
     private String performingPhysicianIdeographicName;
 
     @Basic(optional = false)
     @Column(name = "perf_phys_p_name")
-    @Index(name="perf_phys_p_name_idx")
     private String performingPhysicianPhoneticName;
 
     @Basic(optional = false)
     @Column(name = "pps_start_date")
-    @Index(name="pps_start_date_idx")
     private String performedProcedureStepStartDate;
 
     @Basic(optional = false)
     @Column(name = "pps_start_time")
-    @Index(name="pps_start_time_idx")
     private String performedProcedureStepStartTime;
 
     @Basic(optional = false)
@@ -224,17 +204,14 @@ public class Series implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "series_custom1")
-    @Index(name="series_custom1_idx")
     private String seriesCustomAttribute1;
 
     @Basic(optional = false)
     @Column(name = "series_custom2")
-    @Index(name="series_custom2_idx")
     private String seriesCustomAttribute2;
 
     @Basic(optional = false)
     @Column(name = "series_custom3")
-    @Index(name="series_custom3_idx")
     private String seriesCustomAttribute3;
 
     @Basic(optional = false)

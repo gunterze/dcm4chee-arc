@@ -58,7 +58,6 @@ import javax.persistence.Transient;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.conf.AttributeFilter;
-import org.hibernate.annotations.Index;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -98,12 +97,10 @@ public class RequestedProcedure implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "study_iuid")
-    @Index(name = "rp_study_iuid_idx")
     private String studyInstanceUID;
 
     @Basic(optional = false)
     @Column(name = "req_proc_id")
-    @Index(name = "req_proc_id_idx")
     private String requestedProcedureID;
 
     @Basic(optional = false)

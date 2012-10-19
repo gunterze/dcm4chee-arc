@@ -56,9 +56,9 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
  */
 class PatientQuery extends AbstractQuery {
 
-    public PatientQuery(StatelessSession session, IDWithIssuer[] pids,
+    public PatientQuery(QueryService queryService, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {
-        super(session, query(session, pids, keys, queryParam),
+        super(queryService, query(queryService.session(), pids, keys, queryParam),
                 queryParam, false);
     }
 

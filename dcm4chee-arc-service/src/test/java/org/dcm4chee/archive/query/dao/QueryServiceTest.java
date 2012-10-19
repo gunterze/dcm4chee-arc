@@ -50,6 +50,8 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
+import org.dcm4chee.archive.dao.CountRelatedInstancesService;
+import org.dcm4chee.archive.dao.SeriesService;
 import org.dcm4chee.archive.dao.StudyPermissionService;
 import org.dcm4chee.archive.entity.StudyPermissionAction;
 import org.dcm4chee.archive.test.util.Deployments;
@@ -81,11 +83,14 @@ public class QueryServiceTest {
         WebArchive arc = Deployments.createWebArchive()
                 .addClass(ParamFactory.class)
                 .addClass(BeanLocator.class)
+                .addClass(SeriesService.class)
+                .addClass(CountRelatedInstancesService.class)
                 .addClass(StudyPermissionService.class)
                 .addPackage("org.dcm4chee.archive.common")
                 .addPackage("org.dcm4chee.archive.exception")
                 .addPackage("org.dcm4chee.archive.query.dao")
                 .addPackage("org.dcm4chee.archive.util.query")
+                .addAsWebInfResource("query-ejb-jar.xml", "ejb-jar.xml")
                 .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml");
         return arc;
     }
@@ -443,6 +448,8 @@ public class QueryServiceTest {
             queryService.findStudies(null, null, queryParam);
             assertArrayEquals(new String[] {},
                     matches(queryService, Tag.StudyInstanceUID));
+            closeQueryService();
+            initQueryService();
             queryParam.setRoles("DCM4CHEE_TEST", "FooBar");
             queryService.findStudies(null, null, queryParam);
             assertArrayEquals(SUIDS,

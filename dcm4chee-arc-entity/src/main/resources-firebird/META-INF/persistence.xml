@@ -6,7 +6,7 @@
   <persistence-unit name="dcm4chee-arc">
     <jta-data-source>${ds}</jta-data-source>
     <properties>
-      <property name="hibernate.dialect" value="org.hibernate.dialect.FirebirdDialect" />
+      <property name="hibernate.dialect" value="org.dcm4chee.archive.entity.dialect.PatchedFirebirdDialect" />
       <property name="hibernate.hbm2ddl.auto" value="${hbm2ddl.auto}" />
       <property name="hibernate.show_sql" value="${show_sql}" />
       <property name="hibernate.jdbc.use_get_generated_keys" value="true" />

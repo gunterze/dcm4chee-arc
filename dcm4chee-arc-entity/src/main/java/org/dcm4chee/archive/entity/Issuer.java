@@ -48,7 +48,6 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 import org.dcm4che.data.Attributes;
-import org.hibernate.annotations.Index;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
@@ -71,9 +70,6 @@ import org.hibernate.annotations.Index;
 })
 @Entity
 @Table(name = "issuer")
-@org.hibernate.annotations.Table(appliesTo = "issuer", indexes = {
-  @Index(name = "entity_id_idx", columnNames = { "entity_id" } ),
-  @Index(name = "issuer_uidt_idx", columnNames = { "entity_uid", "entity_uid_type" } ) } )
 public class Issuer extends org.dcm4che.data.Issuer {
 
     private static final long serialVersionUID = -3985937520970392728L;

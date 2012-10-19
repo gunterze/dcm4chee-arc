@@ -36,35 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.test.util;
+package org.dcm4chee.archive.entity.dialect;
 
-import java.io.File;
+import java.sql.Types;
 
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.Maven;
-import org.jboss.shrinkwrap.resolver.api.maven.PomEquippedResolveStage;
+import org.hibernate.dialect.FirebirdDialect;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-public abstract class Deployments {
+public class PatchedFirebirdDialect extends FirebirdDialect {
 
-    private static final String DCM4CHEE_ARC_CONF =
-            "org.dcm4che.dcm4chee-arc:dcm4chee-arc-conf";
-
-    private static final String DCM4CHEE_ARC_ENTITY =
-            System.getProperty("dcm4chee-arc-entity");
-
-    public static WebArchive createWebArchive() {
-        PomEquippedResolveStage resolver = Maven.resolver().loadPomFromFile("pom.xml");
-
-        return ShrinkWrap.create(WebArchive.class, "test.war")
-                .addAsLibraries(
-                        resolver.resolve(DCM4CHEE_ARC_CONF).withoutTransitivity().as(File.class))
-                .addAsLibraries(
-                        resolver.resolve(DCM4CHEE_ARC_ENTITY).withoutTransitivity().as(File.class));
+    public PatchedFirebirdDialect() {
+        registerColumnType(Types.BOOLEAN, "smallint");
     }
 
 }

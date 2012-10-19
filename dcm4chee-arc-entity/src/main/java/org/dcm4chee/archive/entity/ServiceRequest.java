@@ -61,7 +61,6 @@ import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Tag;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4chee.archive.conf.AttributeFilter;
-import org.hibernate.annotations.Index;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -98,7 +97,6 @@ public class ServiceRequest implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "accession_no")
-    @Index(name = "sr_accession_no_idx")
     private String accessionNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -107,32 +105,26 @@ public class ServiceRequest implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "req_service")
-    @Index(name = "req_service_idx")
     private String requestingService;
 
     @Basic(optional = false)
     @Column(name = "req_physician")
-    @Index(name = "req_physician_idx")
     private String requestingPhysician;
     
     @Basic(optional = false)
     @Column(name = "req_phys_fn_sx")
-    @Index(name = "req_phys_fn_sx_idx")
     private String requestingPhysicianFamilyNameSoundex;
     
     @Basic(optional = false)
     @Column(name = "req_phys_gn_sx")
-    @Index(name = "req_phys_gn_sx_idx")
     private String requestingPhysicianGivenNameSoundex;
 
     @Basic(optional = false)
     @Column(name = "req_phys_i_name")
-    @Index(name = "req_phys_i_name_idx")
     private String requestingPhysicianIdeographicName;
 
     @Basic(optional = false)
     @Column(name = "req_phys_p_name")
-    @Index(name = "req_phys_p_name_idx")
     private String requestingPhysicianPhoneticName;
 
     @Basic(optional = false)

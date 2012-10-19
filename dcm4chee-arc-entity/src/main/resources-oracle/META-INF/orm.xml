@@ -310,8 +310,8 @@
   </entity>
 
   <entity class="ScheduledStationAETitle">
-    <table name="sps_aet" />
-    <sequence-generator name="seq" sequence-name="sps_aet_pk_seq" allocation-size="1" />
+    <table name="sps_station_aet" />
+    <sequence-generator name="seq" sequence-name="sps_station_aet_pk_seq" allocation-size="1" />
     <attributes>
       <id name="pk">
         <column name="pk" />

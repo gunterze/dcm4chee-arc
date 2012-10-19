@@ -147,7 +147,7 @@
               <arguments>
                 <argument>--create</argument>
                 <argument>--delimiter=;</argument>
-                <argument>--output=${project.build.directory}/create-${db}.ddl</argument>
+                <argument>--output=${project.build.directory}/create-table-${db}.ddl</argument>
                 <argument>dcm4chee-arc</argument>
               </arguments>
             </configuration>

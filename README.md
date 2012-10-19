@@ -20,7 +20,7 @@ Build Instructions
 ### Quick Start
 
 To compile dcm4chee-arc, run maven with the following parameters in the source root directory:
-`mvn [clean] install -D db={db2|firebird|h2|mssql|mysql|oracle|psql} [-D ldap={slapd|opends|apacheds}] [-D ds=java:/PacsDS]`
+`mvn [clean] install -D db={db2|firebird|h2|mssql|mysql|oracle|psql} [-D ldap={slapd|opendj|apacheds}] [-D ds=java:/PacsDS]`
 
 ### Detailed
 
@@ -32,7 +32,7 @@ Maven parameters for specific configuration backends:
 
 Preferences: `-P prefs` (default)
 
-LDAP: `[-P ldap] -D ldap={slapd|opends|apacheds}`
+LDAP: `[-P ldap] -D ldap={slapd|opendj|apacheds}`
 
 Note: The LDAP server of the target system must be specified as a maven parameter using one of the three supported values. This will setup a default configuration for the particular system, which can be changed later on by editing the ldap configuration file.
 
@@ -69,10 +69,10 @@ Use the `xml2prefs` tool from the dcm4che library to import a sample configurati
 #### Using LDAP Backend
 
 1. Import ldif schemas
-    * dcm4che/dcm4che-conf/dcm4che-conf-ldap/src/main/config/{slapd|opends|apacheds}/dicom.ldif
-    * dcm4che/dcm4che-conf/dcm4che-conf-ldap/src/main/config/{slapd|opends|apacheds}/dcm4che.ldif
-    * dcm4che/dcm4che-conf/dcm4che-conf-ldap-hl7/src/main/config/{slapd|opends|apacheds}/dcm4che-hl7.ldif
-    * dcm4chee-arc/dcm4chee-arc-conf/src/main/config/ldap/{slapd|opends|apacheds}/dcm4chee-archive.ldif
+    * dcm4che/dcm4che-conf/dcm4che-conf-ldap/src/main/config/{slapd|opendj|apacheds}/dicom.ldif
+    * dcm4che/dcm4che-conf/dcm4che-conf-ldap/src/main/config/{slapd|opendj|apacheds}/dcm4che.ldif
+    * dcm4che/dcm4che-conf/dcm4che-conf-ldap-hl7/src/main/config/{slapd|opendj|apacheds}/dcm4che-hl7.ldif
+    * dcm4chee-arc/dcm4chee-arc-conf/src/main/config/ldap/{slapd|opendj|apacheds}/dcm4chee-archive.ldif
 2. Import sample configuration 
     * dcm4chee-arc/dcm4chee-arc-conf/src/main/config/ldap/init.ldif
     * dcm4chee-arc/dcm4chee-arc-conf/src/main/config/ldap/init-config.ldif

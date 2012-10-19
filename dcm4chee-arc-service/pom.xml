@@ -14,7 +14,7 @@
       <dependency>
           <groupId>org.jboss.shrinkwrap.resolver</groupId>
           <artifactId>shrinkwrap-resolver-bom</artifactId>
-          <version>2.0.0-alpha-1</version>
+          <version>2.0.0-alpha-4</version>
           <scope>import</scope>
           <type>pom</type>
       </dependency>
@@ -22,7 +22,7 @@
       <dependency>
           <groupId>org.jboss.arquillian</groupId>
           <artifactId>arquillian-bom</artifactId>
-          <version>1.0.0.Final</version>
+          <version>1.0.2.Final</version>
           <scope>import</scope>
           <type>pom</type>
       </dependency>
@@ -98,6 +98,24 @@
   </dependencies>
   <build>
     <finalName>dcm4chee-arc-${project.version}</finalName>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>src/main/resources2</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+      </testResource>
+      <testResource>
+        <directory>src/test/resources2</directory>
+        <filtering>true</filtering>
+      </testResource>
+    </testResources>
     <plugins>
       <plugin>
         <artifactId>maven-war-plugin</artifactId>
@@ -119,6 +137,9 @@
         <version>2.12</version>
         <configuration>
           <skipTests>${skipTests}</skipTests>
+          <systemPropertyVariables>
+            <dcm4chee-arc-entity>org.dcm4che.dcm4chee-arc:dcm4chee-arc-entity:jar:${db}:${project.version}</dcm4chee-arc-entity>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
     </plugins>
@@ -143,15 +164,6 @@
         <filters>
           <filter>src/main/filters/${ldap}.properties</filter>
         </filters>
-        <resources>
-          <resource>
-            <directory>src/main/resources</directory>
-          </resource>
-          <resource>
-            <directory>src/main/resources-ldap</directory>
-            <filtering>true</filtering>
-          </resource>
-        </resources>
       </build>
     </profile>
     <profile>

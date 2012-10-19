@@ -59,7 +59,6 @@ import javax.persistence.Transient;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.conf.AttributeFilter;
-import org.hibernate.annotations.Index;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -96,7 +95,6 @@ public class Visit implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "admission_id")
-    @Index(name = "admission_id_idx")
     private String admissionID;
 
     @Column(name = "visit_attrs")
