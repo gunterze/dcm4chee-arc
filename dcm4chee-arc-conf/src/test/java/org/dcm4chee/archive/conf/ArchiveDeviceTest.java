@@ -490,33 +490,16 @@ public class ArchiveDeviceTest {
         UID.PatientStudyOnlyQueryRetrieveInformationModelMOVERetired
     };
 
-    private static final RejectionNote INCORRECT_WORKLIST_ENTRY_SELECTED =
-            new RejectionNote("Incorrect worklist entry selected",
-                    new Code("110514", "DCM", null, "Incorrect worklist entry selected"))
-                .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
-                .addAction(RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE);
-    private static final RejectionNote REJECTED_FOR_QUALITY_REASONS =
-            new RejectionNote("Rejected for Quality Reasons",
-                    new Code("113001", "DCM", null, "Rejected for Quality Reasons"))
-                .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES);
-    private static final RejectionNote REJECT_FOR_PATIENT_SAFETY_REASONS =
-            new RejectionNote("Rejected for Patient Safety Reasons",
-                    new Code("113037", "DCM", null, "Rejected for Patient Safety Reasons"))
-                .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
-                .addAction(RejectionNote.Action.HIDE_REJECTION_NOTE)
-                .addAction(RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE);
-    private static final RejectionNote INCORRECT_MODALITY_WORKLIST_ENTRY =
-            new RejectionNote("Incorrect Modality Worklist Entry",
-                    new Code("XXXXXX11", "99IHEIOCM", null, "Incorrect Modality Worklist Entry"))
-                .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
-                .addAction(RejectionNote.Action.HIDE_REJECTION_NOTE)
-                .addAction(RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE);
-    private static final RejectionNote DATA_RETENTION_PERIOD_EXPIRED =
-            new RejectionNote("Data Retention Period Expired",
-                    new Code("XXXXXX22", "99IHEIOCM", null, "Data Retention Period Expired"))
-                .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
-                .addAction(RejectionNote.Action.HIDE_REJECTION_NOTE)
-                .addAction(RejectionNote.Action.NOT_REJECT_SUBSEQUENT_OCCURRENCE);
+    private static final Code INCORRECT_WORKLIST_ENTRY_SELECTED =
+            new Code("110514", "DCM", null, "Incorrect worklist entry selected");
+    private static final Code REJECTED_FOR_QUALITY_REASONS =
+            new Code("113001", "DCM", null, "Rejected for Quality Reasons");
+    private static final Code REJECT_FOR_PATIENT_SAFETY_REASONS =
+            new Code("113037", "DCM", null, "Rejected for Patient Safety Reasons");
+    private static final Code INCORRECT_MODALITY_WORKLIST_ENTRY =
+            new Code("XXXXXX11", "99IHEIOCM", null, "Incorrect Modality Worklist Entry");
+    private static final Code DATA_RETENTION_PERIOD_EXPIRED =
+            new Code("XXXXXX22", "99IHEIOCM", null, "Data Retention Period Expired");
 
     private static final String[] OTHER_DEVICES = {
         "dcmqrscp",
@@ -728,6 +711,11 @@ public class ArchiveDeviceTest {
 
     private Device createArchiveDevice(String name) throws Exception {
         ArchiveDevice device = new ArchiveDevice(name);
+        device.setIncorrectWorklistEntrySelectedCode(INCORRECT_WORKLIST_ENTRY_SELECTED);
+        device.setRejectedForQualityReasonsCode(REJECTED_FOR_QUALITY_REASONS);
+        device.setRejectedForPatientSafetyReasonsCode(REJECT_FOR_PATIENT_SAFETY_REASONS);
+        device.setIncorrectModalityWorklistEntryCode(INCORRECT_MODALITY_WORKLIST_ENTRY);
+        device.setDataRetentionPeriodExpiredCode(DATA_RETENTION_PERIOD_EXPIRED);
         device.setFuzzyAlgorithmClass("org.dcm4che.soundex.ESoundex");
         device.setConfigurationStaleTimeout(CONFIGURATION_STALE_TIMEOUT);
         setAttributeFilters(device);
@@ -837,11 +825,7 @@ public class ArchiveDeviceTest {
                 new StoreDuplicate(
                         StoreDuplicate.Condition.NE_CHECKSUM,
                         StoreDuplicate.Action.REPLACE));
-        ae.addRejectionNote(INCORRECT_WORKLIST_ENTRY_SELECTED);
-        ae.addRejectionNote(REJECTED_FOR_QUALITY_REASONS);
-        ae.addRejectionNote(REJECT_FOR_PATIENT_SAFETY_REASONS);
-        ae.addRejectionNote(INCORRECT_MODALITY_WORKLIST_ENTRY);
-        ae.addRejectionNote(DATA_RETENTION_PERIOD_EXPIRED);
+        ae.setHideRejectedInstances(true);
         ae.addAttributeCoercion(new AttributeCoercion(null, 
                 Dimse.C_STORE_RQ, 
                 SCP,
@@ -883,10 +867,6 @@ public class ArchiveDeviceTest {
         ae.setMatchUnknown(true);
         ae.setSendPendingCGet(true);
         ae.setSendPendingCMoveInterval(PENDING_CMOVE_INTERVAL);
-        ae.addRejectionNote(INCORRECT_WORKLIST_ENTRY_SELECTED);
-        ae.addRejectionNote(REJECT_FOR_PATIENT_SAFETY_REASONS);
-        ae.addRejectionNote(INCORRECT_MODALITY_WORKLIST_ENTRY);
-        ae.addRejectionNote(DATA_RETENTION_PERIOD_EXPIRED);
         addTCs(ae, null, SCU, IMAGE_CUIDS, image_tsuids);
         addTCs(ae, null, SCU, VIDEO_CUIDS, video_tsuids);
         addTCs(ae, null, SCU, OTHER_CUIDS, other_tsuids);

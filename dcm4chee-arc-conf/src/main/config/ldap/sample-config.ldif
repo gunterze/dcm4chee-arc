@@ -1,6 +1,5 @@
 version: 1
 
-
 dn: dicomAETitle=DCMQRSCP,cn=Unique AE Titles Registry,cn=DICOM Configuration,dc=example,dc=com
 objectClass: dicomUniqueAETitle
 dicomAETitle: DCMQRSCP
@@ -435,6 +434,7 @@ objectClass: dicomUniqueAETitle
 dicomAETitle: DCM4CHEE_ADMIN
 
 dn: dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmDataRetentionPeriodExpiredCode: (XXXXXX22 ,99IHEIOCM ,"Data Retention Period Expired")
 dicomInstalled: TRUE
 dicomDeviceName: dcm4chee-arc
 dcmKeyStorePin: secret
@@ -457,6 +457,10 @@ objectClass: dcmDevice
 objectClass: dcmArchiveDevice
 objectClass: pkiUser
 dcmFuzzyAlgorithmClass: org.dcm4che.soundex.ESoundex
+dcmRejectedForQualityReasonsCode: (113001 ,DCM ,"Rejected for Quality Reasons")
+dcmIncorrectModalityWorklistEntryCode: (XXXXXX11 ,99IHEIOCM ,"Incorrect Modality Worklist Entry")
+dcmIncorrectWorklistEntrySelectedCode: (110514 ,DCM ,"Incorrect worklist entry selected")
+dcmRejectedForPatientSafetyReasonsCode: (113037 ,DCM ,"Rejected for Patient Safety Reasons")
 dicomThisNodeCertificateReference: dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 userCertificate;binary:: MIICTTCCAbagAwIBAgIETvRlSTANBgkqhkiG9w0BAQUFADBrMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxETAPBgNVBAsTCGRjbTRjaGVlMRUwEwYDVQQDEwxkY200Y2hlZS1hcmMwHhcNMTExMjIzMTEyNjAxWhcNMTIxMjIyMTEyNjAxWjBrMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxETAPBgNVBAsTCGRjbTRjaGVlMRUwEwYDVQQDEwxkY200Y2hlZS1hcmMwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAIpyZpH077XTZAvXt/TXSlqU/523X01Va4rzw9BOLITD1Yqo3gOQ4TFIO9WjHQaV1cwsAL5emi65ssd/YjrJHWA6QBRHYDBGNldQlSzKduYS5BqaW3yhCBMw9lZLVN1Gh7QUgWknFNHpSH0uV65esBf598KFzRl8eh8l4/njH9wNAgMBAAEwDQYJKoZIhvcNAQEFBQADgYEAeFaW8IJ3aitQDDL9chQ5k5YNFtZwNDdnVnnsvGgYINYd2VYW6ql2BvXiH49qG5UPJZhqEIDD9VZd2GiJfI/16/YNZBE+0SgUQXsqED9NmqjZRNz0hO6Qddc9+wlBNmlGKyA+ftzNw0Uq1WqXh2IcrxTBMsDKKZLbqbAK7tiECPo=
 
@@ -501,6 +505,7 @@ dcmTLSProtocol: SSLv3
 cn: hl7-tls
 
 dn: dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmHideRejectedInstances: TRUE
 dcmDigestAlgorithm: MD5
 dcmFileSystemGroupID: DEFAULT
 dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
@@ -3862,43 +3867,6 @@ dcmStoreDuplicateAction: REPLACE
 objectClass: dcmStoreDuplicate
 dcmStoreDuplicateCondition: NE_CHECKSUM
 
-dn: cn=Incorrect worklist entry selected,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmRejectionCode: (110514 ,DCM ,"Incorrect worklist entry selected")
-dcmRejectionAction: HIDE_REJECTED_INSTANCES
-dcmRejectionAction: NOT_ACCEPT_SUBSEQUENT_OCCURRENCE
-objectClass: dcmRejectionNote
-cn: Incorrect worklist entry selected
-
-dn: cn=Rejected for Quality Reasons,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmRejectionCode: (113001 ,DCM ,"Rejected for Quality Reasons")
-dcmRejectionAction: HIDE_REJECTED_INSTANCES
-objectClass: dcmRejectionNote
-cn: Rejected for Quality Reasons
-
-dn: cn=Rejected for Patient Safety Reasons,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmRejectionCode: (113037 ,DCM ,"Rejected for Patient Safety Reasons")
-dcmRejectionAction: HIDE_REJECTED_INSTANCES
-dcmRejectionAction: HIDE_REJECTION_NOTE
-dcmRejectionAction: NOT_ACCEPT_SUBSEQUENT_OCCURRENCE
-objectClass: dcmRejectionNote
-cn: Rejected for Patient Safety Reasons
-
-dn: cn=Incorrect Modality Worklist Entry,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmRejectionCode: (XXXXXX11 ,99IHEIOCM ,"Incorrect Modality Worklist Entry")
-dcmRejectionAction: HIDE_REJECTED_INSTANCES
-dcmRejectionAction: HIDE_REJECTION_NOTE
-dcmRejectionAction: NOT_ACCEPT_SUBSEQUENT_OCCURRENCE
-objectClass: dcmRejectionNote
-cn: Incorrect Modality Worklist Entry
-
-dn: cn=Data Retention Period Expired,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmRejectionCode: (XXXXXX22 ,99IHEIOCM ,"Data Retention Period Expired")
-dcmRejectionAction: HIDE_REJECTED_INSTANCES
-dcmRejectionAction: HIDE_REJECTION_NOTE
-dcmRejectionAction: NOT_REJECT_SUBSEQUENT_OCCURRENCE
-objectClass: dcmRejectionNote
-cn: Data Retention Period Expired
-
 dn: dicomAETitle=DCM4CHEE_ADMIN,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dicomNetworkConnectionReference: cn=dicom-tls,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
@@ -5616,37 +5584,6 @@ dicomTransferSyntax: 1.2.840.10008.1.2.2
 objectClass: dicomTransferCapability
 objectClass: dcmTransferCapability
 cn: Encapsulated PDF Storage SCU
-
-dn: cn=Incorrect worklist entry selected,dicomAETitle=DCM4CHEE_ADMIN,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmRejectionCode: (110514 ,DCM ,"Incorrect worklist entry selected")
-dcmRejectionAction: HIDE_REJECTED_INSTANCES
-dcmRejectionAction: NOT_ACCEPT_SUBSEQUENT_OCCURRENCE
-objectClass: dcmRejectionNote
-cn: Incorrect worklist entry selected
-
-dn: cn=Rejected for Patient Safety Reasons,dicomAETitle=DCM4CHEE_ADMIN,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmRejectionCode: (113037 ,DCM ,"Rejected for Patient Safety Reasons")
-dcmRejectionAction: HIDE_REJECTED_INSTANCES
-dcmRejectionAction: HIDE_REJECTION_NOTE
-dcmRejectionAction: NOT_ACCEPT_SUBSEQUENT_OCCURRENCE
-objectClass: dcmRejectionNote
-cn: Rejected for Patient Safety Reasons
-
-dn: cn=Incorrect Modality Worklist Entry,dicomAETitle=DCM4CHEE_ADMIN,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmRejectionCode: (XXXXXX11 ,99IHEIOCM ,"Incorrect Modality Worklist Entry")
-dcmRejectionAction: HIDE_REJECTED_INSTANCES
-dcmRejectionAction: HIDE_REJECTION_NOTE
-dcmRejectionAction: NOT_ACCEPT_SUBSEQUENT_OCCURRENCE
-objectClass: dcmRejectionNote
-cn: Incorrect Modality Worklist Entry
-
-dn: cn=Data Retention Period Expired,dicomAETitle=DCM4CHEE_ADMIN,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmRejectionCode: (XXXXXX22 ,99IHEIOCM ,"Data Retention Period Expired")
-dcmRejectionAction: HIDE_REJECTED_INSTANCES
-dcmRejectionAction: HIDE_REJECTION_NOTE
-dcmRejectionAction: NOT_REJECT_SUBSEQUENT_OCCURRENCE
-objectClass: dcmRejectionNote
-cn: Data Retention Period Expired
 
 dn: hl7ApplicationName=*,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 hl7DefaultCharacterSet: 8859/1

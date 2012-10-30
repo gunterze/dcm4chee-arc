@@ -86,7 +86,9 @@ import org.dcm4chee.archive.conf.AttributeFilter;
             + "s.study.pk, "
             + "s.study.numberOfStudyRelatedSeries, "
             + "s.study.numberOfStudyRelatedInstances, "
+            + "s.study.numberOfStudyRelatedRejectedInstances, "
             + "s.numberOfSeriesRelatedInstances, "
+            + "s.numberOfSeriesRelatedRejectedInstances, "
             + "s.study.modalitiesInStudy, "
             + "s.study.sopClassesInStudy, "
             + "s.encodedAttributes, "
@@ -94,16 +96,14 @@ import org.dcm4chee.archive.conf.AttributeFilter;
             + "s.study.patient.encodedAttributes) "
             + "FROM Series s WHERE s.pk = ?1"),
 @NamedQuery(
-    name="Series.countRejectedInstances",
-    query="SELECT COUNT(i) FROM Instance i WHERE i.series.pk = ?1 "
-            + "AND i.replaced = FALSE AND i.rejectionCode IS NOT NULL"),
-@NamedQuery(
-    name="Series.countRelatedInstances",
-    query="SELECT COUNT(i) FROM Instance i WHERE i.series.pk = ?1 "
-            + "AND i.replaced = FALSE"),
+    name="Series.numberOfStudyRelatedSeries",
+    query="SELECT COUNT(s) FROM Series s WHERE s.study.pk = ?1"),
 @NamedQuery(
     name="Series.updateNumberOfSeriesRelatedInstances",
-    query="UPDATE Series s SET s.numberOfSeriesRelatedInstances = ?1 WHERE s.pk = ?2")
+    query="UPDATE Series s "
+            + "SET s.numberOfSeriesRelatedInstances = ?1, "
+                + "s.numberOfSeriesRelatedRejectedInstances = ?2 "
+            + "WHERE s.pk = ?3")
 })
 @Entity
 @Table(name = "series")
@@ -113,8 +113,7 @@ public class Series implements Serializable {
 
     public static final String FIND_BY_SERIES_INSTANCE_UID = "Series.findBySeriesInstanceUID";
     public static final String PATIENT_STUDY_SERIES_ATTRIBUTES = "Series.patientStudySeriesAttributes";
-    public static final String COUNT_REJECTED_INSTANCES = "Series.countRejectedInstances";
-    public static final String COUNT_RELATED_INSTANCES = "Series.countRelatedInstances";
+    public static final String NUMBER_OF_STUDY_RELATED_SERIES = "Series.numberOfStudyRelatedSeries";
     public static final String UPDATE_NUMBER_OF_SERIES_RELATED_INSTANCES = "Series.updateNumberOfSeriesRelatedInstances";
 
     @Id
@@ -218,6 +217,10 @@ public class Series implements Serializable {
     @Column(name = "num_instances")
     private int numberOfSeriesRelatedInstances;
 
+    @Basic(optional = false)
+    @Column(name = "num_rejected")
+    private int numberOfSeriesRelatedRejectedInstances;
+
     @Column(name = "src_aet")
     private String sourceAET;
 
@@ -262,7 +265,8 @@ public class Series implements Serializable {
                 + ", no=" + seriesNumber
                 + ", mod=" + modality
                 + ", numI=" + numberOfSeriesRelatedInstances
-                + "]";
+                + "(+" + numberOfSeriesRelatedRejectedInstances
+                + ")]";
     }
 
     @PrePersist
@@ -383,12 +387,16 @@ public class Series implements Serializable {
         return numberOfSeriesRelatedInstances;
     }
 
-    public void setNumberOfSeriesRelatedInstances(int numberOfSeriesRelatedInstances) {
-        this.numberOfSeriesRelatedInstances = numberOfSeriesRelatedInstances;
+    public void setNumberOfSeriesRelatedInstances(int number) {
+        this.numberOfSeriesRelatedInstances = number;
     }
 
-    public void incNumberOfSeriesRelatedInstances() {
-        numberOfSeriesRelatedInstances++;
+    public int getNumberOfSeriesRelatedRejectedInstances() {
+        return numberOfSeriesRelatedRejectedInstances;
+    }
+
+    public void setNumberOfSeriesRelatedRejectedInstances(int number) {
+        this.numberOfSeriesRelatedRejectedInstances = number;
     }
 
     public String getSourceAET() {

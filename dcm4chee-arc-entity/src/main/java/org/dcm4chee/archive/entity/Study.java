@@ -82,22 +82,12 @@ import org.dcm4chee.archive.conf.AttributeFilter;
     name="Study.findByStudyInstanceUID",
     query="SELECT s FROM Study s WHERE s.studyInstanceUID = ?1"),
 @NamedQuery(
-    name="Study.countRejectedInstances",
-    query="SELECT COUNT(i) FROM Instance i WHERE i.series.study.pk = ?1 "
-        + "AND i.replaced = FALSE AND i.rejectionCode IS NOT NULL"),
-@NamedQuery(
-    name="Study.countRelatedSeries",
-    query="SELECT COUNT(s) FROM Series s WHERE s.study.pk = ?1 AND EXISTS ("
-        + "SELECT 1 FROM Instance i WHERE i.series = s AND i.replaced = FALSE)"),
-@NamedQuery(
-    name="Study.countRelatedInstances",
-    query="SELECT COUNT(i) FROM Instance i WHERE i.series.study.pk = ?1 "
-        + "AND i.replaced = FALSE"),
-@NamedQuery(
-    name="Study.updateNumberOfStudyRelatedSeriesAndInstances",
+    name="Study.updateNumberOfStudyRelatedInstances",
     query="UPDATE Study s "
-        + "SET s.numberOfStudyRelatedSeries = ?1, s.numberOfStudyRelatedInstances = ?2 "
-        + "WHERE s.pk = ?3")
+        + "SET s.numberOfStudyRelatedSeries = ?1, "
+            + "s.numberOfStudyRelatedInstances = ?2, "
+            + "s.numberOfStudyRelatedRejectedInstances = ?3 "
+        + "WHERE s.pk = ?4")
 })
 @Entity
 @Table(name = "study")
@@ -106,10 +96,7 @@ public class Study implements Serializable {
     private static final long serialVersionUID = -6358525535057418771L;
 
     public static final String FIND_BY_STUDY_INSTANCE_UID = "Study.findByStudyInstanceUID";
-    public static final String COUNT_REJECTED_INSTANCES = "Study.countRejectedInstances";
-    public static final String COUNT_RELATED_SERIES = "Study.countRelatedSeries";
-    public static final String COUNT_RELATED_INSTANCES = "Study.countRelatedInstances";
-    public static final String UPDATE_NUMBER_OF_STUDY_RELATED_SERIES_AND_INSTANCES = "Study.updateNumberOfStudyRelatedSeriesAndInstances";
+    public static final String UPDATE_NUMBER_OF_STUDY_RELATED_INSTANCES = "Study.updateNumberOfStudyRelatedInstances";
 
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -192,6 +179,10 @@ public class Study implements Serializable {
     @Column(name = "num_instances")
     private int numberOfStudyRelatedInstances;
 
+    @Basic(optional = false)
+    @Column(name = "num_rejected")
+    private int numberOfStudyRelatedRejectedInstances;
+
     @Column(name = "mods_in_study")
     private String modalitiesInStudy;
 
@@ -236,7 +227,8 @@ public class Study implements Serializable {
                 + ", mods=" + modalitiesInStudy
                 + ", numS=" + numberOfStudyRelatedSeries
                 + ", numI=" + numberOfStudyRelatedInstances
-                + "]";
+                + "(+" + numberOfStudyRelatedRejectedInstances
+                + ")]";
     }
 
     @PrePersist
@@ -337,16 +329,24 @@ public class Study implements Serializable {
         return numberOfStudyRelatedSeries;
     }
 
-    public void setNumberOfStudyRelatedSeries(int numberOfStudyRelatedSeries) {
-        this.numberOfStudyRelatedSeries = numberOfStudyRelatedSeries;
+    public void setNumberOfStudyRelatedSeries(int number) {
+        this.numberOfStudyRelatedSeries = number;
     }
 
     public int getNumberOfStudyRelatedInstances() {
         return numberOfStudyRelatedInstances;
     }
 
-    public void setNumberOfStudyRelatedInstances(int numberOfStudyRelatedInstances) {
-        this.numberOfStudyRelatedInstances = numberOfStudyRelatedInstances;
+    public void setNumberOfStudyRelatedInstances(int number) {
+        this.numberOfStudyRelatedInstances = number;
+    }
+
+    public int getNumberOfStudyRelatedRejectedInstances() {
+        return numberOfStudyRelatedRejectedInstances;
+    }
+
+    public void setNumberOfStudyRelatedRejectedInstances(int number) {
+        this.numberOfStudyRelatedRejectedInstances = number;
     }
 
     public String[] getModalitiesInStudy() {

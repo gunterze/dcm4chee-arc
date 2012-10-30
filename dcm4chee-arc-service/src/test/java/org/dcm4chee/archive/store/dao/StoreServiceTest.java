@@ -130,10 +130,10 @@ public class StoreServiceTest {
         StoreParam storeParam = ParamFactory.createStoreParam();
         PerformedProcedureStep pps = mppsService.createPerformedProcedureStep(
                 MPPS_IUID, mpps_create, storeParam);
-        assertTrue(pps.isInProgress());
+        assertEquals(PerformedProcedureStep.Status.IN_PROGRESS, pps.getStatus());
         PPSWithIAN ppsWithIAN = mppsService.updatePerformedProcedureStep(
                 MPPS_IUID, load("testdata/mpps-set.xml"), storeParam);
-        assertTrue(ppsWithIAN.pps.isCompleted());
+        assertEquals(PerformedProcedureStep.Status.COMPLETED, ppsWithIAN.pps.getStatus());
         storeService.setStoreParam(storeParam);
         storeParam.setRetrieveAETs("AET_1","AET_2");
         storeParam.setExternalRetrieveAET("AET_3");

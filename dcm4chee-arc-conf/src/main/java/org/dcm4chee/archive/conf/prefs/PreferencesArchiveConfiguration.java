@@ -59,7 +59,6 @@ import org.dcm4chee.archive.conf.ArchiveDevice;
 import org.dcm4chee.archive.conf.ArchiveHL7Application;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
-import org.dcm4chee.archive.conf.RejectionNote;
 import org.dcm4chee.archive.conf.StoreDuplicate;
 
 /**
@@ -83,6 +82,16 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
 
         ArchiveDevice arcDev = (ArchiveDevice) device;
         prefs.putBoolean("dcmArchiveDevice", true);
+        storeNotNull(prefs, "dcmIncorrectWorklistEntrySelectedCode",
+                arcDev.getIncorrectWorklistEntrySelectedCode());
+        storeNotNull(prefs, "dcmRejectedForQualityReasonsCode",
+                arcDev.getRejectedForQualityReasonsCode());
+        storeNotNull(prefs, "dcmRejectedForPatientSafetyReasonsCode",
+                arcDev.getRejectedForPatientSafetyReasonsCode());
+        storeNotNull(prefs, "dcmIncorrectModalityWorklistEntryCode",
+                arcDev.getIncorrectModalityWorklistEntryCode());
+        storeNotNull(prefs, "dcmDataRetentionPeriodExpiredCode",
+                arcDev.getDataRetentionPeriodExpiredCode());
         storeNotNull(prefs, "dcmFuzzyAlgorithmClass",
                 arcDev.getFuzzyAlgorithmClass());
         storeNotDef(prefs, "dcmConfigurationStaleTimeout",
@@ -109,7 +118,6 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         ArchiveApplicationEntity arcAE = (ArchiveApplicationEntity) ae;
         store(arcAE.getAttributeCoercions(), aeNode);
         storeStoreDuplicates(arcAE.getStoreDuplicates(), aeNode);
-        storeRejectionNotes(arcAE.getRejectionNotes(), aeNode);
     }
 
     private void storeStoreDuplicates(List<StoreDuplicate> sds, Preferences aeNode) {
@@ -122,17 +130,6 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
     private void storeTo(StoreDuplicate sd, Preferences prefs) {
         storeNotNull(prefs, "dcmStoreDuplicateCondition", sd.getCondition());
         storeNotNull(prefs, "dcmStoreDuplicateAction", sd.getAction());
-    }
-
-    private void storeRejectionNotes(List<RejectionNote> rns, Preferences aeNode) {
-        Preferences rnsNode = aeNode.node("dcmRejectionNote");
-        for (RejectionNote rn : rns)
-            storeTo(rn, rnsNode.node(rn.getCommonName()));
-    }
-
-    private void storeTo(RejectionNote rn, Preferences prefs) {
-        storeNotNull(prefs, "dcmRejectionCode", rn.getCode());
-        storeNotEmpty(prefs, "dcmRejectionAction", rn.getActions().toArray());
     }
 
     private static void storeTo(AttributeFilter filter, Preferences prefs) {
@@ -190,6 +187,7 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
                     ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
         storeNotDef(prefs, "dcmReturnOtherPatientIDs", arcAE.isReturnOtherPatientIDs(), false);
         storeNotDef(prefs, "dcmReturnOtherPatientNames", arcAE.isReturnOtherPatientNames(), false);
+        storeNotDef(prefs, "dcmHideRejectedInstances", arcAE.isHideRejectedInstances(), false);
         storeNotNull(prefs, "hl7PIXConsumerApplication", arcAE.getLocalPIXConsumerApplication());
         storeNotNull(prefs, "hl7PIXManagerApplication", arcAE.getRemotePIXManagerApplication());
     }
@@ -238,6 +236,16 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
             return;
 
         ArchiveDevice arcdev = (ArchiveDevice) device;
+        arcdev.setIncorrectWorklistEntrySelectedCode(new Code(
+                prefs.get("dcmIncorrectWorklistEntrySelectedCode", null)));
+        arcdev.setRejectedForQualityReasonsCode(new Code(
+                prefs.get("dcmRejectedForQualityReasonsCode", null)));
+        arcdev.setRejectedForPatientSafetyReasonsCode(new Code(
+                prefs.get("dcmRejectedForPatientSafetyReasonsCode", null)));
+        arcdev.setIncorrectModalityWorklistEntryCode(new Code(
+                prefs.get("dcmIncorrectModalityWorklistEntryCode", null)));
+        arcdev.setDataRetentionPeriodExpiredCode(new Code(
+                prefs.get("dcmDataRetentionPeriodExpiredCode", null)));
         arcdev.setFuzzyAlgorithmClass(prefs.get("dcmFuzzyAlgorithmClass", null));
         arcdev.setConfigurationStaleTimeout(
                 prefs.getInt("dcmConfigurationStaleTimeout", 0));
@@ -295,6 +303,8 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
                 prefs.getBoolean("dcmReturnOtherPatientIDs", false));
         arcae.setReturnOtherPatientNames(
                 prefs.getBoolean("dcmReturnOtherPatientNames", false));
+        arcae.setHideRejectedInstances(
+                prefs.getBoolean("dcmHideRejectedInstances", false));
         arcae.setLocalPIXConsumerApplication(prefs.get("hl7PIXConsumerApplication", null));
         arcae.setRemotePIXManagerApplication(prefs.get("hl7PIXManagerApplication", null));
     }
@@ -308,7 +318,6 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) ae;
         load(arcae.getAttributeCoercions(), aeNode);
         loadStoreDuplicates(arcae.getStoreDuplicates(), aeNode);
-        loadRejectionNotes(arcae.getRejectionNotes(), aeNode);
     }
 
     private void loadStoreDuplicates(List<StoreDuplicate> sds, Preferences aeNode)
@@ -322,28 +331,6 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         return new StoreDuplicate(
                 StoreDuplicate.Condition.valueOf(prefs.get("dcmStoreDuplicateCondition", null)),
                 StoreDuplicate.Action.valueOf(prefs.get("dcmStoreDuplicateAction", null)));
-    }
-
-    private void loadRejectionNotes(List<RejectionNote> rns, Preferences aeNode)
-            throws BackingStoreException {
-        Preferences rnsNode = aeNode.node("dcmRejectionNote");
-        for (String cn : rnsNode.childrenNames())
-            rns.add(loadRejectionNoteFrom(rnsNode.node(cn)));
-    }
-
-    private RejectionNote loadRejectionNoteFrom(Preferences prefs) {
-        RejectionNote rn = new RejectionNote(prefs.name(),
-                new Code(prefs.get("dcmRejectionCode", null)));
-        loadRejectionActionsFrom(rn, "dcmRejectionAction", prefs);
-        return rn;
-    }
-
-    private void loadRejectionActionsFrom(RejectionNote rn, String key,
-            Preferences prefs) {
-        int n = prefs.getInt(key + ".#", 0);
-        for (int i = 0; i < n; i++)
-            rn.addAction(RejectionNote.Action.valueOf(
-                    prefs.get(key + '.' + (i+1), null)));
     }
 
     @Override
@@ -388,6 +375,21 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
 
         ArchiveDevice aa = (ArchiveDevice) a;
         ArchiveDevice bb = (ArchiveDevice) b;
+        storeDiff(prefs, "dcmIncorrectWorklistEntrySelectedCode",
+                aa.getIncorrectWorklistEntrySelectedCode(),
+                bb.getIncorrectWorklistEntrySelectedCode());
+        storeDiff(prefs, "dcmRejectedForQualityReasonsCode",
+                aa.getRejectedForQualityReasonsCode(),
+                bb.getRejectedForQualityReasonsCode());
+        storeDiff(prefs, "dcmRejectedForPatientSafetyReasonsCode",
+                aa.getRejectedForPatientSafetyReasonsCode(),
+                bb.getRejectedForPatientSafetyReasonsCode());
+        storeDiff(prefs, "dcmIncorrectModalityWorklistEntryCode",
+                aa.getIncorrectModalityWorklistEntryCode(),
+                bb.getIncorrectModalityWorklistEntryCode());
+        storeDiff(prefs, "dcmDataRetentionPeriodExpiredCode",
+                aa.getDataRetentionPeriodExpiredCode(),
+                bb.getDataRetentionPeriodExpiredCode());
         storeDiff(prefs, "dcmFuzzyAlgorithmClass",
                 aa.getFuzzyAlgorithmClass(),
                 bb.getFuzzyAlgorithmClass());
@@ -494,6 +496,10 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
                  aa.isReturnOtherPatientNames(),
                  bb.isReturnOtherPatientNames(),
                  false);
+         storeDiff(prefs, "dcmHideRejectedInstances",
+                 aa.isHideRejectedInstances(),
+                 bb.isHideRejectedInstances(),
+                 false);
          storeDiff(prefs, "hl7PIXConsumerApplication",
                  aa.getLocalPIXConsumerApplication(),
                  bb.getLocalPIXConsumerApplication());
@@ -567,7 +573,6 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         ArchiveApplicationEntity bb = (ArchiveApplicationEntity) ae;
         merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), aePrefs);
         mergeStoreDuplicates(aa.getStoreDuplicates(), bb.getStoreDuplicates(), aePrefs);
-        mergeRejectionNotes(aa.getRejectionNotes(), bb.getRejectionNotes(), aePrefs);
     }
 
     private void mergeStoreDuplicates(List<StoreDuplicate> prevs, List<StoreDuplicate> sds,
@@ -591,33 +596,6 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
     private void storeDiffs(Preferences prefs, StoreDuplicate a, StoreDuplicate b) {
         storeDiff(prefs, "dcmStoreDuplicateCondition", a.getCondition(), b.getCondition());
         storeDiff(prefs, "dcmStoreDuplicateAction", a.getAction(), b.getAction());
-    }
-
-    private void mergeRejectionNotes(List<RejectionNote> prevs, List<RejectionNote> rns,
-            Preferences aePrefs) throws BackingStoreException {
-        Preferences rnsNode = aePrefs.node("dcmRejectionNote");
-        int index = 1;
-        Iterator<RejectionNote> prevIter = prevs.iterator();
-        for (RejectionNote rn : rns) {
-            Preferences rnNode = rnsNode.node("" + index++);
-            if (prevIter.hasNext())
-                storeDiffs(rnNode, prevIter.next(), rn);
-            else
-                storeTo(rn, rnNode);
-        }
-        while (prevIter.hasNext()) {
-            prevIter.next();
-            rnsNode.node("" + index++).removeNode();
-        }
-    }
-
-    private void storeDiffs(Preferences prefs, RejectionNote a, RejectionNote b) {
-        storeDiff(prefs, "dcmRejectionCode",
-                a.getCode(),
-                b.getCode());
-        storeDiff(prefs, "dcmRejectionAction",
-                a.getActions().toArray(),
-                b.getActions().toArray());
     }
 
 }

@@ -49,6 +49,7 @@ import org.dcm4chee.archive.common.QueryParam;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
 import org.dcm4chee.archive.entity.Code;
+import org.dcm4chee.archive.entity.Instance;
 import org.dcm4chee.archive.entity.QCode;
 import org.dcm4chee.archive.entity.QContentItem;
 import org.dcm4chee.archive.entity.QInstance;
@@ -250,8 +251,13 @@ public abstract class Builder {
                 AttributeFilter.selectStringValue(keys, attrFilter.getCustomAttribute3(), "*"),
                 matchUnknown, true));
         builder.and(QInstance.instance.replaced.isFalse());
-        andNotInCodes(builder, QInstance.instance.conceptNameCode, queryParam.getHideConceptNameCodes());
-        andNotInCodes(builder, QInstance.instance.rejectionCode, queryParam.getHideRejectionCodes());
+        if (queryParam.isHideRejectedInstances())
+            builder.and(QInstance.instance.rejectionFlags.eq(0));
+        else
+            builder.and(ExpressionUtils.or(
+                    QInstance.instance.rejectionFlags.eq(0),
+                    QInstance.instance.rejectionFlags.eq(
+                            Instance.REJECTED_FOR_QUALITY_REASONS)));
     }
 
     public static Predicate pids(IDWithIssuer[] pids, boolean matchUnknown) {

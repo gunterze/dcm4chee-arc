@@ -67,7 +67,6 @@ import org.dcm4chee.archive.conf.ArchiveDevice;
 import org.dcm4chee.archive.conf.ArchiveHL7Application;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
-import org.dcm4chee.archive.conf.RejectionNote;
 import org.dcm4chee.archive.conf.StoreDuplicate;
 import org.dcm4chee.archive.conf.StoreDuplicate.Condition;
 
@@ -131,6 +130,16 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         if (!(device instanceof ArchiveDevice))
             return attrs;
         ArchiveDevice arcDev = (ArchiveDevice) device;
+        storeNotNull(attrs, "dcmIncorrectWorklistEntrySelectedCode",
+                arcDev.getIncorrectWorklistEntrySelectedCode());
+        storeNotNull(attrs, "dcmRejectedForQualityReasonsCode",
+                arcDev.getRejectedForQualityReasonsCode());
+        storeNotNull(attrs, "dcmRejectedForPatientSafetyReasonsCode",
+                arcDev.getRejectedForPatientSafetyReasonsCode());
+        storeNotNull(attrs, "dcmIncorrectModalityWorklistEntryCode",
+                arcDev.getIncorrectModalityWorklistEntryCode());
+        storeNotNull(attrs, "dcmDataRetentionPeriodExpiredCode",
+                arcDev.getDataRetentionPeriodExpiredCode());
         storeNotNull(attrs, "dcmFuzzyAlgorithmClass",
                 arcDev.getFuzzyAlgorithmClass());
         storeNotDef(attrs, "dcmConfigurationStaleTimeout",
@@ -158,8 +167,6 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         store(arcAE.getAttributeCoercions(), aeDN);
         for (StoreDuplicate sd : arcAE.getStoreDuplicates())
             createSubcontext(dnOf(sd, aeDN), storeTo(sd, new BasicAttributes(true)));
-        for (RejectionNote rn : arcAE.getRejectionNotes())
-            createSubcontext(dnOf(rn, aeDN), storeTo(rn, new BasicAttributes(true)));
     }
 
     private String dnOf(StoreDuplicate sd, String aeDN) {
@@ -173,18 +180,6 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         attrs.put("objectclass", "dcmStoreDuplicate");
         storeNotNull(attrs, "dcmStoreDuplicateCondition", sd.getCondition());
         storeNotNull(attrs, "dcmStoreDuplicateAction", sd.getAction());
-        return attrs;
-    }
-
-    private static String dnOf(RejectionNote rn, String parentDN) {
-        return "cn=" + rn.getCommonName() + ',' + parentDN;
-    }
-
-    private static Attributes storeTo(RejectionNote ac, BasicAttributes attrs) {
-        attrs.put("objectclass", "dcmRejectionNote");
-        attrs.put("cn", ac.getCommonName());
-        storeNotNull(attrs, "dcmRejectionCode", ac.getCode());
-        storeNotEmpty(attrs, "dcmRejectionAction", ac.getActions().toArray());
         return attrs;
     }
 
@@ -241,6 +236,7 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
                     ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
         storeNotDef(attrs, "dcmReturnOtherPatientIDs", arcAE.isReturnOtherPatientIDs(), false);
         storeNotDef(attrs, "dcmReturnOtherPatientNames", arcAE.isReturnOtherPatientNames(), false);
+        storeNotDef(attrs, "dcmHideRejectedInstances", arcAE.isHideRejectedInstances(), false);
         storeNotNull(attrs, "hl7PIXConsumerApplication", arcAE.getLocalPIXConsumerApplication());
         storeNotNull(attrs, "hl7PIXManagerApplication", arcAE.getRemotePIXManagerApplication());
         return attrs;
@@ -264,6 +260,16 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         if (!(device instanceof ArchiveDevice))
             return;
         ArchiveDevice arcdev = (ArchiveDevice) device;
+        arcdev.setIncorrectWorklistEntrySelectedCode(new Code(
+                stringValue(attrs.get("dcmIncorrectWorklistEntrySelectedCode"))));
+        arcdev.setRejectedForQualityReasonsCode(new Code(
+                stringValue(attrs.get("dcmRejectedForQualityReasonsCode"))));
+        arcdev.setRejectedForPatientSafetyReasonsCode(new Code(
+                stringValue(attrs.get("dcmRejectedForPatientSafetyReasonsCode"))));
+        arcdev.setIncorrectModalityWorklistEntryCode(new Code(
+                stringValue(attrs.get("dcmIncorrectModalityWorklistEntryCode"))));
+        arcdev.setDataRetentionPeriodExpiredCode(new Code(
+                stringValue(attrs.get("dcmDataRetentionPeriodExpiredCode"))));
         arcdev.setFuzzyAlgorithmClass(stringValue(attrs.get("dcmFuzzyAlgorithmClass")));
         arcdev.setConfigurationStaleTimeout(
                 intValue(attrs.get("dcmConfigurationStaleTimeout"), 0));
@@ -354,6 +360,8 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
                booleanValue(attrs.get("dcmReturnOtherPatientIDs"), false));
        arcae.setReturnOtherPatientNames(
                booleanValue(attrs.get("dcmReturnOtherPatientNames"), false));
+       arcae.setHideRejectedInstances(
+               booleanValue(attrs.get("dcmHideRejectedInstances"), false));
        arcae.setLocalPIXConsumerApplication(stringValue(attrs.get("hl7PIXConsumerApplication")));
        arcae.setRemotePIXManagerApplication(stringValue(attrs.get("hl7PIXManagerApplication")));
     }
@@ -366,7 +374,6 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) ae;
         load(arcae.getAttributeCoercions(), aeDN);
         loadStoreDuplicates(arcae.getStoreDuplicates(), aeDN);
-        loadRejectionNotes(arcae.getRejectionNotes(), aeDN);
     }
 
     private void loadStoreDuplicates(List<StoreDuplicate> sds, String aeDN) throws NamingException {
@@ -385,31 +392,6 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
                         stringValue(attrs.get("dcmStoreDuplicateCondition"))),
                 StoreDuplicate.Action.valueOf(
                         stringValue(attrs.get("dcmStoreDuplicateAction"))));
-    }
-
-    private void loadRejectionNotes(List<RejectionNote> rns, String aeDN) throws NamingException {
-        NamingEnumeration<SearchResult> ne = search(aeDN, "(objectclass=dcmRejectionNote)");
-        try {
-            while (ne.hasMore())
-                rns.add(loadRejectionNoteFrom(ne.next().getAttributes()));
-        } finally {
-           safeClose(ne);
-        }
-    }
-
-    private RejectionNote loadRejectionNoteFrom(Attributes attrs)
-            throws NamingException {
-        RejectionNote rn = new RejectionNote(stringValue(attrs.get("cn")),
-                new Code(stringValue(attrs.get("dcmRejectionCode"))));
-        loadRejectionActionsFrom(rn, attrs.get("dcmRejectionAction"));
-        return rn;
-    }
-
-    private void loadRejectionActionsFrom(RejectionNote rn, Attribute attr)
-            throws NamingException {
-        if (attr != null)
-            for (int i = 0, n = attr.size(); i < n; i++)
-                rn.addAction(RejectionNote.Action.valueOf((String) attr.get(i)));
     }
 
     @Override
@@ -431,6 +413,21 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         
         ArchiveDevice aa = (ArchiveDevice) a;
         ArchiveDevice bb = (ArchiveDevice) b;
+        storeDiff(mods, "dcmIncorrectWorklistEntrySelectedCode",
+                aa.getIncorrectWorklistEntrySelectedCode(),
+                bb.getIncorrectWorklistEntrySelectedCode());
+        storeDiff(mods, "dcmRejectedForQualityReasonsCode",
+                aa.getRejectedForQualityReasonsCode(),
+                bb.getRejectedForQualityReasonsCode());
+        storeDiff(mods, "dcmRejectedForPatientSafetyReasonsCode",
+                aa.getRejectedForPatientSafetyReasonsCode(),
+                bb.getRejectedForPatientSafetyReasonsCode());
+        storeDiff(mods, "dcmIncorrectModalityWorklistEntryCode",
+                aa.getIncorrectModalityWorklistEntryCode(),
+                bb.getIncorrectModalityWorklistEntryCode());
+        storeDiff(mods, "dcmDataRetentionPeriodExpiredCode",
+                aa.getDataRetentionPeriodExpiredCode(),
+                bb.getDataRetentionPeriodExpiredCode());
         storeDiff(mods, "dcmFuzzyAlgorithmClass",
                 aa.getFuzzyAlgorithmClass(),
                 bb.getFuzzyAlgorithmClass());
@@ -538,6 +535,10 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
                 aa.isReturnOtherPatientNames(),
                 bb.isReturnOtherPatientNames(),
                 false);
+        storeDiff(mods, "dcmHideRejectedInstances",
+                aa.isHideRejectedInstances(),
+                bb.isHideRejectedInstances(),
+                false);
         storeDiff(mods, "hl7PIXConsumerApplication",
                 aa.getLocalPIXConsumerApplication(),
                 bb.getLocalPIXConsumerApplication());
@@ -590,7 +591,6 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         ArchiveApplicationEntity bb = (ArchiveApplicationEntity) ae;
         merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), aeDN);
         mergeStoreDuplicates(aa.getStoreDuplicates(), bb.getStoreDuplicates(), aeDN);
-        mergeRejectionNotes(aa.getRejectionNotes(), bb.getRejectionNotes(), aeDN);
     }
 
     private void mergeStoreDuplicates(List<StoreDuplicate> prevs, List<StoreDuplicate> acs, String parentDN)
@@ -621,41 +621,6 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
            if (other.getCondition() == condition)
                return other;
        return null;
-    }
-
-    private void mergeRejectionNotes(List<RejectionNote> prevs, List<RejectionNote> rns, String parentDN)
-            throws NamingException {
-        for (RejectionNote prev : prevs) {
-            String cn = prev.getCommonName();
-            if (findByCommonName(rns, cn) == null)
-                destroySubcontext(dnOf(prev, parentDN));
-        }
-        for (RejectionNote rn : rns) {
-            String dn = dnOf(rn, parentDN);
-            RejectionNote prev = findByCommonName(prevs, rn.getCommonName());
-            if (prev == null)
-                createSubcontext(dn, storeTo(rn, new BasicAttributes(true)));
-            else
-                modifyAttributes(dn, storeDiffs(prev, rn, new ArrayList<ModificationItem>()));
-        }
-    }
-
-    private RejectionNote findByCommonName(List<RejectionNote> rns, String cn) {
-        for (RejectionNote other : rns)
-            if (other.getCommonName().equals(cn))
-                return other;
-        return null;
-    }
-
-    private List<ModificationItem> storeDiffs(RejectionNote prev,
-            RejectionNote rn, ArrayList<ModificationItem> mods) {
-        storeDiff(mods, "dcmRejectionCode",
-                prev.getCode(),
-                rn.getCode());
-        storeDiff(mods, "dcmRejectionAction",
-                prev.getActions().toArray(),
-                rn.getActions().toArray());
-        return mods;
     }
 
     private List<ModificationItem> storeDiffs(AttributeFilter prev,

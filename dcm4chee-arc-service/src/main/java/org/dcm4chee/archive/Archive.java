@@ -41,21 +41,16 @@ package org.dcm4chee.archive;
 import javax.jms.Queue;
 
 import org.dcm4che.conf.api.ApplicationEntityCache;
-import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.conf.api.hl7.HL7ApplicationCache;
 import org.dcm4che.conf.api.hl7.HL7Configuration;
 import org.dcm4che.data.UID;
-import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.DeviceService;
 import org.dcm4che.net.hl7.HL7MessageListener;
 import org.dcm4che.net.hl7.service.HL7ServiceRegistry;
+import org.dcm4che.net.service.BasicCEchoSCP;
 import org.dcm4che.net.service.DicomServiceRegistry;
-import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.conf.ArchiveDevice;
-import org.dcm4chee.archive.conf.RejectionNote;
-import org.dcm4chee.archive.dao.CodeService;
 import org.dcm4chee.archive.dao.PatientService;
-import org.dcm4chee.archive.entity.Code;
 import org.dcm4chee.archive.hl7.PatientUpdateService;
 import org.dcm4chee.archive.jms.JMSService;
 import org.dcm4chee.archive.mpps.IANSCU;
@@ -84,7 +79,6 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
     static final String IMAGE = "IMAGE";
 
     private final HL7Configuration dicomConfiguration;
-    private final CodeService codeService;
     private final CStoreSCP storeSCP;
     private final StgCmtSCP stgCmtSCP;
     private final MPPSSCP mppsSCP;
@@ -106,8 +100,7 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
     private final MPPSSCU mppsSCU;
     private final IANSCU ianSCU;
 
-    public Archive(HL7Configuration dicomConfiguration, String deviceName,
-            CodeService codeService,
+    public Archive(HL7Configuration dicomConfiguration, ArchiveDevice device,
             PatientService patientService,
             StgCmtService stgCmtService,
             MPPSService mppsService,
@@ -115,10 +108,9 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
             JMSService jmsService,
             Queue mppsSCUQueue,
             Queue ianSCUQueue,
-            Queue stgcmtSCPQueue)
-            throws ConfigurationException, Exception {
+            Queue stgcmtSCPQueue) {
+        init(device);
         this.dicomConfiguration = dicomConfiguration;
-        this.codeService = codeService;
         this.aeCache = new ApplicationEntityCache(dicomConfiguration);
         this.hl7AppCache = new HL7ApplicationCache(dicomConfiguration);
         this.pixConsumer = new PIXConsumer(hl7AppCache);
@@ -163,10 +155,9 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         this.mwlFindSCP = new MWLCFindSCP(
                 UID.ModalityWorklistInformationModelFIND,
                 aeCache, pixConsumer);
-        init((ArchiveDevice) dicomConfiguration.findDevice(deviceName));
+        device.setDimseRQHandler(serviceRegistry());
         device.setHL7MessageListener(hl7ServiceRegistry(patientService));
         setConfigurationStaleTimeout();
-        loadRejectionNoteCodes();
    }
 
     private HL7MessageListener hl7ServiceRegistry(PatientService patientService) {
@@ -180,7 +171,6 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
     public void reloadConfiguration() throws Exception {
         device.reconfigure(dicomConfiguration.findDevice(device.getDeviceName()));
         setConfigurationStaleTimeout();
-        loadRejectionNoteCodes();
         device.rebindConnections();
     }
 
@@ -190,18 +180,9 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         hl7AppCache.setStaleTimeout(staleTimeout);
     }
 
-    private void loadRejectionNoteCodes() {
-        for (ApplicationEntity ae : device.getApplicationEntities()) {
-            for (RejectionNote rj : ((ArchiveApplicationEntity) ae).getRejectionNotes()) {
-                if (!(rj.getCode() instanceof Code))
-                    rj.setCode(codeService.findOrCreate(new Code(rj.getCode())));
-            }
-        }
-    }
-
-    @Override
-    protected DicomServiceRegistry serviceRegistry() {
-        DicomServiceRegistry services = super.serviceRegistry();
+    private DicomServiceRegistry serviceRegistry() {
+        DicomServiceRegistry services = new DicomServiceRegistry();
+        services.addDicomService(new BasicCEchoSCP());
         services.addDicomService(storeSCP);
         services.addDicomService(stgCmtSCP);
         services.addDicomService(mwlFindSCP);

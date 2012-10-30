@@ -55,6 +55,7 @@ import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
 import org.dcm4chee.archive.dao.SeriesService;
+import org.dcm4chee.archive.entity.Instance;
 import org.dcm4chee.archive.entity.QFileRef;
 import org.dcm4chee.archive.entity.QFileSystem;
 import org.dcm4chee.archive.entity.QInstance;
@@ -69,6 +70,7 @@ import org.hibernate.ejb.HibernateEntityManagerFactory;
 
 import com.mysema.query.BooleanBuilder;
 import com.mysema.query.jpa.hibernate.HibernateQuery;
+import com.mysema.query.types.ExpressionUtils;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -107,10 +109,13 @@ public class RetrieveService {
         builder.and(Builder.uids(QInstance.instance.sopInstanceUID,
                 keys.getStrings(Tag.SOPInstanceUID), false));
         builder.and(QInstance.instance.replaced.isFalse());
-        Builder.andNotInCodes(builder, QInstance.instance.conceptNameCode, 
-                queryParam.getHideConceptNameCodes());
-        Builder.andNotInCodes(builder, QInstance.instance.rejectionCode, 
-                queryParam.getHideRejectionCodes());
+        if (queryParam.isHideRejectedInstances())
+            builder.and(QInstance.instance.rejectionFlags.eq(0));
+        else
+            builder.and(ExpressionUtils.or(
+                    QInstance.instance.rejectionFlags.eq(0),
+                    QInstance.instance.rejectionFlags.eq(
+                            Instance.REJECTED_FOR_QUALITY_REASONS)));
         return locate(new HibernateQuery(session)
             .from(QInstance.instance)
             .leftJoin(QInstance.instance.fileRefs, QFileRef.fileRef)

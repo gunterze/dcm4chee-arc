@@ -49,7 +49,9 @@ public class PatientStudySeriesAttributes {
     private final Long studyPk;
     private int numberOfStudyRelatedSeries;
     private int numberOfStudyRelatedInstances;
+    private int numberOfStudyRelatedRejectedInstances;
     private int numberOfSeriesRelatedInstances;
+    private int numberOfSeriesRelatedRejectedInstances;
     private String modalitiesInStudy;
     private String sopClassesInStudy;
     private final byte[] seriesAttrs;
@@ -59,7 +61,9 @@ public class PatientStudySeriesAttributes {
     public PatientStudySeriesAttributes(Long studyPk,
             int numberOfStudyRelatedSeries,
             int numberOfStudyRelatedInstances,
+            int numberOfStudyRelatedRejectedInstances,
             int numberOfSeriesRelatedInstances,
+            int numberOfSeriesRelatedRejectedInstances,
             String modalitiesInStudy,
             String sopClassesInStudy,
             byte[] seriesAttributes,
@@ -68,7 +72,9 @@ public class PatientStudySeriesAttributes {
         this.studyPk = studyPk;
         this.numberOfStudyRelatedSeries = numberOfStudyRelatedSeries;
         this.numberOfStudyRelatedInstances = numberOfStudyRelatedInstances;
+        this.numberOfStudyRelatedRejectedInstances = numberOfStudyRelatedRejectedInstances;
         this.numberOfSeriesRelatedInstances = numberOfSeriesRelatedInstances;
+        this.numberOfSeriesRelatedRejectedInstances = numberOfSeriesRelatedRejectedInstances;
         this.modalitiesInStudy = modalitiesInStudy;
         this.sopClassesInStudy = sopClassesInStudy;
         this.seriesAttrs = seriesAttributes;
@@ -84,26 +90,24 @@ public class PatientStudySeriesAttributes {
         return numberOfStudyRelatedSeries;
     }
 
-    public final void setNumberOfStudyRelatedSeries(int numberOfStudyRelatedSeries) {
-        this.numberOfStudyRelatedSeries = numberOfStudyRelatedSeries;
+    public final void setNumberOfStudyRelatedSeries(int number) {
+        this.numberOfStudyRelatedSeries = number;
     }
 
     public final int getNumberOfStudyRelatedInstances() {
         return numberOfStudyRelatedInstances;
     }
 
-    public final void setNumberOfStudyRelatedInstances(
-            int numberOfStudyRelatedInstances) {
-        this.numberOfStudyRelatedInstances = numberOfStudyRelatedInstances;
+    public final void setNumberOfStudyRelatedInstances(int number) {
+        this.numberOfStudyRelatedInstances = number;
     }
 
     public final int getNumberOfSeriesRelatedInstances() {
         return numberOfSeriesRelatedInstances;
     }
 
-    public final void setNumberOfSeriesRelatedInstances(
-            int numberOfSeriesRelatedInstances) {
-        this.numberOfSeriesRelatedInstances = numberOfSeriesRelatedInstances;
+    public final void setNumberOfSeriesRelatedInstances(int number) {
+        this.numberOfSeriesRelatedInstances = number;
     }
 
     public final String getModalitiesInStudy() {
@@ -122,7 +126,9 @@ public class PatientStudySeriesAttributes {
         this.sopClassesInStudy = sopClassesInStudy;
     }
 
-    public Attributes getAttributes(boolean includeQueryAttributes) {
+    public Attributes getAttributes(
+            boolean includeQueryAttributes,
+            boolean hideRejectedInstances) {
         Attributes attrs = new Attributes();
         Utils.decodeAttributes(attrs, patientAttrs);
         Utils.decodeAttributes(attrs, studyAttrs);
@@ -130,11 +136,17 @@ public class PatientStudySeriesAttributes {
         if (includeQueryAttributes) {
             Utils.setStudyQueryAttributes(attrs,
                     numberOfStudyRelatedSeries,
-                    numberOfStudyRelatedInstances,
+                    hideRejectedInstances
+                        ? numberOfStudyRelatedInstances
+                        : numberOfStudyRelatedInstances
+                            + numberOfStudyRelatedRejectedInstances,
                     modalitiesInStudy,
                     sopClassesInStudy);
             Utils.setSeriesQueryAttributes(attrs,
-                    numberOfSeriesRelatedInstances);
+                    hideRejectedInstances
+                        ? numberOfSeriesRelatedInstances
+                        : numberOfSeriesRelatedInstances
+                            + numberOfSeriesRelatedRejectedInstances);
         }
         return attrs;
     }

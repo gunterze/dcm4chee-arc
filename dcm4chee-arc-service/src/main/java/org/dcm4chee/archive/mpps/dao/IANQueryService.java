@@ -38,17 +38,11 @@
 
 package org.dcm4chee.archive.mpps.dao;
 
-import static org.dcm4chee.archive.conf.RejectionNote.Action.HIDE_REJECTION_NOTE;
-
-import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceUnit;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
@@ -57,21 +51,10 @@ import org.dcm4che.data.UID;
 import org.dcm4che.data.VR;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.DicomServiceException;
-import org.dcm4chee.archive.conf.RejectionNote;
-import org.dcm4chee.archive.entity.Availability;
-import org.dcm4chee.archive.entity.Code;
+import org.dcm4chee.archive.entity.Instance;
 import org.dcm4chee.archive.entity.PerformedProcedureStep;
-import org.dcm4chee.archive.entity.QInstance;
-import org.dcm4chee.archive.entity.QSeries;
-import org.dcm4chee.archive.entity.QStudy;
+import org.dcm4chee.archive.entity.SOPInstanceReference;
 import org.dcm4chee.archive.entity.Utils;
-import org.dcm4chee.archive.util.query.Builder;
-import org.hibernate.SessionFactory;
-import org.hibernate.StatelessSession;
-import org.hibernate.ejb.HibernateEntityManagerFactory;
-
-import com.mysema.query.BooleanBuilder;
-import com.mysema.query.jpa.hibernate.HibernateQuery;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -79,73 +62,17 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
 @Stateless
 public class IANQueryService {
 
-    @PersistenceUnit
-    private EntityManagerFactory emf;
+    @PersistenceContext
+    private EntityManager em;
 
-    private StatelessSession session;
-
-    @PostConstruct
-    public void init() {
-        SessionFactory sessionFactory = ((HibernateEntityManagerFactory) emf).getSessionFactory();
-        session = sessionFactory.openStatelessSession();
-    }
-
-    @PreDestroy
-    public void destroy() {
-        session.close();
-    }
-
-    public Attributes createIANforMPPS(PerformedProcedureStep mpps,
-            List<RejectionNote> rejectionNotes, Set<String> rejectedIUIDs)
+    public Attributes createIANforMPPS(PerformedProcedureStep mpps)
             throws DicomServiceException {
         Sequence perfSeriesSeq = mpps.getAttributes()
                 .getSequence(Tag.PerformedSeriesSequence);
-        if (perfSeriesSeq == null)
+        if (perfSeriesSeq == null || perfSeriesSeq.isEmpty())
             return null;
 
-        String[] seriesIUIDs = new String[perfSeriesSeq.size()];
-        int remaining = 0;
-        for (int i = 0; i < seriesIUIDs.length; i++) {
-            Attributes perfSeries = perfSeriesSeq.get(i);
-            seriesIUIDs[i] = perfSeries.getString(Tag.SeriesInstanceUID);
-            Sequence refImgs =
-                    perfSeries.getSequence(Tag.ReferencedImageSequence);
-            Sequence refNonImgs =
-                    perfSeries.getSequence(Tag.ReferencedNonImageCompositeSOPInstanceSequence);
-            if (refImgs != null)
-                remaining += refImgs.size();
-            if (refNonImgs != null)
-                remaining += refNonImgs.size();
-        }
-        if (remaining == 0)
-            return null;
-
-        BooleanBuilder builder = new BooleanBuilder();
-        builder.and(Builder.uids(QSeries.series.seriesInstanceUID, seriesIUIDs, false));
-        builder.and(QInstance.instance.replaced.isFalse());
-        List<Object[]> list = new HibernateQuery(session)
-            .from(QInstance.instance)
-            .innerJoin(QInstance.instance.series, QSeries.series)
-            .innerJoin(QSeries.series.study, QStudy.study)
-            .where(builder)
-            .list(
-                QStudy.study.studyInstanceUID,
-                QSeries.series.seriesInstanceUID,
-                QInstance.instance.sopClassUID,
-                QInstance.instance.sopInstanceUID,
-                QInstance.instance.retrieveAETs,
-                QInstance.instance.externalRetrieveAET,
-                QInstance.instance.availability,
-                QInstance.instance.conceptNameCode.pk);
-
-        if (list.isEmpty())
-            return null;
-
-        HashMap<String,Object[]> map = new HashMap<String,Object[]>(list.size() * 4 / 3);
-        for (Object[] a : list)
-            map.put((String) a[3], a);
-
-        Attributes ian = new Attributes(4);
+        Attributes ian = new Attributes(3);
         Attributes refPPS = new Attributes(3);
         ian.newSequence(Tag.ReferencedPerformedProcedureStepSequence, 1).add(refPPS);
         refPPS.setString(Tag.ReferencedSOPClassUID, VR.UI,
@@ -153,9 +80,8 @@ public class IANQueryService {
         refPPS.setString(Tag.ReferencedSOPInstanceUID, VR.UI,
                 mpps.getSopInstanceUID());
         refPPS.setNull(Tag.PerformedWorkitemCodeSequence, VR.SQ);
-        String studyIUID = (String) list.get(0)[0];
-        ian.setString(Tag.StudyInstanceUID, VR.UI, studyIUID);
-        Sequence refSeriesSeq = ian.newSequence(Tag.ReferencedSeriesSequence, seriesIUIDs.length);
+        Sequence refSeriesSeq = ian.newSequence(Tag.ReferencedSeriesSequence, perfSeriesSeq.size());
+        String studyInstanceUID = null;
         for (Attributes perfSeries : perfSeriesSeq) {
             Sequence refImgs =
                     perfSeries.getSequence(Tag.ReferencedImageSequence);
@@ -168,69 +94,71 @@ public class IANQueryService {
                 seriesSize += refNonImgs.size();
             if (seriesSize == 0)
                 continue;
-            String seriesIUID = perfSeries.getString(Tag.SeriesInstanceUID);
-            Attributes refSeries = new Attributes(3);
+
+            String seriesInstanceUID = perfSeries.getString(Tag.SeriesInstanceUID);
+            @SuppressWarnings("unchecked")
+            List<SOPInstanceReference> storedSOPs =
+                em.createNamedQuery(
+                        Instance.SOP_INSTANCE_REFERENCE_BY_SERIES_INSTANCE_UID)
+                  .setParameter(1, seriesInstanceUID)
+                  .getResultList();
+            if (storedSOPs.isEmpty())
+                return null;
+
+            String studyInstanceUID0 = storedSOPs.get(0).studyInstanceUID;
+            if (studyInstanceUID == null)
+                ian.setString(Tag.StudyInstanceUID, VR.UI, studyInstanceUID = studyInstanceUID0);
+            else if (!studyInstanceUID.equals(studyInstanceUID0))
+                throw new DicomServiceException(Status.ProcessingFailure,
+                        "Series referenced by MPPS belong to multiple Studies");
+
+            Attributes refSeries = new Attributes(2);
+            refSeriesSeq.add(refSeries);
             Sequence refSOPs = refSeries.newSequence(Tag.ReferencedSOPSequence, seriesSize);
-            refSeries.setString(Tag.SeriesInstanceUID, VR.UI, seriesIUID);
+            refSeries.setString(Tag.SeriesInstanceUID, VR.UI, seriesInstanceUID);
+
             if (refImgs != null)
-                remaining -= addAllTo(studyIUID, seriesIUID, refImgs, map,
-                        refSOPs, rejectionNotes, rejectedIUIDs);
+                if (!containsAll(storedSOPs, refImgs, refSOPs))
+                    return null;
             if (refNonImgs != null)
-                remaining -= addAllTo(studyIUID, seriesIUID, refNonImgs, map,
-                        refSOPs, rejectionNotes, rejectedIUIDs);
-            if (!refSOPs.isEmpty())
-                refSeriesSeq.add(refSeries);
+                if (!containsAll(storedSOPs, refNonImgs, refSOPs))
+                    return null;
         }
-        return remaining == 0 && !refSeriesSeq.isEmpty() ? ian : null;
+        return ian;
     }
 
-    private static int addAllTo(String studyIUD, String seriesIUID,
-            Sequence ppsRefs, HashMap<String, Object[]> map, Sequence refSOPs,
-            List<RejectionNote> rejectionNotes, Set<String> rejected)
-            throws DicomServiceException {
-        int count = 0;
+    private static boolean containsAll(List<SOPInstanceReference> storedSOPs,
+            Sequence ppsRefs, Sequence refSOPs) {
         for (Attributes ppsRef : ppsRefs) {
-            Object[] a = map.get(ppsRef.getString(Tag.ReferencedSOPInstanceUID));
-            if (a != null) {
-                if (!studyIUD.equals(a[0]))
-                    throw new DicomServiceException(Status.ProcessingFailure,
-                                "Referenced SOP Instances belong to multiple Studies");
-                if (!seriesIUID.equals(a[1]))
-                    throw new DicomServiceException(Status.ProcessingFailure,
-                                "Mismatch of Series Instance UID of referenced Instance");
-                if (!ppsRef.getString(Tag.ReferencedSOPClassUID).equals(a[2]))
-                    new DicomServiceException(Status.ProcessingFailure,
-                                "Mismatch of SOP Class UID of referenced Instance");
-                if (!hide(rejectionNotes, (Long) a[7]))
-                    refSOPs.add(refSOP(ppsRef, (String) a[4], (String) a[5], 
-                            rejected != null && rejected.contains(ppsRef.getString(Tag.ReferencedSOPInstanceUID))
-                                    ? Availability.UNAVAILABLE
-                                    : (Availability) a[6]));
-                count++;
-            }
+            SOPInstanceReference sopRef = findBySOPInstanceUID(storedSOPs,
+                    ppsRef.getString(Tag.ReferencedSOPInstanceUID));
+            if (sopRef == null)
+                return false;
+            if (!sopRef.sopClassUID.equals(
+                    ppsRef.getString(Tag.ReferencedSOPClassUID)))
+                new DicomServiceException(Status.ProcessingFailure,
+                        "Mismatch of SOP Class UID of referenced Instance");
+
+            refSOPs.add(makeRefSOPItem(sopRef));
         }
-        return count;
+        return true;
     }
 
-    private static boolean hide(List<RejectionNote> rejectionNotes, Long codePk) {
-        if (codePk != null && rejectionNotes != null) {
-            long pk = codePk.longValue();
-            for (RejectionNote rn : rejectionNotes)
-                if (((Code) rn.getCode()).getPk() == pk)
-                    return rn.getActions().contains(HIDE_REJECTION_NOTE);
-        }
-        return false;
+    private static Attributes makeRefSOPItem(SOPInstanceReference sopRef) {
+        Attributes refSOP = new Attributes(4);
+        Utils.setRetrieveAET(refSOP, sopRef.retrieveAETs, sopRef.externalRetrieveAET);
+        refSOP.setString(Tag.InstanceAvailability, VR.CS, sopRef.availability.toString());
+        refSOP.setString(Tag.ReferencedSOPClassUID, VR.UI, sopRef.sopClassUID);
+        refSOP.setString(Tag.ReferencedSOPInstanceUID, VR.UI, sopRef.sopInstanceUID);
+        return refSOP;
     }
 
-    private static Attributes refSOP(Attributes ppsRef, String retrieveAETs,
-            String externalRetrieveAET, Availability availability) {
-        Attributes attrs = new Attributes(4);
-        Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
-        attrs.setString(Tag.InstanceAvailability, VR.CS, availability.toString());
-        attrs.setString(Tag.ReferencedSOPClassUID, VR.UI,
-                ppsRef.getString(Tag.ReferencedSOPClassUID));
-        attrs.setString(Tag.ReferencedSOPInstanceUID, VR.UI,
-                ppsRef.getString(Tag.ReferencedSOPInstanceUID));
-        return attrs ;
+    private static SOPInstanceReference findBySOPInstanceUID(
+            List<SOPInstanceReference> storedSOPs, String iuid) {
+        for (SOPInstanceReference sopRef : storedSOPs)
+            if (sopRef.sopInstanceUID.equals(iuid))
+                return sopRef;
+        return null;
     }
+
 }

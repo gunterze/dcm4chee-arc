@@ -41,6 +41,7 @@ package org.dcm4chee.archive.conf;
 import javax.xml.transform.Templates;
 import javax.xml.transform.TransformerConfigurationException;
 
+import org.dcm4che.data.Code;
 import org.dcm4che.io.TemplatesCache;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.hl7.HL7Device;
@@ -54,6 +55,11 @@ public class ArchiveDevice extends HL7Device {
 
     private static final long serialVersionUID = -3611223780276386740L;
 
+    private Code incorrectWorklistEntrySelectedCode;
+    private Code rejectedForQualityReasonsCode;
+    private Code rejectedForPatientSafetyReasonsCode;
+    private Code incorrectModalityWorklistEntryCode;
+    private Code dataRetentionPeriodExpiredCode;
     private String fuzzyAlgorithmClass;
     private final AttributeFilter[] attributeFilters =
             new AttributeFilter[Entity.values().length];
@@ -64,6 +70,46 @@ public class ArchiveDevice extends HL7Device {
 
     public ArchiveDevice(String name) {
         super(name);
+    }
+
+    public Code getIncorrectWorklistEntrySelectedCode() {
+        return incorrectWorklistEntrySelectedCode;
+    }
+
+    public void setIncorrectWorklistEntrySelectedCode(Code code) {
+        this.incorrectWorklistEntrySelectedCode = code;
+    }
+
+    public Code getRejectedForQualityReasonsCode() {
+        return rejectedForQualityReasonsCode;
+    }
+
+    public void setRejectedForQualityReasonsCode(Code code) {
+        this.rejectedForQualityReasonsCode = code;
+    }
+
+    public Code getRejectedForPatientSafetyReasonsCode() {
+        return rejectedForPatientSafetyReasonsCode;
+    }
+
+    public void setRejectedForPatientSafetyReasonsCode(Code code) {
+        this.rejectedForPatientSafetyReasonsCode = code;
+    }
+
+    public Code getIncorrectModalityWorklistEntryCode() {
+        return incorrectModalityWorklistEntryCode;
+    }
+
+    public void setIncorrectModalityWorklistEntryCode(Code code) {
+        this.incorrectModalityWorklistEntryCode = code;
+    }
+
+    public Code getDataRetentionPeriodExpiredCode() {
+        return dataRetentionPeriodExpiredCode;
+    }
+
+    public void setDataRetentionPeriodExpiredCode(Code code) {
+        this.dataRetentionPeriodExpiredCode = code;
     }
 
     public String getFuzzyAlgorithmClass() {
@@ -130,6 +176,11 @@ public class ArchiveDevice extends HL7Device {
     protected void setDeviceAttributes(Device from) {
         super.setDeviceAttributes(from);
         ArchiveDevice arcdev = (ArchiveDevice) from;
+        setIncorrectWorklistEntrySelectedCode(arcdev.incorrectWorklistEntrySelectedCode);
+        setRejectedForQualityReasonsCode(arcdev.rejectedForQualityReasonsCode);
+        setRejectedForPatientSafetyReasonsCode(arcdev.rejectedForPatientSafetyReasonsCode);
+        setIncorrectModalityWorklistEntryCode(arcdev.incorrectModalityWorklistEntryCode);
+        setDataRetentionPeriodExpiredCode(arcdev.getDataRetentionPeriodExpiredCode());
         setFuzzyAlgorithmClass(arcdev.fuzzyAlgorithmClass);
         setConfigurationStaleTimeout(arcdev.configurationStaleTimeout);
         System.arraycopy(arcdev.attributeFilters, 0,

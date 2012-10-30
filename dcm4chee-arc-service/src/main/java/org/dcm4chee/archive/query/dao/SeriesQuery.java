@@ -39,7 +39,6 @@
 package org.dcm4chee.archive.query.dao;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
 import org.dcm4chee.archive.entity.Availability;
@@ -84,7 +83,9 @@ class SeriesQuery extends AbstractQuery {
                 QSeries.series.pk,
                 QStudy.study.numberOfStudyRelatedSeries,
                 QStudy.study.numberOfStudyRelatedInstances,
+                QStudy.study.numberOfStudyRelatedRejectedInstances,
                 QSeries.series.numberOfSeriesRelatedInstances,
+                QSeries.series.numberOfSeriesRelatedRejectedInstances,
                 QStudy.study.modalitiesInStudy,
                 QStudy.study.sopClassesInStudy,
                 QSeries.series.retrieveAETs,
@@ -99,48 +100,46 @@ class SeriesQuery extends AbstractQuery {
     protected Attributes toAttributes(ScrollableResults results) {
         Long studyPk = results.getLong(0);
         Long seriesPk = results.getLong(1);
-        int seriesRelatedInstances = results.getInteger(4);
-        String retrieveAETs = results.getString(7);
-        String externalRetrieveAET = results.getString(8);
-        Availability availability = (Availability) results.get(9);
-        byte[] seriesAttributes = results.getBinary(10);
+        int[] numInsts = { results.getInteger(5), results.getInteger(6) };
+        String retrieveAETs = results.getString(9);
+        String externalRetrieveAET = results.getString(10);
+        Availability availability = (Availability) results.get(11);
+        byte[] seriesAttributes = results.getBinary(12);
         if (!studyPk.equals(this.studyPk)) {
             this.studyAttrs = toStudyAttributes(studyPk, results);
             this.studyPk = studyPk;
         }
         Attributes attrs = new Attributes(studyAttrs);
         Utils.decodeAttributes(attrs, seriesAttributes);
-        if (seriesRelatedInstances == -1)
-            seriesRelatedInstances = queryService.seriesService()
-                    .calculateNumberOfSeriesRelatedInstances(seriesPk, queryParam);
-        Utils.setSeriesQueryAttributes(attrs, seriesRelatedInstances);
+        if (numInsts[0] == -1)
+            numInsts = queryService.seriesService()
+                    .calculateNumberOfSeriesRelatedInstances(seriesPk);
+        Utils.setSeriesQueryAttributes(attrs,
+                queryParam.isHideRejectedInstances() ? numInsts[0]
+                        : numInsts[0] + numInsts[1]);
         Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
         Utils.setAvailability(attrs, availability);
-        // skip match for empty Series
-        if (attrs.getInt(Tag.NumberOfSeriesRelatedInstances, 0) == 0)
-            return null;
         return attrs;
     }
 
     private Attributes toStudyAttributes(Long studyPk, ScrollableResults results) {
-        int studyRelatedSeries = results.getInteger(2);
-        int studyRelatedInstances = results.getInteger(3);
-        String modalitiesInStudy = results.getString(5);
-        String sopClassesInStudy = results.getString(6);
-        byte[] studyAttributes = results.getBinary(11);
-        byte[] patientAttributes = results.getBinary(12);
+        int[] numInsts = { results.getInteger(2), results.getInteger(3), results.getInteger(4) };
+        String modalitiesInStudy = results.getString(7);
+        String sopClassesInStudy = results.getString(8);
+        byte[] studyAttributes = results.getBinary(13);
+        byte[] patientAttributes = results.getBinary(14);
         Attributes attrs = new Attributes();
         Utils.decodeAttributes(attrs, patientAttributes);
         Utils.decodeAttributes(attrs, studyAttributes);
-        if (studyRelatedInstances == -1) {
-            int[] a = queryService.seriesService()
-                    .calculateNumberOfStudyRelatedSeriesAndInstances(studyPk, queryParam);
-            studyRelatedSeries = a[0];
-            studyRelatedInstances = a[1];
+        if (numInsts[1] == -1) {
+            numInsts = queryService.seriesService()
+                    .calculateNumberOfStudyRelatedSeriesAndInstances(studyPk);
         };
         Utils.setStudyQueryAttributes(attrs,
-                studyRelatedSeries,
-                studyRelatedInstances,
+                numInsts[0],
+                queryParam.isHideRejectedInstances() 
+                        ? numInsts[1]
+                        : numInsts[1] + numInsts[2],
                 modalitiesInStudy,
                 sopClassesInStudy);
         return attrs;

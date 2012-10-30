@@ -38,18 +38,13 @@
 
 package org.dcm4chee.archive.store.dao;
 
-import static org.dcm4chee.archive.conf.RejectionNote.Action.*;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import javax.ejb.EJB;
 import javax.ejb.Remove;
@@ -67,12 +62,11 @@ import org.dcm4che.data.VR;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.soundex.FuzzyStr;
+import org.dcm4che.util.StringUtils;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
-import org.dcm4chee.archive.conf.RejectionNote;
-import org.dcm4chee.archive.conf.RejectionNote.Action;
 import org.dcm4chee.archive.conf.StoreDuplicate;
 import org.dcm4chee.archive.dao.CodeService;
 import org.dcm4chee.archive.dao.IssuerService;
@@ -91,6 +85,7 @@ import org.dcm4chee.archive.entity.PerformedProcedureStep;
 import org.dcm4chee.archive.entity.ScheduledProcedureStep;
 import org.dcm4chee.archive.entity.Series;
 import org.dcm4chee.archive.entity.Study;
+import org.dcm4chee.archive.entity.Utils;
 import org.dcm4chee.archive.entity.VerifyingObserver;
 import org.dcm4chee.archive.mpps.dao.IANQueryService;
 import org.slf4j.Logger;
@@ -120,16 +115,15 @@ public class StoreService {
     private RequestService requestService;
 
     @EJB
-    private IANQueryService ianQuery;
+    private IANQueryService ianQueryService;
 
     private StoreParam storeParam;
     private FileSystem curFileSystem;
     private Series cachedSeries;
     private PerformedProcedureStep prevMpps;
     private PerformedProcedureStep curMpps;
-    private Code curRejectionCode;
-    private HashMap<String,HashSet<String>> rejectedInstances =
-            new HashMap<String,HashSet<String>>();
+    private boolean incorrectWorklistEntrySelected;
+    private List<Attributes> iansForRejectionNote = new ArrayList<Attributes>();
 
     public void setStoreParam(StoreParam storeParam) {
         this.storeParam = storeParam;
@@ -137,32 +131,6 @@ public class StoreService {
 
     public FileSystem getCurrentFileSystem() {
         return curFileSystem;
-    }
-
-    public Attributes createIANforPreviousMPPS() throws DicomServiceException {
-        try {
-            return createIANforMPPS(prevMpps, null);
-        } finally {
-            prevMpps = null;
-        }
-    }
-
-    public Attributes createIANforCurrentMPPS()
-            throws DicomServiceException {
-        try {
-            return createIANforMPPS(curMpps, null);
-        } finally {
-            curMpps = null;
-        }
-    }
-
-    private Attributes createIANforMPPS(PerformedProcedureStep pps,
-            Set<String> rejectedIUIDs) throws DicomServiceException {
-        if (pps == null || pps.isInProgress())
-            return null;
-
-        return ianQuery.createIANforMPPS(
-                pps, storeParam.getRejectionNotes(), rejectedIUIDs);
     }
 
     public boolean addFileRef(String sourceAET, Attributes data, Attributes modified,
@@ -173,28 +141,26 @@ public class StoreService {
             Instance inst;
             try {
                 inst = findInstance(data.getString(Tag.SOPInstanceUID, null));
-                Code rnc = inst.getRejectionCode();
-                RejectionNote rn = storeParam.getRejectionNote(rnc);
-                if (containsAction(rn, NOT_ACCEPT_SUBSEQUENT_OCCURRENCE))
-                        throw new DicomServiceException(Status.CannotUnderstand,
-                                rnc.getCodeMeaning());
-                switch (storeDuplicate(inst, digest, fs.getGroupID(), storeParam)) {
+                int rejectionFlags = inst.getRejectionFlags();
+                if ((rejectionFlags & ~Instance.DATA_RETENTION_PERIOD_EXPIRED) != 0)
+                    throw new DicomServiceException(Status.CannotUnderstand,
+                            "subsequent occurrence of rejected instance");
+
+                StoreDuplicate.Action storeDuplicate =
+                        (rejectionFlags & Instance.DATA_RETENTION_PERIOD_EXPIRED) != 0
+                                ? StoreDuplicate.Action.REPLACE
+                                : storeDuplicate(inst, digest, fs.getGroupID(), storeParam);
+                switch (storeDuplicate) {
                 case IGNORE:
                     coerceAttributes(inst, data, modified);
-                    if (containsAction(rn, NOT_REJECT_SUBSEQUENT_OCCURRENCE))
-                        inst.setRejectionCode(null);
                     return false;
                 case STORE:
                     updateInstance(inst, data, modified, storeParam);
                     coerceAttributes(inst.getSeries(), data, modified);
-                    if (containsAction(rn, NOT_REJECT_SUBSEQUENT_OCCURRENCE))
-                        inst.setRejectionCode(null);
                     break;
                 case REPLACE:
                     inst.setReplaced(true);
                     inst = newInstance(sourceAET, data, modified, fs.getAvailability());
-                    if (!containsAction(rn, NOT_REJECT_SUBSEQUENT_OCCURRENCE))
-                        inst.setRejectionCode(rnc);
                     break;
                 }
             } catch (NoResultException e) {
@@ -215,12 +181,9 @@ public class StoreService {
 
     }
 
-    protected boolean containsAction(RejectionNote rn, final Action action) {
-        return rn != null && rn.getActions().contains(action);
-    }
-
     private StoreDuplicate.Action storeDuplicate(Instance inst, String digest,
-            String fsGroupID, StoreParam storeParam) {
+            String fsGroupID, StoreParam storeParam)
+            throws DicomServiceException {
         Collection<FileRef> files = inst.getFileRefs();
         boolean noFiles = files.isEmpty();
         boolean equalsChecksum = false;
@@ -263,12 +226,10 @@ public class StoreService {
             Attributes modified, Availability availability)
                     throws DicomServiceException {
         try {
-            rejectedInstances.clear();
+            String cuid = data.getString(Tag.SOPClassUID);
             Code conceptNameCode = singleCode(data, Tag.ConceptNameCodeSequence);
-            RejectionNote rn = storeParam.getRejectionNote(conceptNameCode);
-            if (rn != null) {
-                rejectRefInstances(data, rn);
-            }
+            if (cuid.equals(UID.KeyObjectSelectionDocumentStorage))
+                processRejectionNote(data, storeParam.rejectionFlagOf(conceptNameCode));
             Series series = findOrCreateSeries(sourceAET, data, availability);
             coerceAttributes(series, data, modified);
             if (!modified.isEmpty() && storeParam.isStoreOriginalAttributes()) {
@@ -283,13 +244,17 @@ public class StoreService {
             Instance inst = new Instance();
             inst.setSeries(series);
             inst.setConceptNameCode(conceptNameCode);
-            inst.setRejectionCode(curRejectionCode);
             inst.setVerifyingObservers(createVerifyingObservers(
                     data.getSequence(Tag.VerifyingObserverSequence), storeParam.getFuzzyStr()));
             inst.setContentItems(createContentItems(data.getSequence(Tag.ContentSequence)));
             inst.setRetrieveAETs(storeParam.getRetrieveAETs());
             inst.setExternalRetrieveAET(storeParam.getExternalRetrieveAET());
-            inst.setAvailability(availability);
+            if (incorrectWorklistEntrySelected) {
+                inst.setAvailability(Availability.UNAVAILABLE);
+                inst.setRejectionFlag(Instance.INCORRECT_MODALITY_WORKLIST_ENTRY);
+            } else {
+                inst.setAvailability(availability);
+            }
             inst.setAttributes(data, 
                     storeParam.getAttributeFilter(Entity.Instance),
                     storeParam.getFuzzyStr());
@@ -304,11 +269,12 @@ public class StoreService {
         }
     }
 
-    private void rejectRefInstances(Attributes data, RejectionNote rn)
+    private void processRejectionNote(Attributes data, int rejectionFlag)
             throws DicomServiceException {
-        boolean hideRejectedInstances = rn.getActions()
-                .contains(RejectionNote.Action.HIDE_REJECTED_INSTANCES);
-        Code rejectionCcode = (Code) rn.getCode();
+        if (rejectionFlag == 0)
+            return;
+
+        String kosStudyIUID = data.getString(Tag.StudyInstanceUID);
         HashMap<String,String> iuid2cuid = new HashMap<String,String>();
         Sequence refStudySeq = data.getSequence(Tag.CurrentRequestedProcedureEvidenceSequence);
         if (refStudySeq == null)
@@ -318,6 +284,8 @@ public class StoreService {
             Sequence refSeriesSeq = refStudy.getSequence(Tag.ReferencedSeriesSequence);
             if (studyIUID == null || refSeriesSeq == null)
                 rejectionFailed("Rejection failed: Missing Type 1 attribute");
+            if (!studyIUID.equals(kosStudyIUID))
+                rejectionFailed("Rejection failed: Mismatch of Study Instance UID of Rejection Note");
             for (Attributes refSeries : refSeriesSeq) {
                 String seriesIUID = refSeries.getString(Tag.SeriesInstanceUID);
                 Sequence refSOPSeq = refSeries.getSequence(Tag.ReferencedSOPSequence);
@@ -338,29 +306,22 @@ public class StoreService {
                     Series series = insts.get(0).getSeries();
                     Study study = series.getStudy();
                     if (!studyIUID.equals(study.getStudyInstanceUID()))
-                        rejectionFailed("Rejection failed: Mismatch of Study Instance UID");
-                    if (hideRejectedInstances
-                            && UID.ModalityPerformedProcedureStepSOPClass
-                                .equals(series.getPerformedProcedureStepClassUID())) {
-                        String mppsiuid = series.getPerformedProcedureStepInstanceUID();
-                        HashSet<String> iuids = rejectedInstances.get(mppsiuid);
-                        if (iuids == null)
-                            rejectedInstances.put(mppsiuid,
-                                    iuids = new HashSet<String>(iuid2cuid.keySet()));
-                        else
-                            iuids.addAll(iuid2cuid.keySet());
-                    }
+                        rejectionFailed("Rejection failed: Mismatch of referenced Study Instance UID");
+                    Sequence ianRefSOPSeq = ianRefSOPSeq(insts);
                     for (Instance inst : insts) {
                         String refCUID = iuid2cuid.remove(inst.getSopInstanceUID());
                         if (refCUID != null) {
                             if (!refCUID.equals(inst.getSopClassUID()))
-                                rejectionFailed("Rejection failed: Mismatch of SOP Class UID");
-                            inst.setRejectionCode(rejectionCcode);
+                                rejectionFailed("Rejection failed: Mismatch of referenced SOP Class UID");
+                            inst.setRejectionFlag(rejectionFlag);
+                            inst.setAvailability(Availability.UNAVAILABLE);
+                            ianRefSOPSeq.add(makeRefSOPItem(inst));
                         }
                     }
                     series.setNumberOfSeriesRelatedInstances(-1);
-                    study.setNumberOfStudyRelatedSeries(-1);
+                    series.setNumberOfSeriesRelatedRejectedInstances(-1);
                     study.setNumberOfStudyRelatedInstances(-1);
+                    study.setNumberOfStudyRelatedRejectedInstances(-1);
                 }
                 if (!iuid2cuid.isEmpty())
                     rejectionFailed("Rejection failed: No such referenced SOP Instances");
@@ -368,22 +329,55 @@ public class StoreService {
         }
     }
 
-    public List<Attributes> createIANsforRejectionNote() throws DicomServiceException {
-        try {
-            List<Attributes> ians = new ArrayList<Attributes>(rejectedInstances.size());
-            for (Entry<String, HashSet<String>> entry : rejectedInstances.entrySet()) {
-                PerformedProcedureStep mpps = findPPS(entry.getKey());
-                Attributes ian = createIANforMPPS(mpps, entry.getValue());
-                if (ian != null)
-                    ians.add(ian);
-            }
-            return ians;
-        } finally {
-            rejectedInstances.clear();
+    private static Attributes makeRefSOPItem(Instance inst) {
+        Attributes refSOP = new Attributes(4);
+        Utils.setRetrieveAET(refSOP, inst.getEncodedRetrieveAETs(), inst.getExternalRetrieveAET());
+        refSOP.setString(Tag.InstanceAvailability, VR.CS, inst.getAvailability().toString());
+        refSOP.setString(Tag.ReferencedSOPClassUID, VR.UI, inst.getSopClassUID());
+        refSOP.setString(Tag.ReferencedSOPInstanceUID, VR.UI, inst.getSopInstanceUID());
+        return refSOP;
+    }
+
+    private Sequence ianRefSOPSeq(List<Instance> insts) {
+        Series series = insts.get(0).getSeries();
+        Sequence refSeriesSeq = ianRefSeriesSeq(series);
+        Attributes refSeries = new Attributes(2);
+        refSeriesSeq.add(refSeries);
+        Sequence refSOPs = refSeries.newSequence(Tag.ReferencedSOPSequence, insts.size());
+        refSeries.setString(Tag.SeriesInstanceUID, VR.UI, series.getSeriesInstanceUID());
+        return refSOPs;
+    }
+
+    private Sequence ianRefSeriesSeq(Series series) {
+        String ppsCUID = series.getPerformedProcedureStepClassUID();
+        String ppsIUID = series.getPerformedProcedureStepInstanceUID();
+        for (Attributes ian : iansForRejectionNote) {
+            Attributes refPPS = ian.getNestedDataset(
+                    Tag.ReferencedPerformedProcedureStepSequence);
+            if (StringUtils.equals(
+                    refPPS.getString(Tag.ReferencedSOPClassUID), ppsCUID)
+             && StringUtils.equals(
+                    refPPS.getString(Tag.ReferencedSOPInstanceUID), ppsIUID))
+                return ian.getSequence(Tag.ReferencedSeriesSequence);
         }
+        Attributes ian = new Attributes(3);
+        iansForRejectionNote.add(ian);
+        if (ppsIUID != null) {
+            Attributes refPPS = new Attributes(3);
+            refPPS.setString(Tag.ReferencedSOPClassUID, VR.UI, ppsCUID);
+            refPPS.setString(Tag.ReferencedSOPInstanceUID, VR.UI, ppsIUID);
+            refPPS.setNull(Tag.PerformedWorkitemCodeSequence, VR.SQ);
+            ian.newSequence(Tag.ReferencedPerformedProcedureStepSequence, 1).add(refPPS);
+        } else {
+            ian.setNull(Tag.ReferencedPerformedProcedureStepSequence, VR.SQ);
+        }
+        Sequence refSeriesSeq = ian.newSequence(Tag.ReferencedSeriesSequence, 10);
+        ian.setString(Tag.StudyInstanceUID, VR.UI, series.getStudy().getStudyInstanceUID());
+        return refSeriesSeq;
     }
 
     private void rejectionFailed(String message) throws DicomServiceException {
+        iansForRejectionNote.clear();
         throw new DicomServiceException(Status.CannotUnderstand, message)
                 .setOffendingElements(Tag.CurrentRequestedProcedureEvidenceSequence);
     }
@@ -480,9 +474,7 @@ public class StoreService {
         String seriesIUID = data.getString(Tag.SeriesInstanceUID, null);
         Series series = cachedSeries;
         if (series == null || !series.getSeriesInstanceUID().equals(seriesIUID)) {
-            updateRefPPS(
-                    data.getNestedDataset(Tag.ReferencedPerformedProcedureStepSequence),
-                    storeParam);
+            updateRefPPS(data);
             checkRefPPS(data);
             try {
                 cachedSeries = series = findSeries(seriesIUID);
@@ -501,6 +493,7 @@ public class StoreService {
                 series.setExternalRetrieveAET(storeParam.getExternalRetrieveAET());
                 series.setAvailability(availability);
                 series.setNumberOfSeriesRelatedInstances(-1);
+                series.setNumberOfSeriesRelatedRejectedInstances(-1);
                 series.setAttributes(data,
                         storeParam.getAttributeFilter(Entity.Series),
                         storeParam.getFuzzyStr());
@@ -523,6 +516,7 @@ public class StoreService {
         series.retainExternalRetrieveAET(storeParam.getExternalRetrieveAET());
         series.floorAvailability(availability);
         series.setNumberOfSeriesRelatedInstances(-1);
+        series.setNumberOfSeriesRelatedRejectedInstances(-1);
         Attributes seriesAttrs = series.getAttributes();
         AttributeFilter seriesFilter = storeParam.getAttributeFilter(Entity.Series);
         if (seriesAttrs.mergeSelected(data, seriesFilter.getSelection())) {
@@ -530,7 +524,8 @@ public class StoreService {
         }
     }
 
-    private void updateRefPPS(Attributes refPPS, StoreParam storeParam) {
+    private void updateRefPPS(Attributes data) {
+        Attributes refPPS = data.getNestedDataset(Tag.ReferencedPerformedProcedureStepSequence);
         String mppsIUID = refPPS != null
                 && UID.ModalityPerformedProcedureStepSOPClass.equals(
                         refPPS.getString(Tag.ReferencedSOPClassUID))
@@ -540,20 +535,20 @@ public class StoreService {
         if (mpps == null || !mpps.getSopInstanceUID().equals(mppsIUID)) {
             prevMpps = mpps;
             curMpps = mpps = findPPS(mppsIUID);
-            curRejectionCode = null;
-            if (mpps != null && mpps.isDiscontinued()) {
+            incorrectWorklistEntrySelected = false;
+            if (mpps != null && mpps.getStatus() == PerformedProcedureStep.Status.DISCONTINUED) {
                 Attributes reasonCode = mpps.getAttributes().getNestedDataset(
                         Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence);
-                RejectionNote rn = storeParam.getRejectionNote(reasonCode);
-                if (rn != null)
-                    curRejectionCode = (Code) rn.getCode();
+                if (reasonCode != null && new org.dcm4che.data.Code(reasonCode)
+                        .equalsIgnoreMeaning(storeParam.getIncorrectWorklistEntrySelectedCode()))
+                    incorrectWorklistEntrySelected = true;
             }
         }
     }
 
     private void checkRefPPS(Attributes data) throws DicomServiceException {
         PerformedProcedureStep mpps = curMpps;
-        if (mpps == null || mpps.isInProgress())
+        if (mpps == null || mpps.getStatus() == PerformedProcedureStep.Status.IN_PROGRESS)
             return;
 
         String seriesIUID = data.getString(Tag.SeriesInstanceUID);
@@ -640,8 +635,6 @@ public class StoreService {
         cachedSeries = null;
         prevMpps = null;
         curMpps = null;
-        curRejectionCode = null;
-        rejectedInstances.clear();
     }
 
     private Issuer issuer(Attributes item) {
@@ -670,8 +663,8 @@ public class StoreService {
             study.setRetrieveAETs(storeParam.getRetrieveAETs());
             study.setExternalRetrieveAET(storeParam.getExternalRetrieveAET());
             study.setAvailability(availability);
-            study.setNumberOfStudyRelatedSeries(-1);
             study.setNumberOfStudyRelatedInstances(-1);
+            study.setNumberOfStudyRelatedRejectedInstances(-1);
             study.setAttributes(data, 
                     storeParam.getAttributeFilter(Entity.Study),
                     storeParam.getFuzzyStr());
@@ -687,8 +680,8 @@ public class StoreService {
         study.retainRetrieveAETs(storeParam.getRetrieveAETs());
         study.retainExternalRetrieveAET(storeParam.getExternalRetrieveAET());
         study.floorAvailability(availability);
-        study.setNumberOfStudyRelatedSeries(-1);
         study.setNumberOfStudyRelatedInstances(-1);
+        study.setNumberOfStudyRelatedRejectedInstances(-1);
         AttributeFilter studyFilter = storeParam.getAttributeFilter(Entity.Study);
         Attributes studyAttrs = study.getAttributes();
         if (studyAttrs.mergeSelected(data, studyFilter.getSelection())) {
@@ -723,6 +716,32 @@ public class StoreService {
             }
         }
         return list;
+    }
+
+    public Attributes createIANforPreviousMPPS() throws DicomServiceException {
+        PerformedProcedureStep mpps = prevMpps;
+        prevMpps = null;
+        return createIAN(mpps);
+    }
+
+    public Attributes createIANforCurrentMPPS() throws DicomServiceException {
+        return createIAN(curMpps);
+    }
+
+    private Attributes createIAN(PerformedProcedureStep mpps) throws DicomServiceException {
+        if (mpps == null || mpps.getStatus() == PerformedProcedureStep.Status.IN_PROGRESS)
+            return null;
+
+        return ianQueryService.createIANforMPPS(mpps);
+    }
+
+    public Attributes[] createIANsforRejectionNote() {
+        try {
+            return iansForRejectionNote.toArray(
+                    new Attributes[iansForRejectionNote.size()]);
+        } finally {
+            iansForRejectionNote.clear();
+        }
     }
 
 }

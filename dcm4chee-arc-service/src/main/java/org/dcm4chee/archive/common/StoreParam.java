@@ -40,21 +40,25 @@ package org.dcm4chee.archive.common;
 
 import java.util.List;
 
-import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Code;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.conf.ArchiveDevice;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
-import org.dcm4chee.archive.conf.RejectionNote;
 import org.dcm4chee.archive.conf.StoreDuplicate;
-
+import org.dcm4chee.archive.entity.Instance;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 public class StoreParam {
 
+    private Code incorrectWorklistEntrySelectedCode;
+    private Code rejectedForQualityReasonsCode;
+    private Code rejectedForPatientSafetyReasonsCode;
+    private Code incorrectModalityWorklistEntryCode;
+    private Code dataRetentionPeriodExpiredCode;
     private FuzzyStr fuzzyStr;
     private AttributeFilter[] attributeFilters;
     private boolean storeOriginalAttributes;
@@ -62,7 +66,6 @@ public class StoreParam {
     private String[] retrieveAETs;
     private String externalRetrieveAET;
     private List<StoreDuplicate> storeDuplicates;
-    private List<RejectionNote> rejectionNotes;
 
     public final boolean isStoreOriginalAttributes() {
         return storeOriginalAttributes;
@@ -104,6 +107,46 @@ public class StoreParam {
         this.externalRetrieveAET = externalRetrieveAET;
     }
 
+    public Code getIncorrectWorklistEntrySelectedCode() {
+        return incorrectWorklistEntrySelectedCode;
+    }
+
+    public void setIncorrectWorklistEntrySelectedCode(Code code) {
+        this.incorrectWorklistEntrySelectedCode = code;
+    }
+
+    public final Code getRejectedForQualityReasonsCode() {
+        return rejectedForQualityReasonsCode;
+    }
+
+    public final void setRejectedForQualityReasonsCode(Code code) {
+        this.rejectedForQualityReasonsCode = code;
+    }
+
+    public final Code getRejectedForPatientSafetyReasonsCode() {
+        return rejectedForPatientSafetyReasonsCode;
+    }
+
+    public final void setRejectedForPatientSafetyReasonsCode(Code code) {
+        this.rejectedForPatientSafetyReasonsCode = code;
+    }
+
+    public final Code getIncorrectModalityWorklistEntryCode() {
+        return incorrectModalityWorklistEntryCode;
+    }
+
+    public final void setIncorrectModalityWorklistEntryCode(Code code) {
+        this.incorrectModalityWorklistEntryCode = code;
+    }
+
+    public final Code getDataRetentionPeriodExpiredCode() {
+        return dataRetentionPeriodExpiredCode;
+    }
+
+    public final void setDataRetentionPeriodExpiredCode(Code code) {
+        this.dataRetentionPeriodExpiredCode = code;
+    }
+
     public final void setFuzzyStr(FuzzyStr fuzzyStr) {
         this.fuzzyStr = fuzzyStr;
     }
@@ -128,31 +171,30 @@ public class StoreParam {
         return StoreDuplicate.Action.IGNORE;
     }
 
-    public final List<RejectionNote> getRejectionNotes() {
-        return rejectionNotes;
-    }
-
-    public final void setRejectionNotes(List<RejectionNote> rejectionNotes) {
-        this.rejectionNotes = rejectionNotes;
-    }
-
-    public RejectionNote getRejectionNote(org.dcm4che.data.Code code) {
-       if (rejectionNotes != null && code != null)
-           for (RejectionNote rn : rejectionNotes) {
-                if (rn.getCode().equalsIgnoreMeaning(code))
-                   return rn;
-           }
-       return null;
-    }
-
-    public RejectionNote getRejectionNote(Attributes codeItem) {
-        if (codeItem != null)
-            return getRejectionNote(new org.dcm4che.data.Code(codeItem));
-        return null;
+    public int rejectionFlagOf(Code conceptNameCode) {
+        if (conceptNameCode.equalsIgnoreMeaning(rejectedForQualityReasonsCode))
+            return Instance.REJECTED_FOR_QUALITY_REASONS;
+        if (conceptNameCode.equalsIgnoreMeaning(rejectedForPatientSafetyReasonsCode))
+            return Instance.REJECTED_FOR_PATIENT_SAFETY_REASONS;
+        if (conceptNameCode.equalsIgnoreMeaning(incorrectModalityWorklistEntryCode))
+            return Instance.INCORRECT_MODALITY_WORKLIST_ENTRY;
+        if (conceptNameCode.equalsIgnoreMeaning(dataRetentionPeriodExpiredCode))
+            return Instance.DATA_RETENTION_PERIOD_EXPIRED;
+        return 0;
     }
 
     public static StoreParam valueOf(ArchiveDevice dev) {
         StoreParam storeParam = new StoreParam();
+        storeParam.setIncorrectWorklistEntrySelectedCode(
+                (Code) dev.getIncorrectWorklistEntrySelectedCode());
+        storeParam.setRejectedForQualityReasonsCode(
+                (Code) dev.getRejectedForQualityReasonsCode());
+        storeParam.setRejectedForPatientSafetyReasonsCode(
+                (Code) dev.getRejectedForPatientSafetyReasonsCode());
+        storeParam.setIncorrectModalityWorklistEntryCode(
+                (Code) dev.getIncorrectModalityWorklistEntryCode());
+        storeParam.setDataRetentionPeriodExpiredCode(
+                (Code) dev.getDataRetentionPeriodExpiredCode());
         storeParam.setFuzzyStr(dev.getFuzzyStr());
         storeParam.setAttributeFilters(dev.getAttributeFilters());
         return storeParam;
@@ -165,8 +207,6 @@ public class StoreParam {
         storeParam.setRetrieveAETs(ae.getRetrieveAETs());
         storeParam.setExternalRetrieveAET(ae.getExternalRetrieveAET());
         storeParam.setStoreDuplicates(ae.getStoreDuplicates());
-        storeParam.setRejectionNotes(ae.getRejectionNotes());
         return storeParam;
     }
-
 }

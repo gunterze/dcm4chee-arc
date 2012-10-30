@@ -73,6 +73,10 @@ import org.dcm4chee.archive.conf.AttributeFilter;
 @Table(name = "pps")
 public class PerformedProcedureStep implements Serializable {
 
+    public enum Status {
+        IN_PROGRESS, COMPLETED, DISCONTINUED;
+    }
+
     private static final long serialVersionUID = 4127487385799077653L;
 
     public static final String FIND_BY_SOP_INSTANCE_UID =
@@ -93,7 +97,7 @@ public class PerformedProcedureStep implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "pps_status")
-    private String status;
+    private Status status;
 
     @Basic(optional = false)
     @Column(name = "pps_attrs")
@@ -132,20 +136,8 @@ public class PerformedProcedureStep implements Serializable {
         this.sopInstanceUID = sopInstanceUID;
     }
 
-    public String getStatus() {
+    public Status getStatus() {
         return status;
-    }
-
-    public boolean isInProgress() {
-        return IN_PROGRESS.equals(status);
-    }
-
-    public boolean isCompleted() {
-        return COMPLETED.equals(status);
-    }
-
-    public boolean isDiscontinued() {
-        return DISCONTINUED.equals(status);
     }
 
     public byte[] getEncodedAttributes() {
@@ -176,7 +168,9 @@ public class PerformedProcedureStep implements Serializable {
     }
 
     public void setAttributes(Attributes attrs, AttributeFilter filter) {
-        status = attrs.getString(Tag.PerformedProcedureStepStatus);
+        String s = attrs.getString(Tag.PerformedProcedureStepStatus);
+        if (s != null)
+            status = Status.valueOf(s.replace(' ', '_'));
         encodedAttributes = Utils.encodeAttributes(
                 cachedAttributes = new Attributes(attrs, filter.getSelection()));
     }

@@ -79,8 +79,39 @@ import org.dcm4chee.archive.conf.AttributeFilter;
     query="SELECT i FROM Instance i WHERE i.sopInstanceUID = ?1 AND i.replaced = FALSE"),
 @NamedQuery(
     name="Instance.findBySeriesInstanceUID",
-    query="SELECT i FROM Instance i WHERE i.series.seriesInstanceUID = ?1 AND i.replaced = FALSE")
-})
+    query="SELECT i FROM Instance i WHERE i.series.seriesInstanceUID = ?1 AND i.replaced = FALSE"),
+@NamedQuery(
+    name="Instance.sopInstanceReferenceBySeriesInstanceUID",
+    query="SELECT NEW org.dcm4chee.archive.entity.SOPInstanceReference("
+            + "i.series.study.studyInstanceUID, "
+            + "i.series.performedProcedureStepClassUID, "
+            + "i.series.performedProcedureStepInstanceUID, "
+            + "i.series.seriesInstanceUID, "
+            + "i.sopClassUID, "
+            + "i.sopInstanceUID, "
+            + "i.availability,"
+            + "i.retrieveAETs,"
+            + "i.externalRetrieveAET) "
+            + "FROM Instance i WHERE i.series.seriesInstanceUID = ?1 AND i.replaced = FALSE"),
+@NamedQuery(
+    name="Instance.sopInstanceReferenceByStudyInstanceUID",
+    query="SELECT NEW org.dcm4chee.archive.entity.SOPInstanceReference("
+            + "i.series.study.studyInstanceUID, "
+            + "i.series.performedProcedureStepClassUID, "
+            + "i.series.performedProcedureStepInstanceUID, "
+            + "i.series.seriesInstanceUID, "
+            + "i.sopClassUID, "
+            + "i.sopInstanceUID, "
+            + "i.availability,"
+            + "i.retrieveAETs,"
+            + "i.externalRetrieveAET) "
+            + "FROM Instance i WHERE i.series.study.studyInstanceUID = ?1 AND i.replaced = FALSE"),
+@NamedQuery(
+    name="Instance.numberOfStudyRelatedInstances",
+    query="SELECT COUNT(i) FROM Instance i WHERE i.series.study.pk = ?1 AND i.replaced = FALSE AND i.rejectionFlags = ?2"),
+@NamedQuery(
+    name="Instance.numberOfSeriesRelatedInstances",
+    query="SELECT COUNT(i) FROM Instance i WHERE i.series.pk = ?1 AND i.replaced = FALSE AND i.rejectionFlags = ?2")})
 @Entity
 @Table(name = "instance")
 public class Instance implements Serializable {
@@ -91,6 +122,20 @@ public class Instance implements Serializable {
             "Instance.findBySOPInstanceUID";
     public static final String FIND_BY_SERIES_INSTANCE_UID =
             "Instance.findBySeriesInstanceUID";
+    public static final String SOP_INSTANCE_REFERENCE_BY_SERIES_INSTANCE_UID =
+            "Instance.sopInstanceReferenceBySeriesInstanceUID";
+    public static final String SOP_INSTANCE_REFERENCE_BY_STUDY_INSTANCE_UID =
+            "Instance.sopInstanceReferenceByStudyInstanceUID";
+    public static final String NUMBER_OF_STUDY_RELATED_INSTANCES =
+            "Instance.numberOfStudyRelatedInstances";
+    public static final String NUMBER_OF_SERIES_RELATED_INSTANCES =
+            "Instance.numberOfSeriesRelatedInstances";
+
+    public static final int REJECTED_FOR_QUALITY_REASONS = 1;
+    public static final int REJECTED_FOR_PATIENT_SAFETY_REASONS = 2;
+    public static final int INCORRECT_MODALITY_WORKLIST_ENTRY = 4;
+    public static final int DATA_RETENTION_PERIOD_EXPIRED = 8;
+
 
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -156,6 +201,10 @@ public class Instance implements Serializable {
     private Availability availability;
 
     @Basic(optional = false)
+    @Column(name = "rejection_flags")
+    private int rejectionFlags;
+
+    @Basic(optional = false)
     @Column(name = "replaced")
     private boolean replaced;
 
@@ -170,10 +219,6 @@ public class Instance implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "srcode_fk")
     private Code conceptNameCode;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "rjcode_fk")
-    private Code rejectionCode;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "instance_fk")
@@ -281,6 +326,14 @@ public class Instance implements Serializable {
         this.retrieveAETs = StringUtils.concat(retrieveAETs, '\\');
     }
 
+    public String getEncodedRetrieveAETs() {
+        return retrieveAETs;
+    }
+
+    public void setEncodedRetrieveAETs(String retrieveAETs) {
+        this.retrieveAETs = retrieveAETs;
+    }
+
     public String getExternalRetrieveAET() {
         return externalRetrieveAET;
     }
@@ -297,12 +350,20 @@ public class Instance implements Serializable {
         this.availability = availability;
     }
 
-    public boolean isReplaced() {
-        return replaced;
+    public int getRejectionFlags() {
+        return rejectionFlags;
     }
 
-    public void setReplaced(boolean replaced) {
-        this.replaced = replaced;
+    public void setRejectionFlag(int rejectionFlag) {
+        this.rejectionFlags |= rejectionFlag;
+    }
+
+    public void clearRejectionFlag(int rejectionFlag) {
+        this.rejectionFlags &= ~rejectionFlag;
+    }
+
+    public boolean hasRejectionFlag(int rejectionFlag) {
+        return (rejectionFlags & rejectionFlag) != 0;
     }
 
     public boolean isArchived() {
@@ -311,6 +372,14 @@ public class Instance implements Serializable {
 
     public void setArchived(boolean archived) {
         this.archived = archived;
+    }
+
+    public boolean isReplaced() {
+        return replaced;
+    }
+
+    public void setReplaced(boolean replaced) {
+        this.replaced = replaced;
     }
 
     public byte[] getEncodedAttributes() {
@@ -323,14 +392,6 @@ public class Instance implements Serializable {
 
     public void setConceptNameCode(Code conceptNameCode) {
         this.conceptNameCode = conceptNameCode;
-    }
-
-    public Code getRejectionCode() {
-        return rejectionCode;
-    }
-
-    public void setRejectionCode(Code rejectionCode) {
-        this.rejectionCode = rejectionCode;
     }
 
     public Collection<VerifyingObserver> getVerifyingObservers() {

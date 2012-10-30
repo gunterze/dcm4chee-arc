@@ -58,11 +58,10 @@ import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
-import org.dcm4chee.archive.conf.RejectionNote;
 import org.dcm4chee.archive.dao.CodeService;
 import org.dcm4chee.archive.dao.PatientService;
 import org.dcm4chee.archive.dao.RequestService;
-import org.dcm4chee.archive.entity.Code;
+import org.dcm4chee.archive.entity.Availability;
 import org.dcm4chee.archive.entity.Instance;
 import org.dcm4chee.archive.entity.Patient;
 import org.dcm4chee.archive.entity.PerformedProcedureStep;
@@ -124,7 +123,7 @@ public class MPPSService {
             throw new DicomServiceException(Status.NoSuchObjectInstance)
                 .setUID(Tag.AffectedSOPInstanceUID, sopInstanceUID);
         }
-        if (!pps.isInProgress())
+        if (pps.getStatus() != PerformedProcedureStep.Status.IN_PROGRESS)
             BasicMPPSSCP.mayNoLongerBeUpdated();
 
         AttributeFilter filter = storeParam.getAttributeFilter(Entity.PerformedProcedureStep);
@@ -132,29 +131,25 @@ public class MPPSService {
         attrs.addAll(modified);
         pps.setAttributes(attrs, filter);
         Attributes ian = null;
-        if (!pps.isInProgress()) {
+        if (pps.getStatus() != PerformedProcedureStep.Status.IN_PROGRESS) {
             if (!attrs.containsValue(Tag.PerformedSeriesSequence))
                 throw new DicomServiceException(Status.MissingAttributeValue)
                         .setAttributeIdentifierList(Tag.PerformedSeriesSequence);
-            ian = ianQuery.createIANforMPPS(
-                    pps, storeParam.getRejectionNotes(), null);
-            if (pps.isDiscontinued()) {
+            if (pps.getStatus() != PerformedProcedureStep.Status.DISCONTINUED) {
                 Attributes reasonCode = pps.getAttributes().getNestedDataset(
                         Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence);
-                RejectionNote rn = storeParam.getRejectionNote(reasonCode);
-                if (rn != null) {
+                if (reasonCode != null && new org.dcm4che.data.Code(reasonCode)
+                    .equalsIgnoreMeaning(storeParam.getIncorrectWorklistEntrySelectedCode()))
                     rejectPerformedSeries(
-                            attrs.getSequence(Tag.PerformedSeriesSequence),
-                            (Code) rn.getCode());
-                    ian = null;
-                }
+                            attrs.getSequence(Tag.PerformedSeriesSequence));
             }
+            ian  = ianQuery.createIANforMPPS(pps);
         }
         em.merge(pps);
         return new PPSWithIAN(pps, ian);
     }
 
-    private void rejectPerformedSeries(Sequence perfSeriesSeq, Code rejectionCode) {
+    private void rejectPerformedSeries(Sequence perfSeriesSeq) {
         HashSet<String> iuids = new HashSet<String>();
         for (Attributes perfSeries : perfSeriesSeq) {
             addRefSOPInstanceUIDs(iuids,
@@ -168,13 +163,15 @@ public class MPPSService {
             Series series = null;
             for (Instance inst : insts)
                 if (iuids.contains(inst.getSopInstanceUID())) {
-                    inst.setRejectionCode(rejectionCode);
+                    inst.setRejectionFlag(Instance.INCORRECT_MODALITY_WORKLIST_ENTRY);
+                    inst.setAvailability(Availability.UNAVAILABLE);
                     series = inst.getSeries();
                 }
             Study study = series.getStudy();
             series.setNumberOfSeriesRelatedInstances(-1);
+            series.setNumberOfSeriesRelatedRejectedInstances(-1);
             study.setNumberOfStudyRelatedInstances(-1);
-            study.setNumberOfStudyRelatedSeries(-1);
+            study.setNumberOfStudyRelatedRejectedInstances(-1);
             iuids.clear();
         }
     }

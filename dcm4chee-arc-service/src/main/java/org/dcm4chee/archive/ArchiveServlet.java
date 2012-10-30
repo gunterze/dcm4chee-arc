@@ -51,7 +51,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
 import org.dcm4che.conf.api.hl7.HL7Configuration;
-import org.dcm4chee.archive.dao.CodeService;
+import org.dcm4chee.archive.conf.ArchiveDevice;
 import org.dcm4chee.archive.dao.PatientService;
 import org.dcm4chee.archive.jms.JMSService;
 import org.dcm4chee.archive.mpps.dao.MPPSService;
@@ -80,9 +80,6 @@ public class ArchiveServlet extends HttpServlet {
     private Queue stgcmtSCPQueue;
 
     @EJB
-    private CodeService codeService;
-
-    @EJB
     private PatientService patientService;
 
     @EJB
@@ -105,8 +102,8 @@ public class ArchiveServlet extends HttpServlet {
                     config.getInitParameter("dicomConfigurationClass"), false,
                     Thread.currentThread().getContextClassLoader()).newInstance();
             archive = new Archive(dicomConfig,
-                    config.getInitParameter("deviceName"),
-                    codeService, 
+                    (ArchiveDevice) dicomConfig.findDevice(
+                            config.getInitParameter("deviceName")),
                     patientService,
                     stgCmtService,
                     mppsService,

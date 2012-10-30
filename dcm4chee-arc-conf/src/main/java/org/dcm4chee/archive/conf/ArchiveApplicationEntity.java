@@ -86,10 +86,10 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     private int ianMaxRetries;
     private int ianRetryInterval = DEF_RETRY_INTERVAL;
     private final List<StoreDuplicate> storeDuplicates  = new ArrayList<StoreDuplicate>();
-    private final List<RejectionNote> rejectionNotes = new ArrayList<RejectionNote>();
     private final AttributeCoercions attributeCoercions = new AttributeCoercions();
     private boolean returnOtherPatientIDs;
     private boolean returnOtherPatientNames;
+    private boolean hideRejectedInstances;
     private String pixManagerApplication;
     private String pixConsumerApplication;
 
@@ -334,30 +334,6 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         this.ianRetryInterval = ianRetryInterval;
     }
 
-    public List<RejectionNote> getRejectionNotes() {
-        return rejectionNotes;
-    }
-
-    public void addRejectionNote(RejectionNote rn) {
-        rejectionNotes.add(rn);
-    }
-
-    public void setRejectionNotes(Collection<RejectionNote> rns) {
-        // preserve cached Code entities
-        for (RejectionNote rn : rns)
-            for (RejectionNote prev : rejectionNotes)
-                if (rn.getCode().equalsIgnoreMeaning(prev.getCode())) {
-                    rn.setCode(prev.getCode());
-                    break;
-                }
-        rejectionNotes.clear();
-        rejectionNotes.addAll(rns);
-    }
-
-    public boolean removeRejectionNote(RejectionNote rn) {
-        return rejectionNotes.remove(rn);
-    }
-
     public boolean isReturnOtherPatientIDs() {
         return returnOtherPatientIDs;
     }
@@ -372,6 +348,14 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
 
     public void setReturnOtherPatientNames(boolean returnOtherPatientNames) {
         this.returnOtherPatientNames = returnOtherPatientNames;
+    }
+
+    public boolean isHideRejectedInstances() {
+        return hideRejectedInstances;
+    }
+
+    public void setHideRejectedInstances(boolean hideRejectedInstances) {
+        this.hideRejectedInstances = hideRejectedInstances;
     }
 
     public String getRemotePIXManagerApplication() {
@@ -419,10 +403,10 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         setIANRetryInterval(arcae.ianRetryInterval);
         setReturnOtherPatientIDs(arcae.returnOtherPatientIDs);
         setReturnOtherPatientNames(arcae.returnOtherPatientNames);
+        setHideRejectedInstances(arcae.hideRejectedInstances);
         setRemotePIXManagerApplication(arcae.pixManagerApplication);
         setLocalPIXConsumerApplication(arcae.pixConsumerApplication);
         setStoreDuplicates(arcae.getStoreDuplicates());
-        setRejectionNotes(arcae.getRejectionNotes());
         setAttributeCoercions(arcae.getAttributeCoercions());
     }
 

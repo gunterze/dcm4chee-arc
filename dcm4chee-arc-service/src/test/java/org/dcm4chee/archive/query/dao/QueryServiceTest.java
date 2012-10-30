@@ -50,7 +50,6 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
-import org.dcm4chee.archive.dao.CountRelatedInstancesService;
 import org.dcm4chee.archive.dao.SeriesService;
 import org.dcm4chee.archive.dao.StudyPermissionService;
 import org.dcm4chee.archive.entity.StudyPermissionAction;
@@ -84,7 +83,6 @@ public class QueryServiceTest {
                 .addClass(ParamFactory.class)
                 .addClass(BeanLocator.class)
                 .addClass(SeriesService.class)
-                .addClass(CountRelatedInstancesService.class)
                 .addClass(StudyPermissionService.class)
                 .addPackage("org.dcm4chee.archive.common")
                 .addPackage("org.dcm4chee.archive.exception")

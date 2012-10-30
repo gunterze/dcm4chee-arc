@@ -38,9 +38,7 @@
 
 package org.dcm4chee.archive.common;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
 
 import org.dcm4che.data.Issuer;
 import org.dcm4che.net.ApplicationEntity;
@@ -50,8 +48,6 @@ import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.conf.ArchiveDevice;
 import org.dcm4chee.archive.conf.AttributeFilter;
-import org.dcm4chee.archive.conf.RejectionNote;
-import org.dcm4chee.archive.entity.Code;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -64,8 +60,7 @@ public class QueryParam {
     private boolean combinedDatetimeMatching;
     private boolean fuzzySemanticMatching;
     private boolean matchUnknown;
-    private List<Code> hideConceptNameCodes;
-    private List<Code> hideRejectionCodes;
+    private boolean hideRejectedInstances;
     private String[] roles;
     private boolean returnOtherPatientIDs;
     private boolean returnOtherPatientNames;
@@ -120,45 +115,28 @@ public class QueryParam {
         return attributeFilters;
     }
 
-    public List<Code> getHideConceptNameCodes() {
-        return hideConceptNameCodes;
-    }
-
-    public List<Code> getHideRejectionCodes() {
-        return hideRejectionCodes;
-    }
-
-    public void setRejectionNotes(List<RejectionNote> rejectionNotes) {
-        this.hideConceptNameCodes = codesForAction(
-                rejectionNotes, RejectionNote.Action.HIDE_REJECTION_NOTE);
-        this.hideRejectionCodes = codesForAction(
-                rejectionNotes, RejectionNote.Action.HIDE_REJECTED_INSTANCES);
-    }
-
-    private List<Code> codesForAction(List<RejectionNote> rns,
-            RejectionNote.Action action) {
-        List<Code> codes = new ArrayList<Code>(rns.size());
-        for (RejectionNote rn : rns) {
-            if (rn.getActions().contains(action))
-                codes.add((Code) rn.getCode());
-        }
-        return codes ;
-    }
-
-    public boolean isReturnOtherPatientIDs() {
+    public final boolean isReturnOtherPatientIDs() {
         return returnOtherPatientIDs;
     }
 
-    public void setReturnOtherPatientIDs(boolean returnOtherPatientIDs) {
+    public final void setReturnOtherPatientIDs(boolean returnOtherPatientIDs) {
         this.returnOtherPatientIDs = returnOtherPatientIDs;
     }
 
-    public boolean isReturnOtherPatientNames() {
+    public final boolean isReturnOtherPatientNames() {
         return returnOtherPatientNames;
     }
 
-    public void setReturnOtherPatientNames(boolean returnOtherPatientNames) {
+    public final void setReturnOtherPatientNames(boolean returnOtherPatientNames) {
         this.returnOtherPatientNames = returnOtherPatientNames;
+    }
+
+    public final boolean isHideRejectedInstances() {
+        return hideRejectedInstances;
+    }
+
+    public final void setHideRejectedInstances(boolean hideRejectedInstances) {
+        this.hideRejectedInstances = hideRejectedInstances;
     }
 
     public Issuer getDefaultIssuerOfPatientID() {
@@ -190,7 +168,7 @@ public class QueryParam {
                 .contains(QueryOption.FUZZY));
         queryParam.setMatchUnknown(ae.isMatchUnknown());
         queryParam.setRoles(roles);
-        queryParam.setRejectionNotes(ae.getRejectionNotes());
+        queryParam.setHideRejectedInstances(ae.isHideRejectedInstances());
         queryParam.setReturnOtherPatientIDs(ae.isReturnOtherPatientIDs());
         queryParam.setReturnOtherPatientNames(ae.isReturnOtherPatientNames());
 

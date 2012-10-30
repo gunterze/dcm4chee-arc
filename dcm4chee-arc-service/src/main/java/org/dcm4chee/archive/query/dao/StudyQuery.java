@@ -104,7 +104,7 @@ class StudyQuery extends AbstractQuery {
         Utils.decodeAttributes(attrs, studyAttributes);
         if (studyRelatedInstances == -1) {
             int[] a = queryService.seriesService()
-                    .calculateNumberOfStudyRelatedSeriesAndInstances(studyPk, queryParam);
+                    .calculateNumberOfStudyRelatedSeriesAndInstances(studyPk);
             studyRelatedSeries = a[0];
             studyRelatedInstances = a[1];
         };

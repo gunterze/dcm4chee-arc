@@ -75,7 +75,7 @@ public class ClearTestData {
         "FUZZY_LUKE",
         "FUZZY_NONE",
         "FUZZY_NUMERICAL",
-        "PERSON_NAME",
+        "OOMIYA_SHOUGO",
         "MWL_TEST",
     };
 
