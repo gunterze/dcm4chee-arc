@@ -89,7 +89,7 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     private final AttributeCoercions attributeCoercions = new AttributeCoercions();
     private boolean returnOtherPatientIDs;
     private boolean returnOtherPatientNames;
-    private boolean hideRejectedInstances;
+    private boolean showRejectedInstances;
     private String pixManagerApplication;
     private String pixConsumerApplication;
 
@@ -350,12 +350,12 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         this.returnOtherPatientNames = returnOtherPatientNames;
     }
 
-    public boolean isHideRejectedInstances() {
-        return hideRejectedInstances;
+    public boolean isShowRejectedInstances() {
+        return showRejectedInstances;
     }
 
-    public void setHideRejectedInstances(boolean hideRejectedInstances) {
-        this.hideRejectedInstances = hideRejectedInstances;
+    public void setShowRejectedInstances(boolean showRejectedInstances) {
+        this.showRejectedInstances = showRejectedInstances;
     }
 
     public String getRemotePIXManagerApplication() {
@@ -403,7 +403,7 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         setIANRetryInterval(arcae.ianRetryInterval);
         setReturnOtherPatientIDs(arcae.returnOtherPatientIDs);
         setReturnOtherPatientNames(arcae.returnOtherPatientNames);
-        setHideRejectedInstances(arcae.hideRejectedInstances);
+        setShowRejectedInstances(arcae.showRejectedInstances);
         setRemotePIXManagerApplication(arcae.pixManagerApplication);
         setLocalPIXConsumerApplication(arcae.pixConsumerApplication);
         setStoreDuplicates(arcae.getStoreDuplicates());

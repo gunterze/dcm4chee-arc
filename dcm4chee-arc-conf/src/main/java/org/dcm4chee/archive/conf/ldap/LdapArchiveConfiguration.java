@@ -236,7 +236,7 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
                     ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
         storeNotDef(attrs, "dcmReturnOtherPatientIDs", arcAE.isReturnOtherPatientIDs(), false);
         storeNotDef(attrs, "dcmReturnOtherPatientNames", arcAE.isReturnOtherPatientNames(), false);
-        storeNotDef(attrs, "dcmHideRejectedInstances", arcAE.isHideRejectedInstances(), false);
+        storeNotDef(attrs, "dcmShowRejectedInstances", arcAE.isShowRejectedInstances(), false);
         storeNotNull(attrs, "hl7PIXConsumerApplication", arcAE.getLocalPIXConsumerApplication());
         storeNotNull(attrs, "hl7PIXManagerApplication", arcAE.getRemotePIXManagerApplication());
         return attrs;
@@ -360,8 +360,8 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
                booleanValue(attrs.get("dcmReturnOtherPatientIDs"), false));
        arcae.setReturnOtherPatientNames(
                booleanValue(attrs.get("dcmReturnOtherPatientNames"), false));
-       arcae.setHideRejectedInstances(
-               booleanValue(attrs.get("dcmHideRejectedInstances"), false));
+       arcae.setShowRejectedInstances(
+               booleanValue(attrs.get("dcmShowRejectedInstances"), false));
        arcae.setLocalPIXConsumerApplication(stringValue(attrs.get("hl7PIXConsumerApplication")));
        arcae.setRemotePIXManagerApplication(stringValue(attrs.get("hl7PIXManagerApplication")));
     }
@@ -535,9 +535,9 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
                 aa.isReturnOtherPatientNames(),
                 bb.isReturnOtherPatientNames(),
                 false);
-        storeDiff(mods, "dcmHideRejectedInstances",
-                aa.isHideRejectedInstances(),
-                bb.isHideRejectedInstances(),
+        storeDiff(mods, "dcmShowRejectedInstances",
+                aa.isShowRejectedInstances(),
+                bb.isShowRejectedInstances(),
                 false);
         storeDiff(mods, "hl7PIXConsumerApplication",
                 aa.getLocalPIXConsumerApplication(),

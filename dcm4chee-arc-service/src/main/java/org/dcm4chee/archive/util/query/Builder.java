@@ -251,13 +251,13 @@ public abstract class Builder {
                 AttributeFilter.selectStringValue(keys, attrFilter.getCustomAttribute3(), "*"),
                 matchUnknown, true));
         builder.and(QInstance.instance.replaced.isFalse());
-        if (queryParam.isHideRejectedInstances())
-            builder.and(QInstance.instance.rejectionFlags.eq(0));
-        else
+        if (queryParam.isShowRejectedInstances())
             builder.and(ExpressionUtils.or(
                     QInstance.instance.rejectionFlags.eq(0),
                     QInstance.instance.rejectionFlags.eq(
                             Instance.REJECTED_FOR_QUALITY_REASONS)));
+        else
+            builder.and(QInstance.instance.rejectionFlags.eq(0));
     }
 
     public static Predicate pids(IDWithIssuer[] pids, boolean matchUnknown) {

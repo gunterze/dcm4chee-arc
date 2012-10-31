@@ -128,7 +128,7 @@ public class PatientStudySeriesAttributes {
 
     public Attributes getAttributes(
             boolean includeQueryAttributes,
-            boolean hideRejectedInstances) {
+            boolean showRejectedInstances) {
         Attributes attrs = new Attributes();
         Utils.decodeAttributes(attrs, patientAttrs);
         Utils.decodeAttributes(attrs, studyAttrs);
@@ -136,17 +136,17 @@ public class PatientStudySeriesAttributes {
         if (includeQueryAttributes) {
             Utils.setStudyQueryAttributes(attrs,
                     numberOfStudyRelatedSeries,
-                    hideRejectedInstances
+                    showRejectedInstances
                         ? numberOfStudyRelatedInstances
-                        : numberOfStudyRelatedInstances
-                            + numberOfStudyRelatedRejectedInstances,
+                                + numberOfStudyRelatedRejectedInstances
+                        : numberOfStudyRelatedInstances,
                     modalitiesInStudy,
                     sopClassesInStudy);
             Utils.setSeriesQueryAttributes(attrs,
-                    hideRejectedInstances
+                    showRejectedInstances
                         ? numberOfSeriesRelatedInstances
-                        : numberOfSeriesRelatedInstances
-                            + numberOfSeriesRelatedRejectedInstances);
+                                + numberOfSeriesRelatedRejectedInstances
+                        : numberOfSeriesRelatedInstances);
         }
         return attrs;
     }

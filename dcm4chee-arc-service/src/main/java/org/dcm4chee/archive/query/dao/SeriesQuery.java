@@ -115,8 +115,9 @@ class SeriesQuery extends AbstractQuery {
             numInsts = queryService.seriesService()
                     .calculateNumberOfSeriesRelatedInstances(seriesPk);
         Utils.setSeriesQueryAttributes(attrs,
-                queryParam.isHideRejectedInstances() ? numInsts[0]
-                        : numInsts[0] + numInsts[1]);
+                queryParam.isShowRejectedInstances()
+                        ? numInsts[0] + numInsts[1]
+                        : numInsts[0]);
         Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
         Utils.setAvailability(attrs, availability);
         return attrs;
@@ -137,9 +138,9 @@ class SeriesQuery extends AbstractQuery {
         };
         Utils.setStudyQueryAttributes(attrs,
                 numInsts[0],
-                queryParam.isHideRejectedInstances() 
-                        ? numInsts[1]
-                        : numInsts[1] + numInsts[2],
+                queryParam.isShowRejectedInstances() 
+                        ? numInsts[1] + numInsts[2]
+                        : numInsts[1],
                 modalitiesInStudy,
                 sopClassesInStudy);
         return attrs;

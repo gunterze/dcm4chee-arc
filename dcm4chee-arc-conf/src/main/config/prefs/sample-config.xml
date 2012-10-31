@@ -11,10 +11,15 @@
           <map>
             <entry key="dcmArchiveDevice" value="true"/>
             <entry key="dcmConfigurationStaleTimeout" value="60"/>
+            <entry key="dcmDataRetentionPeriodExpiredCode" value="(XXXXXX22 ,99IHEIOCM ,&quot;Data Retention Period Expired&quot;)"/>
             <entry key="dcmFuzzyAlgorithmClass" value="org.dcm4che.soundex.ESoundex"/>
+            <entry key="dcmIncorrectModalityWorklistEntryCode" value="(XXXXXX11 ,99IHEIOCM ,&quot;Incorrect Modality Worklist Entry&quot;)"/>
+            <entry key="dcmIncorrectWorklistEntrySelectedCode" value="(110514 ,DCM ,&quot;Incorrect worklist entry selected&quot;)"/>
             <entry key="dcmKeyStorePin" value="secret"/>
             <entry key="dcmKeyStoreType" value="JKS"/>
             <entry key="dcmKeyStoreURL" value="resource:dcm4chee-arc-key.jks"/>
+            <entry key="dcmRejectedForPatientSafetyReasonsCode" value="(113037 ,DCM ,&quot;Rejected for Patient Safety Reasons&quot;)"/>
+            <entry key="dcmRejectedForQualityReasonsCode" value="(113001 ,DCM ,&quot;Rejected for Quality Reasons&quot;)"/>
             <entry key="dicomAuthorizedNodeCertificateReference.#" value="11"/>
             <entry key="dicomAuthorizedNodeCertificateReference.1" value="dicomConfigurationRoot/dicomDevicesRoot/dcmqrscp"/>
             <entry key="dicomAuthorizedNodeCertificateReference.10" value="dicomConfigurationRoot/dicomDevicesRoot/movescu"/>
@@ -360,51 +365,6 @@
                     <entry key="dicomAETitle" value="WITHOUT_PN"/>
                     <entry key="dicomTransferRole" value="SCU"/>
                     <entry key="labeledURI" value="resource:dcm4chee-arc-nullify-pn.xsl"/>
-                  </map>
-                </node>
-              </node>
-              <node name="dcmRejectionNote">
-                <map/>
-                <node name="Data Retention Period Expired">
-                  <map>
-                    <entry key="dcmRejectionAction.#" value="3"/>
-                    <entry key="dcmRejectionAction.1" value="HIDE_REJECTED_INSTANCES"/>
-                    <entry key="dcmRejectionAction.2" value="HIDE_REJECTION_NOTE"/>
-                    <entry key="dcmRejectionAction.3" value="NOT_REJECT_SUBSEQUENT_OCCURRENCE"/>
-                    <entry key="dcmRejectionCode" value="(XXXXXX22 ,99IHEIOCM ,&quot;Data Retention Period Expired&quot;)"/>
-                  </map>
-                </node>
-                <node name="Incorrect Modality Worklist Entry">
-                  <map>
-                    <entry key="dcmRejectionAction.#" value="3"/>
-                    <entry key="dcmRejectionAction.1" value="HIDE_REJECTED_INSTANCES"/>
-                    <entry key="dcmRejectionAction.2" value="HIDE_REJECTION_NOTE"/>
-                    <entry key="dcmRejectionAction.3" value="NOT_ACCEPT_SUBSEQUENT_OCCURRENCE"/>
-                    <entry key="dcmRejectionCode" value="(XXXXXX11 ,99IHEIOCM ,&quot;Incorrect Modality Worklist Entry&quot;)"/>
-                  </map>
-                </node>
-                <node name="Incorrect worklist entry selected">
-                  <map>
-                    <entry key="dcmRejectionAction.#" value="2"/>
-                    <entry key="dcmRejectionAction.1" value="HIDE_REJECTED_INSTANCES"/>
-                    <entry key="dcmRejectionAction.2" value="NOT_ACCEPT_SUBSEQUENT_OCCURRENCE"/>
-                    <entry key="dcmRejectionCode" value="(110514 ,DCM ,&quot;Incorrect worklist entry selected&quot;)"/>
-                  </map>
-                </node>
-                <node name="Rejected for Patient Safety Reasons">
-                  <map>
-                    <entry key="dcmRejectionAction.#" value="3"/>
-                    <entry key="dcmRejectionAction.1" value="HIDE_REJECTED_INSTANCES"/>
-                    <entry key="dcmRejectionAction.2" value="HIDE_REJECTION_NOTE"/>
-                    <entry key="dcmRejectionAction.3" value="NOT_ACCEPT_SUBSEQUENT_OCCURRENCE"/>
-                    <entry key="dcmRejectionCode" value="(113037 ,DCM ,&quot;Rejected for Patient Safety Reasons&quot;)"/>
-                  </map>
-                </node>
-                <node name="Rejected for Quality Reasons">
-                  <map>
-                    <entry key="dcmRejectionAction.#" value="1"/>
-                    <entry key="dcmRejectionAction.1" value="HIDE_REJECTED_INSTANCES"/>
-                    <entry key="dcmRejectionCode" value="(113001 ,DCM ,&quot;Rejected for Quality Reasons&quot;)"/>
                   </map>
                 </node>
               </node>
@@ -3982,6 +3942,7 @@
                 <entry key="dcmReturnOtherPatientNames" value="true"/>
                 <entry key="dcmSendPendingCGet" value="true"/>
                 <entry key="dcmSendPendingCMoveInterval" value="5000"/>
+                <entry key="dcmShowRejectedInstances" value="true"/>
                 <entry key="dicomAssociationAcceptor" value="true"/>
                 <entry key="dicomAssociationInitiator" value="true"/>
                 <entry key="dicomNetworkConnectionReference.#" value="2"/>
@@ -3991,44 +3952,6 @@
               </map>
               <node name="dcmAttributeCoercion">
                 <map/>
-              </node>
-              <node name="dcmRejectionNote">
-                <map/>
-                <node name="Data Retention Period Expired">
-                  <map>
-                    <entry key="dcmRejectionAction.#" value="3"/>
-                    <entry key="dcmRejectionAction.1" value="HIDE_REJECTED_INSTANCES"/>
-                    <entry key="dcmRejectionAction.2" value="HIDE_REJECTION_NOTE"/>
-                    <entry key="dcmRejectionAction.3" value="NOT_REJECT_SUBSEQUENT_OCCURRENCE"/>
-                    <entry key="dcmRejectionCode" value="(XXXXXX22 ,99IHEIOCM ,&quot;Data Retention Period Expired&quot;)"/>
-                  </map>
-                </node>
-                <node name="Incorrect Modality Worklist Entry">
-                  <map>
-                    <entry key="dcmRejectionAction.#" value="3"/>
-                    <entry key="dcmRejectionAction.1" value="HIDE_REJECTED_INSTANCES"/>
-                    <entry key="dcmRejectionAction.2" value="HIDE_REJECTION_NOTE"/>
-                    <entry key="dcmRejectionAction.3" value="NOT_ACCEPT_SUBSEQUENT_OCCURRENCE"/>
-                    <entry key="dcmRejectionCode" value="(XXXXXX11 ,99IHEIOCM ,&quot;Incorrect Modality Worklist Entry&quot;)"/>
-                  </map>
-                </node>
-                <node name="Incorrect worklist entry selected">
-                  <map>
-                    <entry key="dcmRejectionAction.#" value="2"/>
-                    <entry key="dcmRejectionAction.1" value="HIDE_REJECTED_INSTANCES"/>
-                    <entry key="dcmRejectionAction.2" value="NOT_ACCEPT_SUBSEQUENT_OCCURRENCE"/>
-                    <entry key="dcmRejectionCode" value="(110514 ,DCM ,&quot;Incorrect worklist entry selected&quot;)"/>
-                  </map>
-                </node>
-                <node name="Rejected for Patient Safety Reasons">
-                  <map>
-                    <entry key="dcmRejectionAction.#" value="3"/>
-                    <entry key="dcmRejectionAction.1" value="HIDE_REJECTED_INSTANCES"/>
-                    <entry key="dcmRejectionAction.2" value="HIDE_REJECTION_NOTE"/>
-                    <entry key="dcmRejectionAction.3" value="NOT_ACCEPT_SUBSEQUENT_OCCURRENCE"/>
-                    <entry key="dcmRejectionCode" value="(113037 ,DCM ,&quot;Rejected for Patient Safety Reasons&quot;)"/>
-                  </map>
-                </node>
               </node>
               <node name="dcmStoreDuplicate">
                 <map/>

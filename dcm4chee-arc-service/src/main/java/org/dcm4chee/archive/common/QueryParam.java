@@ -60,7 +60,7 @@ public class QueryParam {
     private boolean combinedDatetimeMatching;
     private boolean fuzzySemanticMatching;
     private boolean matchUnknown;
-    private boolean hideRejectedInstances;
+    private boolean showRejectedInstances;
     private String[] roles;
     private boolean returnOtherPatientIDs;
     private boolean returnOtherPatientNames;
@@ -131,12 +131,12 @@ public class QueryParam {
         this.returnOtherPatientNames = returnOtherPatientNames;
     }
 
-    public final boolean isHideRejectedInstances() {
-        return hideRejectedInstances;
+    public final boolean isShowRejectedInstances() {
+        return showRejectedInstances;
     }
 
-    public final void setHideRejectedInstances(boolean hideRejectedInstances) {
-        this.hideRejectedInstances = hideRejectedInstances;
+    public final void setShowRejectedInstances(boolean showRejectedInstances) {
+        this.showRejectedInstances = showRejectedInstances;
     }
 
     public Issuer getDefaultIssuerOfPatientID() {
@@ -168,7 +168,7 @@ public class QueryParam {
                 .contains(QueryOption.FUZZY));
         queryParam.setMatchUnknown(ae.isMatchUnknown());
         queryParam.setRoles(roles);
-        queryParam.setHideRejectedInstances(ae.isHideRejectedInstances());
+        queryParam.setShowRejectedInstances(ae.isShowRejectedInstances());
         queryParam.setReturnOtherPatientIDs(ae.isReturnOtherPatientIDs());
         queryParam.setReturnOtherPatientNames(ae.isReturnOtherPatientNames());
 

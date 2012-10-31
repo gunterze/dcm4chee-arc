@@ -109,13 +109,13 @@ public class RetrieveService {
         builder.and(Builder.uids(QInstance.instance.sopInstanceUID,
                 keys.getStrings(Tag.SOPInstanceUID), false));
         builder.and(QInstance.instance.replaced.isFalse());
-        if (queryParam.isHideRejectedInstances())
-            builder.and(QInstance.instance.rejectionFlags.eq(0));
-        else
+        if (queryParam.isShowRejectedInstances())
             builder.and(ExpressionUtils.or(
                     QInstance.instance.rejectionFlags.eq(0),
                     QInstance.instance.rejectionFlags.eq(
                             Instance.REJECTED_FOR_QUALITY_REASONS)));
+        else
+            builder.and(QInstance.instance.rejectionFlags.eq(0));
         return locate(new HibernateQuery(session)
             .from(QInstance.instance)
             .leftJoin(QInstance.instance.fileRefs, QFileRef.fileRef)

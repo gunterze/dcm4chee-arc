@@ -67,7 +67,7 @@ public class SeriesService {
         if (includeQueryAttributes )
             updateQueryAttributes(seriesPk, queryParam, result);
         return result.getAttributes(includeQueryAttributes,
-                queryParam.isHideRejectedInstances());
+                queryParam.isShowRejectedInstances());
     }
 
 
@@ -76,13 +76,13 @@ public class SeriesService {
         if (result.getNumberOfSeriesRelatedInstances() == -1) {
             int[] a = calculateNumberOfSeriesRelatedInstances(seriesPk);
             result.setNumberOfSeriesRelatedInstances(
-                    queryParam.isHideRejectedInstances() ? a[0] : a[0] + a[1]);
+                    queryParam.isShowRejectedInstances() ? a[0] + a[1] : a[0]);
         }
         if (result.getNumberOfStudyRelatedInstances() == -1) {
             int[] a = calculateNumberOfStudyRelatedSeriesAndInstances(result.getStudyPk());
             result.setNumberOfStudyRelatedSeries(a[0]);
             result.setNumberOfStudyRelatedInstances(
-                    queryParam.isHideRejectedInstances() ? a[1] : a[1] + a[2]);
+                    queryParam.isShowRejectedInstances() ? a[1] + a[2] : a[1]);
         }
     }
 

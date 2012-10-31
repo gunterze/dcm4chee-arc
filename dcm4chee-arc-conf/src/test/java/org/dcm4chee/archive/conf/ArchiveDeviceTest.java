@@ -825,7 +825,6 @@ public class ArchiveDeviceTest {
                 new StoreDuplicate(
                         StoreDuplicate.Condition.NE_CHECKSUM,
                         StoreDuplicate.Action.REPLACE));
-        ae.setHideRejectedInstances(true);
         ae.addAttributeCoercion(new AttributeCoercion(null, 
                 Dimse.C_STORE_RQ, 
                 SCP,
@@ -867,6 +866,7 @@ public class ArchiveDeviceTest {
         ae.setMatchUnknown(true);
         ae.setSendPendingCGet(true);
         ae.setSendPendingCMoveInterval(PENDING_CMOVE_INTERVAL);
+        ae.setShowRejectedInstances(true);
         addTCs(ae, null, SCU, IMAGE_CUIDS, image_tsuids);
         addTCs(ae, null, SCU, VIDEO_CUIDS, video_tsuids);
         addTCs(ae, null, SCU, OTHER_CUIDS, other_tsuids);
