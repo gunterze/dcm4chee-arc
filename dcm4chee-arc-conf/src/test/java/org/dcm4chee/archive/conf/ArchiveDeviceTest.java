@@ -721,7 +721,7 @@ public class ArchiveDeviceTest {
         device.setFuzzyAlgorithmClass("org.dcm4che.soundex.ESoundex");
         device.setConfigurationStaleTimeout(CONFIGURATION_STALE_TIMEOUT);
         setAttributeFilters(device);
-        device.setKeyStoreURL("file:///${jboss.server.config.dir}/dcm4chee-arc/key.jks");
+        device.setKeyStoreURL("file:${jboss.server.config.dir}/dcm4chee-arc/key.jks");
         device.setKeyStoreType("JKS");
         device.setKeyStorePin("secret");
         device.setThisNodeCertificates(config.deviceRef(name),
@@ -754,7 +754,7 @@ public class ArchiveDeviceTest {
         hl7App.setAcceptedMessageTypes(HL7_MESSAGE_TYPES);
         hl7App.setHL7DefaultCharacterSet("8859/1");
         hl7App.addTemplatesURI("adt2dcm",
-                "file:///${jboss.server.config.dir}/dcm4chee-arc/hl7-adt2dcm.xsl");
+                "file:${jboss.server.config.dir}/dcm4chee-arc/hl7-adt2dcm.xsl");
         device.addHL7Application(hl7App);
         Connection hl7 = new Connection("hl7", "localhost", 2575);
         device.addConnection(hl7);
@@ -832,12 +832,12 @@ public class ArchiveDeviceTest {
                 Dimse.C_STORE_RQ, 
                 SCP,
                 "ENSURE_PID",
-                "file:///${jboss.server.config.dir}/dcm4chee-arc/ensure-pid.xsl"));
+                "file:${jboss.server.config.dir}/dcm4chee-arc/ensure-pid.xsl"));
         ae.addAttributeCoercion(new AttributeCoercion(null, 
                 Dimse.C_STORE_RQ, 
                 SCU,
                 "WITHOUT_PN",
-                "file:///${jboss.server.config.dir}/dcm4chee-arc/nullify-pn.xsl"));
+                "file:${jboss.server.config.dir}/dcm4chee-arc/nullify-pn.xsl"));
         addTCs(ae, null, SCP, IMAGE_CUIDS, image_tsuids);
         addTCs(ae, null, SCP, VIDEO_CUIDS, video_tsuids);
         addTCs(ae, null, SCP, OTHER_CUIDS, other_tsuids);

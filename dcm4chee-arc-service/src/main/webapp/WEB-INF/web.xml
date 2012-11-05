@@ -11,8 +11,12 @@
     <servlet-name>dcm4chee-arc</servlet-name>
     <servlet-class>org.dcm4chee.archive.ArchiveServlet</servlet-class>
     <init-param>
-      <param-name>dicomConfigurationClass</param-name>
-      <param-value>${config-class}</param-value>
+      <param-name>ldapPropertiesURL</param-name>
+      <param-value>file:${jboss.server.config.dir}/dcm4chee-arc/ldap.properties</param-value>
+    </init-param>
+    <init-param>
+      <param-name>storageFileSystemURL</param-name>
+      <param-value>file:${jboss.server.data.dir}/</param-value>
     </init-param>
     <init-param>
       <param-name>deviceName</param-name>

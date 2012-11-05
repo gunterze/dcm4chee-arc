@@ -382,7 +382,7 @@ public class StoreService {
                 .setOffendingElements(Tag.CurrentRequestedProcedureEvidenceSequence);
     }
 
-    public FileSystem selectFileSystem(String groupID)
+    public FileSystem selectFileSystem(String groupID, String storageFileSystemURI)
             throws DicomServiceException {
         try {
             return curFileSystem =
@@ -398,7 +398,7 @@ public class StoreService {
             if (resultList.isEmpty()) {
                 FileSystem fs = new FileSystem();
                 fs.setGroupID(groupID);
-                fs.setURI(new File(System.getProperty("jboss.server.data.dir")).toURI().toString());
+                fs.setURI(storageFileSystemURI);
                 fs.setAvailability(Availability.ONLINE);
                 fs.setStatus(FileSystemStatus.RW);
                 em.persist(fs);

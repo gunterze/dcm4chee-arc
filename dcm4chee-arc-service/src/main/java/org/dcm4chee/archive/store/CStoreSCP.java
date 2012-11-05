@@ -71,14 +71,19 @@ import org.dcm4chee.archive.util.BeanLocator;
  */
 public class CStoreSCP extends BasicCStoreSCP {
 
-private static final String STORE_SERVICE_PROPERTY = "org.dcm4chee.archive.store.impl.StoreService";
+    private static final String STORE_SERVICE_PROPERTY =
+            "org.dcm4chee.archive.store.impl.StoreService";
+
     private final ApplicationEntityCache aeCache;
     private final IANSCU ianSCU;
+    private final String storageFileSystemURI;
 
-    public CStoreSCP(ApplicationEntityCache aeCache, IANSCU ianSCU) {
+    public CStoreSCP(String storageFileSystemURI,
+            ApplicationEntityCache aeCache, IANSCU ianSCU) {
         super("*");
         this.aeCache = aeCache;
         this.ianSCU = ianSCU;
+        this.storageFileSystemURI = storageFileSystemURI;
     }
 
     private static class LazyInitialization {
@@ -219,7 +224,7 @@ private static final String STORE_SERVICE_PROPERTY = "org.dcm4chee.archive.store
                         "No File System Group ID configured for " + ae.getAETitle());
             store = BeanLocator.lookup(StoreService.class);
             store.setStoreParam(StoreParam.valueOf(ae));
-            store.selectFileSystem(fsGroupID);
+            store.selectFileSystem(fsGroupID, storageFileSystemURI);
             as.setProperty(STORE_SERVICE_PROPERTY, store);
         }
         return store;

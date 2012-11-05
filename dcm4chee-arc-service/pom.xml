@@ -46,6 +46,14 @@
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
+      <artifactId>dcm4che-conf-ldap-hl7</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dcm4che</groupId>
+      <artifactId>dcm4che-conf-prefs-hl7</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dcm4che</groupId>
       <artifactId>dcm4che-soundex</artifactId>
     </dependency>
     <dependency>
@@ -98,12 +106,6 @@
   </dependencies>
   <build>
     <finalName>dcm4chee-arc-${project.version}</finalName>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-      </resource>
-    </resources>
     <testResources>
       <testResource>
         <directory>src/test/resources</directory>
@@ -143,25 +145,11 @@
   </build>
   <profiles>
     <profile>
-      <id>prefs</id>
+      <id>default</id>
       <activation><activeByDefault>true</activeByDefault></activation>
       <properties>
-        <config-class>org.dcm4chee.archive.conf.prefs.PreferencesArchiveConfiguration</config-class>
         <skipTests>true</skipTests>
       </properties>
-    </profile>
-    <profile>
-      <id>ldap</id>
-      <activation><property><name>ldap</name></property></activation>
-      <properties>
-        <config-class>org.dcm4chee.archive.conf.ldap.LdapArchiveConfiguration</config-class>
-        <skipTests>true</skipTests>
-      </properties>
-      <build>
-        <filters>
-          <filter>src/main/filters/${ldap}.properties</filter>
-        </filters>
-      </build>
     </profile>
     <profile>
        <!-- An optional Arquillian testing profile that 

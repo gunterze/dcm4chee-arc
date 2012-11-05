@@ -101,6 +101,7 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
     private final IANSCU ianSCU;
 
     public Archive(HL7Configuration dicomConfiguration, ArchiveDevice device,
+            String storageFileSystemURI,
             PatientService patientService,
             StgCmtService stgCmtService,
             MPPSService mppsService,
@@ -117,7 +118,7 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         this.jmsService = jmsService;
         this.mppsSCU = new MPPSSCU(aeCache, jmsService, mppsSCUQueue);
         this.ianSCU = new IANSCU(aeCache, jmsService, ianSCUQueue);
-        this.storeSCP = new CStoreSCP(aeCache, ianSCU);
+        this.storeSCP = new CStoreSCP(storageFileSystemURI, aeCache, ianSCU);
         this.stgCmtSCP = new StgCmtSCP(aeCache, stgCmtService,
                 jmsService, stgcmtSCPQueue);
         this.mppsSCP = new MPPSSCP(aeCache, mppsSCU, ianSCU, mppsService);

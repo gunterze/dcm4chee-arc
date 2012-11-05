@@ -41,6 +41,7 @@ package org.dcm4chee.archive.conf.ldap;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.List;
 
 import javax.naming.NamingEnumeration;
@@ -77,6 +78,11 @@ import org.dcm4chee.archive.conf.StoreDuplicate.Condition;
 public class LdapArchiveConfiguration extends LdapHL7Configuration {
 
     public LdapArchiveConfiguration() throws ConfigurationException {
+    }
+
+    public LdapArchiveConfiguration(Hashtable<?, ?> env)
+            throws ConfigurationException {
+        super(env);
     }
 
     @Override
