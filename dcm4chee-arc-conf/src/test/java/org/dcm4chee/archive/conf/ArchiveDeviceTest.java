@@ -66,6 +66,7 @@ import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.net.hl7.HL7Device;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.SafeClose;
+import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.conf.ldap.LdapArchiveConfiguration;
 import org.dcm4chee.archive.conf.prefs.PreferencesArchiveConfiguration;
 import org.junit.After;
@@ -588,7 +589,8 @@ public class ArchiveDeviceTest {
 
     @Before
     public void setUp() throws Exception {
-        keystore = SSLManagerFactory.loadKeyStore("JKS", "resource:cacerts.jks", "secret");
+        keystore = SSLManagerFactory.loadKeyStore("JKS", 
+                StringUtils.resourceURL("cacerts.jks"), "secret");
         config = System.getProperty("ldap") == null
                 ? new PreferencesArchiveConfiguration(Preferences.userRoot())
                 : new LdapArchiveConfiguration();
@@ -719,7 +721,7 @@ public class ArchiveDeviceTest {
         device.setFuzzyAlgorithmClass("org.dcm4che.soundex.ESoundex");
         device.setConfigurationStaleTimeout(CONFIGURATION_STALE_TIMEOUT);
         setAttributeFilters(device);
-        device.setKeyStoreURL("resource:dcm4chee-arc-key.jks");
+        device.setKeyStoreURL("file:///${jboss.server.config.dir}/dcm4chee-arc/key.jks");
         device.setKeyStoreType("JKS");
         device.setKeyStorePin("secret");
         device.setThisNodeCertificates(config.deviceRef(name),
@@ -751,7 +753,8 @@ public class ArchiveDeviceTest {
         ArchiveHL7Application hl7App = new ArchiveHL7Application("*");
         hl7App.setAcceptedMessageTypes(HL7_MESSAGE_TYPES);
         hl7App.setHL7DefaultCharacterSet("8859/1");
-        hl7App.addTemplatesURI("adt2dcm", "resource:dcm4chee-arc-hl7-adt2dcm.xsl");
+        hl7App.addTemplatesURI("adt2dcm",
+                "file:///${jboss.server.config.dir}/dcm4chee-arc/hl7-adt2dcm.xsl");
         device.addHL7Application(hl7App);
         Connection hl7 = new Connection("hl7", "localhost", 2575);
         device.addConnection(hl7);
@@ -829,12 +832,12 @@ public class ArchiveDeviceTest {
                 Dimse.C_STORE_RQ, 
                 SCP,
                 "ENSURE_PID",
-                "resource:dcm4chee-arc-ensure-pid.xsl"));
+                "file:///${jboss.server.config.dir}/dcm4chee-arc/ensure-pid.xsl"));
         ae.addAttributeCoercion(new AttributeCoercion(null, 
                 Dimse.C_STORE_RQ, 
                 SCU,
                 "WITHOUT_PN",
-                "resource:dcm4chee-arc-nullify-pn.xsl"));
+                "file:///${jboss.server.config.dir}/dcm4chee-arc/nullify-pn.xsl"));
         addTCs(ae, null, SCP, IMAGE_CUIDS, image_tsuids);
         addTCs(ae, null, SCP, VIDEO_CUIDS, video_tsuids);
         addTCs(ae, null, SCP, OTHER_CUIDS, other_tsuids);

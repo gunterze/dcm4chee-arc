@@ -17,7 +17,7 @@
             <entry key="dcmIncorrectWorklistEntrySelectedCode" value="(110514 ,DCM ,&quot;Incorrect worklist entry selected&quot;)"/>
             <entry key="dcmKeyStorePin" value="secret"/>
             <entry key="dcmKeyStoreType" value="JKS"/>
-            <entry key="dcmKeyStoreURL" value="resource:dcm4chee-arc-key.jks"/>
+            <entry key="dcmKeyStoreURL" value="file:///${jboss.server.config.dir}/dcm4chee-arc/key.jks"/>
             <entry key="dcmRejectedForPatientSafetyReasonsCode" value="(113037 ,DCM ,&quot;Rejected for Patient Safety Reasons&quot;)"/>
             <entry key="dcmRejectedForQualityReasonsCode" value="(113001 ,DCM ,&quot;Rejected for Quality Reasons&quot;)"/>
             <entry key="dicomAuthorizedNodeCertificateReference.#" value="11"/>
@@ -356,7 +356,7 @@
                     <entry key="dcmDIMSE" value="C_STORE_RQ"/>
                     <entry key="dicomAETitle" value="ENSURE_PID"/>
                     <entry key="dicomTransferRole" value="SCP"/>
-                    <entry key="labeledURI" value="resource:dcm4chee-arc-ensure-pid.xsl"/>
+                    <entry key="labeledURI" value="file:///${jboss.server.config.dir}/dcm4chee-arc/ensure-pid.xsl"/>
                   </map>
                 </node>
                 <node name="2">
@@ -364,7 +364,7 @@
                     <entry key="dcmDIMSE" value="C_STORE_RQ"/>
                     <entry key="dicomAETitle" value="WITHOUT_PN"/>
                     <entry key="dicomTransferRole" value="SCU"/>
-                    <entry key="labeledURI" value="resource:dcm4chee-arc-nullify-pn.xsl"/>
+                    <entry key="labeledURI" value="file:///${jboss.server.config.dir}/dcm4chee-arc/nullify-pn.xsl"/>
                   </map>
                 </node>
               </node>
@@ -5848,7 +5848,7 @@
                 <entry key="hl7AcceptedMessageType.7" value="ORM^O01"/>
                 <entry key="hl7DefaultCharacterSet" value="8859/1"/>
                 <entry key="labeledURI.#" value="1"/>
-                <entry key="labeledURI.1" value="resource:dcm4chee-arc-hl7-adt2dcm.xsl adt2dcm"/>
+                <entry key="labeledURI.1" value="file:///${jboss.server.config.dir}/dcm4chee-arc/hl7-adt2dcm.xsl adt2dcm"/>
               </map>
             </node>
           </node>

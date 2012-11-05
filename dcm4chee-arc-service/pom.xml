@@ -101,9 +101,6 @@
     <resources>
       <resource>
         <directory>src/main/resources</directory>
-      </resource>
-      <resource>
-        <directory>src/main/resources2</directory>
         <filtering>true</filtering>
       </resource>
     </resources>

@@ -440,7 +440,7 @@ dicomDeviceName: dcm4chee-arc
 dcmKeyStorePin: secret
 dcmKeyStoreType: JKS
 dcmConfigurationStaleTimeout: 60
-dcmKeyStoreURL: resource:dcm4chee-arc-key.jks
+dcmKeyStoreURL: file:///${jboss.server.config.dir}/dcm4chee-arc/key.jks
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=dcmqrscp,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=stgcmtscu,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=storescp,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
@@ -3840,14 +3840,14 @@ cn: Encapsulated PDF Storage SCU
 dn: dcmDIMSE=C_STORE_RQ+dicomAETitle=ENSURE_PID+dicomTransferRole=SCP,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmDIMSE: C_STORE_RQ
 dicomTransferRole: SCP
-labeledURI: resource:dcm4chee-arc-ensure-pid.xsl
+labeledURI: file:///${jboss.server.config.dir}/dcm4chee-arc/ensure-pid.xsl
 objectClass: dcmAttributeCoercion
 dicomAETitle: ENSURE_PID
 
 dn: dcmDIMSE=C_STORE_RQ+dicomAETitle=WITHOUT_PN+dicomTransferRole=SCU,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmDIMSE: C_STORE_RQ
 dicomTransferRole: SCU
-labeledURI: resource:dcm4chee-arc-nullify-pn.xsl
+labeledURI: file:///${jboss.server.config.dir}/dcm4chee-arc/nullify-pn.xsl
 objectClass: dcmAttributeCoercion
 dicomAETitle: WITHOUT_PN
 
@@ -5587,7 +5587,7 @@ cn: Encapsulated PDF Storage SCU
 
 dn: hl7ApplicationName=*,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 hl7DefaultCharacterSet: 8859/1
-labeledURI: resource:dcm4chee-arc-hl7-adt2dcm.xsl adt2dcm
+labeledURI: file:///${jboss.server.config.dir}/dcm4chee-arc/hl7-adt2dcm.xsl adt2dcm
 objectClass: hl7Application
 objectClass: dcmArchiveHL7Application
 dicomNetworkConnectionReference: cn=hl7,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com

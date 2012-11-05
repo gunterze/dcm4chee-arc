@@ -46,6 +46,7 @@ import org.dcm4che.io.TemplatesCache;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.hl7.HL7Device;
 import org.dcm4che.soundex.FuzzyStr;
+import org.dcm4che.util.StringUtils;
 
 
 /**
@@ -157,7 +158,7 @@ public class ArchiveDevice extends HL7Device {
         TemplatesCache tmp = templatesCache;
         if (tmp == null)
             templatesCache = tmp = new TemplatesCache();
-        return tmp.get(uri);
+        return tmp.get(StringUtils.replaceSystemProperties(uri));
     }
 
     public void setAttributeFilter(Entity entity, AttributeFilter filter) {
