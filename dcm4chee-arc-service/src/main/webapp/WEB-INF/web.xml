@@ -15,10 +15,6 @@
       <param-value>file:${jboss.server.config.dir}/dcm4chee-arc/ldap.properties</param-value>
     </init-param>
     <init-param>
-      <param-name>storageFileSystemURL</param-name>
-      <param-value>file:${jboss.server.data.dir}/</param-value>
-    </init-param>
-    <init-param>
       <param-name>deviceName</param-name>
       <param-value>dcm4chee-arc</param-value>
     </init-param>

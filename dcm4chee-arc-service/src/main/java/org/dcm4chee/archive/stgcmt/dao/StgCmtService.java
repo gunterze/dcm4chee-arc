@@ -53,7 +53,6 @@ import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.net.Status;
-import org.dcm4chee.archive.entity.Availability;
 import org.dcm4chee.archive.entity.QInstance;
 import org.dcm4chee.archive.entity.Utils;
 import org.dcm4chee.archive.util.query.Builder;
@@ -101,8 +100,7 @@ public class StgCmtService {
                 QInstance.instance.sopClassUID,
                 QInstance.instance.sopInstanceUID,
                 QInstance.instance.retrieveAETs,
-                QInstance.instance.externalRetrieveAET,
-                QInstance.instance.availability);
+                QInstance.instance.externalRetrieveAET);
         String[] commonRetrieveAETs = null;
         HashMap<String,Object[]> map = new HashMap<String,Object[]>(list.size() * 4 / 3);
         for (Object[] a : list) {
@@ -122,7 +120,7 @@ public class StgCmtService {
         Sequence failedSeq = eventInfo.newSequence(Tag.FailedSOPSequence, size);
         for (Attributes refSOP : requestSeq) {
             Object[] a = map.get(refSOP.getString(Tag.ReferencedSOPInstanceUID));
-            if (a == null || Availability.UNAVAILABLE.equals(a[4]))
+            if (a == null)
                 failedSeq.add(refSOP(refSOP, Status.NoSuchObjectInstance));
             else if (!refSOP.getString(Tag.ReferencedSOPClassUID).equals(a[0]))
                 failedSeq.add(refSOP(refSOP, Status.ClassInstanceConflict));

@@ -82,12 +82,13 @@ import org.dcm4chee.archive.conf.AttributeFilter;
     name="Study.findByStudyInstanceUID",
     query="SELECT s FROM Study s WHERE s.studyInstanceUID = ?1"),
 @NamedQuery(
-    name="Study.updateNumberOfStudyRelatedInstances",
+    name="Study.updateNumberOfInstances",
     query="UPDATE Study s "
-        + "SET s.numberOfStudyRelatedSeries = ?1, "
-            + "s.numberOfStudyRelatedInstances = ?2, "
-            + "s.numberOfStudyRelatedRejectedInstances = ?3 "
-        + "WHERE s.pk = ?4")
+        + "SET s.numberOfSeries = ?1, "
+            + "s.numberOfSeriesA = ?2, "
+            + "s.numberOfInstances = ?3, "
+            + "s.numberOfInstancesA = ?4 "
+        + "WHERE s.pk = ?5")
 })
 @Entity
 @Table(name = "study")
@@ -96,7 +97,7 @@ public class Study implements Serializable {
     private static final long serialVersionUID = -6358525535057418771L;
 
     public static final String FIND_BY_STUDY_INSTANCE_UID = "Study.findByStudyInstanceUID";
-    public static final String UPDATE_NUMBER_OF_STUDY_RELATED_INSTANCES = "Study.updateNumberOfStudyRelatedInstances";
+    public static final String UPDATE_NUMBER_OF_INSTANCES = "Study.updateNumberOfInstances";
 
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -173,15 +174,19 @@ public class Study implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "num_series")
-    private int numberOfStudyRelatedSeries;
+    private int numberOfSeries = -1;
+
+    @Basic(optional = false)
+    @Column(name = "num_series_a")
+    private int numberOfSeriesA = -1;
 
     @Basic(optional = false)
     @Column(name = "num_instances")
-    private int numberOfStudyRelatedInstances;
+    private int numberOfInstances = -1;
 
     @Basic(optional = false)
-    @Column(name = "num_rejected")
-    private int numberOfStudyRelatedRejectedInstances;
+    @Column(name = "num_instances_a")
+    private int numberOfInstancesA = -1;
 
     @Column(name = "mods_in_study")
     private String modalitiesInStudy;
@@ -225,9 +230,10 @@ public class Study implements Serializable {
                 + ", uid=" + studyInstanceUID
                 + ", id=" + studyID
                 + ", mods=" + modalitiesInStudy
-                + ", numS=" + numberOfStudyRelatedSeries
-                + ", numI=" + numberOfStudyRelatedInstances
-                + "(+" + numberOfStudyRelatedRejectedInstances
+                + ", numS=" + numberOfSeries
+                + "(" + numberOfSeriesA
+                + "), numI=" + numberOfInstances
+                + "(" + numberOfInstancesA
                 + ")]";
     }
 
@@ -325,28 +331,43 @@ public class Study implements Serializable {
         return studyCustomAttribute3;
     }
 
-    public int getNumberOfStudyRelatedSeries() {
-        return numberOfStudyRelatedSeries;
+    public int getNumberOfSeries() {
+        return numberOfSeries;
     }
 
-    public void setNumberOfStudyRelatedSeries(int number) {
-        this.numberOfStudyRelatedSeries = number;
+    public void setNumberOfSeries(int numberOfSeries) {
+        this.numberOfSeries = numberOfSeries;
     }
 
-    public int getNumberOfStudyRelatedInstances() {
-        return numberOfStudyRelatedInstances;
+    public int getNumberOfSeriesA() {
+        return numberOfSeriesA;
     }
 
-    public void setNumberOfStudyRelatedInstances(int number) {
-        this.numberOfStudyRelatedInstances = number;
+    public void setNumberOfSeriesA(int numberOfSeriesA) {
+        this.numberOfSeriesA = numberOfSeriesA;
     }
 
-    public int getNumberOfStudyRelatedRejectedInstances() {
-        return numberOfStudyRelatedRejectedInstances;
+    public int getNumberOfInstances() {
+        return numberOfInstances;
     }
 
-    public void setNumberOfStudyRelatedRejectedInstances(int number) {
-        this.numberOfStudyRelatedRejectedInstances = number;
+    public void setNumberOfInstances(int numberOfInstances) {
+        this.numberOfInstances = numberOfInstances;
+    }
+
+    public int getNumberOfInstancesA() {
+        return numberOfInstancesA;
+    }
+
+    public void setNumberOfInstancesA(int numberOfInstancesA) {
+        this.numberOfInstancesA = numberOfInstancesA;
+    }
+
+    public void resetNumberOfInstances() {
+        this.numberOfSeries = -1;
+        this.numberOfSeriesA = -1;
+        this.numberOfInstances = -1;
+        this.numberOfInstancesA = -1;
     }
 
     public String[] getModalitiesInStudy() {

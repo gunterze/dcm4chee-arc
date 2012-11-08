@@ -56,6 +56,7 @@ import org.dcm4chee.archive.jms.JMSService;
 import org.dcm4chee.archive.mpps.IANSCU;
 import org.dcm4chee.archive.mpps.MPPSSCP;
 import org.dcm4chee.archive.mpps.MPPSSCU;
+import org.dcm4chee.archive.mpps.dao.IANQueryService;
 import org.dcm4chee.archive.mpps.dao.MPPSService;
 import org.dcm4chee.archive.mwl.MWLCFindSCP;
 import org.dcm4chee.archive.pix.PIXConsumer;
@@ -101,10 +102,10 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
     private final IANSCU ianSCU;
 
     public Archive(HL7Configuration dicomConfiguration, ArchiveDevice device,
-            String storageFileSystemURI,
             PatientService patientService,
             StgCmtService stgCmtService,
             MPPSService mppsService,
+            IANQueryService ianQueryService,
             RetrieveService retrieveService,
             JMSService jmsService,
             Queue mppsSCUQueue,
@@ -118,7 +119,7 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         this.jmsService = jmsService;
         this.mppsSCU = new MPPSSCU(aeCache, jmsService, mppsSCUQueue);
         this.ianSCU = new IANSCU(aeCache, jmsService, ianSCUQueue);
-        this.storeSCP = new CStoreSCP(storageFileSystemURI, aeCache, ianSCU);
+        this.storeSCP = new CStoreSCP(aeCache, ianSCU, ianQueryService);
         this.stgCmtSCP = new StgCmtSCP(aeCache, stgCmtService,
                 jmsService, stgcmtSCPQueue);
         this.mppsSCP = new MPPSSCP(aeCache, mppsSCU, ianSCU, mppsService);

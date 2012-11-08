@@ -76,10 +76,12 @@ import org.dcm4chee.archive.conf.AttributeFilter;
 @NamedQueries({
 @NamedQuery(
     name="Instance.findBySOPInstanceUID",
-    query="SELECT i FROM Instance i WHERE i.sopInstanceUID = ?1 AND i.replaced = FALSE"),
+    query="SELECT i FROM Instance i "
+            + "WHERE i.sopInstanceUID = ?1 AND i.replaced = FALSE"),
 @NamedQuery(
     name="Instance.findBySeriesInstanceUID",
-    query="SELECT i FROM Instance i WHERE i.series.seriesInstanceUID = ?1 AND i.replaced = FALSE"),
+    query="SELECT i FROM Instance i "
+            + "WHERE i.series.seriesInstanceUID = ?1 AND i.replaced = FALSE"),
 @NamedQuery(
     name="Instance.sopInstanceReferenceBySeriesInstanceUID",
     query="SELECT NEW org.dcm4chee.archive.entity.SOPInstanceReference("
@@ -92,7 +94,8 @@ import org.dcm4chee.archive.conf.AttributeFilter;
             + "i.availability,"
             + "i.retrieveAETs,"
             + "i.externalRetrieveAET) "
-            + "FROM Instance i WHERE i.series.seriesInstanceUID = ?1 AND i.replaced = FALSE"),
+            + "FROM Instance i "
+            + "WHERE i.series.seriesInstanceUID = ?1 AND i.replaced = FALSE"),
 @NamedQuery(
     name="Instance.sopInstanceReferenceByStudyInstanceUID",
     query="SELECT NEW org.dcm4chee.archive.entity.SOPInstanceReference("
@@ -105,13 +108,18 @@ import org.dcm4chee.archive.conf.AttributeFilter;
             + "i.availability,"
             + "i.retrieveAETs,"
             + "i.externalRetrieveAET) "
-            + "FROM Instance i WHERE i.series.study.studyInstanceUID = ?1 AND i.replaced = FALSE"),
+            + "FROM Instance i "
+            + "WHERE i.series.study.studyInstanceUID = ?1 AND i.replaced = FALSE"),
 @NamedQuery(
     name="Instance.numberOfStudyRelatedInstances",
-    query="SELECT COUNT(i) FROM Instance i WHERE i.series.study.pk = ?1 AND i.replaced = FALSE AND i.rejectionFlags = ?2"),
+    query="SELECT COUNT(i) FROM Instance i "
+            + "WHERE i.series.study.pk = ?1 "
+            + "AND i.replaced = FALSE AND i.availability <= ?2"),
 @NamedQuery(
     name="Instance.numberOfSeriesRelatedInstances",
-    query="SELECT COUNT(i) FROM Instance i WHERE i.series.pk = ?1 AND i.replaced = FALSE AND i.rejectionFlags = ?2")})
+    query="SELECT COUNT(i) FROM Instance i "
+            + "WHERE i.series.pk = ?1 "
+            + "AND i.replaced = FALSE AND i.availability <= ?2")})
 @Entity
 @Table(name = "instance")
 public class Instance implements Serializable {
@@ -130,12 +138,6 @@ public class Instance implements Serializable {
             "Instance.numberOfStudyRelatedInstances";
     public static final String NUMBER_OF_SERIES_RELATED_INSTANCES =
             "Instance.numberOfSeriesRelatedInstances";
-
-    public static final int REJECTED_FOR_QUALITY_REASONS = 1;
-    public static final int REJECTED_FOR_PATIENT_SAFETY_REASONS = 2;
-    public static final int INCORRECT_MODALITY_WORKLIST_ENTRY = 4;
-    public static final int DATA_RETENTION_PERIOD_EXPIRED = 8;
-
 
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -199,10 +201,6 @@ public class Instance implements Serializable {
     @Basic(optional = false)
     @Column(name = "availability")
     private Availability availability;
-
-    @Basic(optional = false)
-    @Column(name = "rejection_flags")
-    private int rejectionFlags;
 
     @Basic(optional = false)
     @Column(name = "replaced")
@@ -348,22 +346,6 @@ public class Instance implements Serializable {
 
     public void setAvailability(Availability availability) {
         this.availability = availability;
-    }
-
-    public int getRejectionFlags() {
-        return rejectionFlags;
-    }
-
-    public void setRejectionFlag(int rejectionFlag) {
-        this.rejectionFlags |= rejectionFlag;
-    }
-
-    public void clearRejectionFlag(int rejectionFlag) {
-        this.rejectionFlags &= ~rejectionFlag;
-    }
-
-    public boolean hasRejectionFlag(int rejectionFlag) {
-        return (rejectionFlags & rejectionFlag) != 0;
     }
 
     public boolean isArchived() {

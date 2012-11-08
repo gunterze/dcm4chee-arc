@@ -38,6 +38,7 @@
 
 package org.dcm4chee.archive.mpps.dao;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ejb.Stateless;
@@ -147,7 +148,7 @@ public class IANQueryService {
     private static Attributes makeRefSOPItem(SOPInstanceReference sopRef) {
         Attributes refSOP = new Attributes(4);
         Utils.setRetrieveAET(refSOP, sopRef.retrieveAETs, sopRef.externalRetrieveAET);
-        refSOP.setString(Tag.InstanceAvailability, VR.CS, sopRef.availability.toString());
+        refSOP.setString(Tag.InstanceAvailability, VR.CS, sopRef.availability.toCodeString());
         refSOP.setString(Tag.ReferencedSOPClassUID, VR.UI, sopRef.sopClassUID);
         refSOP.setString(Tag.ReferencedSOPInstanceUID, VR.UI, sopRef.sopInstanceUID);
         return refSOP;
@@ -159,6 +160,117 @@ public class IANQueryService {
             if (sopRef.sopInstanceUID.equals(iuid))
                 return sopRef;
         return null;
+    }
+
+    public Attributes createIANforRejectionNote(Attributes rejectionNote) {
+        String studyIUID = rejectionNote.getString(Tag.StudyInstanceUID);
+        String sopIUID = rejectionNote.getString(Tag.SOPInstanceUID);
+
+        Attributes ian = new Attributes(3);
+        Attributes rnRefPPS = rejectionNote
+                .getNestedDataset(Tag.ReferencedPerformedProcedureStepSequence);
+        if (rnRefPPS != null) {
+            Attributes refPPS = new Attributes(3);
+            refPPS.addAll(rnRefPPS);
+            refPPS.setNull(Tag.PerformedWorkitemCodeSequence, VR.SQ);
+            ian.newSequence(Tag.ReferencedPerformedProcedureStepSequence, 1)
+               .add(refPPS);
+        } else
+            ian.setNull(Tag.ReferencedPerformedProcedureStepSequence, VR.SQ);
+        Sequence refSeriesSeq = ian.newSequence(Tag.ReferencedSeriesSequence, 10);
+        ian.setString(Tag.StudyInstanceUID, VR.UI, studyIUID);
+        @SuppressWarnings("unchecked")
+        List<SOPInstanceReference> storedSOPs =
+            em.createNamedQuery(
+                    Instance.SOP_INSTANCE_REFERENCE_BY_STUDY_INSTANCE_UID)
+              .setParameter(1, studyIUID )
+              .getResultList();
+        int size = storedSOPs.size();
+        for (SOPInstanceReference storedSOP : storedSOPs) {
+            // Exclude reference to Rejection Note from IAN
+            if (storedSOP.sopInstanceUID.equals(sopIUID))
+                continue;
+
+            refSeries(refSeriesSeq, storedSOP.seriesInstanceUID, size)
+                    .getSequence(Tag.ReferencedSOPSequence)
+                    .add(makeRefSOPItem(storedSOP));
+        }
+        return ian;
+    }
+
+    public List<Attributes> createIANsforIncorrectModalityWorklistEntry(
+            Attributes rejectionNote) {
+        String studyIUID = rejectionNote.getString(Tag.StudyInstanceUID);
+        String sopIUID = rejectionNote.getString(Tag.SOPInstanceUID);
+        List<Attributes> ians = new ArrayList<Attributes>();
+        @SuppressWarnings("unchecked")
+        List<SOPInstanceReference> storedSOPs =
+            em.createNamedQuery(
+                    Instance.SOP_INSTANCE_REFERENCE_BY_STUDY_INSTANCE_UID)
+              .setParameter(1, studyIUID )
+              .getResultList();
+        int size = storedSOPs.size();
+        for (SOPInstanceReference storedSOP : storedSOPs) {
+            // Exclude reference to Rejection Note from IAN
+            if (storedSOP.sopInstanceUID.equals(sopIUID))
+                continue;
+
+            Sequence refSeriesSeq = ian(ians, storedSOP)
+                    .getSequence(Tag.ReferencedSeriesSequence);
+            
+            refSeries(refSeriesSeq, storedSOP.seriesInstanceUID, size)
+                    .getSequence(Tag.ReferencedSOPSequence)
+                    .add(makeRefSOPItem(storedSOP));
+        }
+        return ians;
+    }
+
+    private Attributes refSeries(Sequence refSeriesSeq, String seriesIUID, int size) {
+        for (Attributes refSeries : refSeriesSeq)
+            if (refSeries.getString(Tag.SeriesInstanceUID).equals(seriesIUID))
+                return refSeries;
+        
+        Attributes refSeries = new Attributes(2);
+        refSeriesSeq.add(refSeries);
+        refSeries.newSequence(Tag.ReferencedSOPSequence, size);
+        refSeries.setString(Tag.SeriesInstanceUID, VR.UI, seriesIUID);
+        return refSeries ;
+    }
+
+    private Attributes ian(List<Attributes> ians, SOPInstanceReference storedSOP) {
+        for (Attributes ian : ians)
+            if (equalsRefPPS(ian.getNestedDataset(Tag.ReferencedPerformedProcedureStepSequence), storedSOP))
+                return ian;
+
+        Attributes ian = new Attributes(3);
+        if (storedSOP.performedProcedureStepClassUID != null 
+                && storedSOP.performedProcedureStepInstanceUID != null) {
+            Attributes refPPS = new Attributes(3);
+            refPPS.setString(Tag.ReferencedSOPClassUID, VR.UI,
+                    storedSOP.performedProcedureStepClassUID);
+            refPPS.setString(Tag.ReferencedSOPInstanceUID, VR.UI,
+                    storedSOP.performedProcedureStepInstanceUID);
+            refPPS.setNull(Tag.PerformedWorkitemCodeSequence, VR.SQ);
+            ian.newSequence(Tag.ReferencedPerformedProcedureStepSequence, 1)
+               .add(refPPS);
+        } else {
+            ian.setNull(Tag.ReferencedPerformedProcedureStepSequence, VR.SQ);
+        }
+        ian.newSequence(Tag.ReferencedSeriesSequence, 10);
+        ian.setString(Tag.StudyInstanceUID, VR.UI, storedSOP.studyInstanceUID);
+        ians.add(ian);
+        return ian;
+    }
+
+    private boolean equalsRefPPS(Attributes refPPS, SOPInstanceReference storedSOP) {
+        if (refPPS != null)
+            return refPPS.getString(Tag.ReferencedSOPClassUID)
+                    .equals(storedSOP.performedProcedureStepClassUID)
+                && refPPS.getString(Tag.ReferencedSOPInstanceUID)
+                    .equals(storedSOP.performedProcedureStepInstanceUID);
+        else
+            return storedSOP.performedProcedureStepClassUID == null
+                || storedSOP.performedProcedureStepInstanceUID == null;
     }
 
 }

@@ -40,14 +40,18 @@ package org.dcm4chee.archive.common;
 
 import java.util.List;
 
+import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Code;
+import org.dcm4che.data.Tag;
+import org.dcm4che.data.UID;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.conf.ArchiveDevice;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
 import org.dcm4chee.archive.conf.StoreDuplicate;
-import org.dcm4chee.archive.entity.Instance;
+import org.dcm4chee.archive.entity.Availability;
+import org.dcm4chee.archive.entity.PerformedProcedureStep;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -171,16 +175,48 @@ public class StoreParam {
         return StoreDuplicate.Action.IGNORE;
     }
 
-    public int rejectionFlagOf(Code conceptNameCode) {
-        if (conceptNameCode.equalsIgnoreMeaning(rejectedForQualityReasonsCode))
-            return Instance.REJECTED_FOR_QUALITY_REASONS;
-        if (conceptNameCode.equalsIgnoreMeaning(rejectedForPatientSafetyReasonsCode))
-            return Instance.REJECTED_FOR_PATIENT_SAFETY_REASONS;
-        if (conceptNameCode.equalsIgnoreMeaning(incorrectModalityWorklistEntryCode))
-            return Instance.INCORRECT_MODALITY_WORKLIST_ENTRY;
-        if (conceptNameCode.equalsIgnoreMeaning(dataRetentionPeriodExpiredCode))
-            return Instance.DATA_RETENTION_PERIOD_EXPIRED;
-        return 0;
+    public boolean isRejectedByMPPS(PerformedProcedureStep mpps) {
+        if (mpps == null || mpps.getStatus() != PerformedProcedureStep.Status.DISCONTINUED)
+            return false;
+
+        Attributes reasonCode = mpps.getAttributes().getNestedDataset(
+                Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence);
+        return reasonCode != null && new Code(reasonCode)
+                .equalsIgnoreMeaning(incorrectWorklistEntrySelectedCode);
+    }
+
+    public boolean isRejectionNote(Attributes attrs, Availability[] rejectionNote) {
+        if (!attrs.getString(Tag.SOPClassUID)
+                .equals(UID.KeyObjectSelectionDocumentStorage))
+            return false;
+
+        Attributes item = attrs.getNestedDataset(Tag.ConceptNameCodeSequence);
+        if (item == null)
+            return false;
+
+        Code code = new Code(item);
+        if (code.equalsIgnoreMeaning(rejectedForQualityReasonsCode)) {
+            rejectionNote[0] =
+                    Availability.REJECTED_FOR_QUALITY_REASONS_REJECTION_NOTE;
+            rejectionNote[1] =
+                    Availability.REJECTED_FOR_QUALITY_REASONS;
+        } else if (code.equalsIgnoreMeaning(rejectedForPatientSafetyReasonsCode)) {
+            rejectionNote[0] =
+                    Availability.REJECTED_FOR_PATIENT_SAFETY_REASONS_REJECTION_NOTE;
+            rejectionNote[1] =
+                    Availability.REJECTED_FOR_PATIENT_SAFETY_REASONS;
+        } else if (code.equalsIgnoreMeaning(incorrectModalityWorklistEntryCode)) {
+            rejectionNote[0] =
+                    Availability.INCORRECT_MODALITY_WORKLIST_ENTRY_REJECTION_NOTE;
+            rejectionNote[1] =
+                    Availability.INCORRECT_MODALITY_WORKLIST_ENTRY;
+        } else if (code.equalsIgnoreMeaning(dataRetentionPeriodExpiredCode)) {
+            rejectionNote[0] =
+                    Availability.DATA_RETENTION_PERIOD_EXPIRED_REJECTION_NOTE;
+            rejectionNote[1] =
+                    Availability.DATA_RETENTION_PERIOD_EXPIRED;
+        }
+        return true;
     }
 
     public static StoreParam valueOf(ArchiveDevice dev) {

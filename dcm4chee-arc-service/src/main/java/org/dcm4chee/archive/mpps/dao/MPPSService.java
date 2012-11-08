@@ -135,14 +135,9 @@ public class MPPSService {
             if (!attrs.containsValue(Tag.PerformedSeriesSequence))
                 throw new DicomServiceException(Status.MissingAttributeValue)
                         .setAttributeIdentifierList(Tag.PerformedSeriesSequence);
-            if (pps.getStatus() != PerformedProcedureStep.Status.DISCONTINUED) {
-                Attributes reasonCode = pps.getAttributes().getNestedDataset(
-                        Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence);
-                if (reasonCode != null && new org.dcm4che.data.Code(reasonCode)
-                    .equalsIgnoreMeaning(storeParam.getIncorrectWorklistEntrySelectedCode()))
+            if (storeParam.isRejectedByMPPS(pps))
                     rejectPerformedSeries(
                             attrs.getSequence(Tag.PerformedSeriesSequence));
-            }
             ian  = ianQuery.createIANforMPPS(pps);
         }
         em.merge(pps);
@@ -163,15 +158,12 @@ public class MPPSService {
             Series series = null;
             for (Instance inst : insts)
                 if (iuids.contains(inst.getSopInstanceUID())) {
-                    inst.setRejectionFlag(Instance.INCORRECT_MODALITY_WORKLIST_ENTRY);
-                    inst.setAvailability(Availability.UNAVAILABLE);
+                    inst.setAvailability(Availability.INCORRECT_MODALITY_WORKLIST_ENTRY);
                     series = inst.getSeries();
                 }
             Study study = series.getStudy();
-            series.setNumberOfSeriesRelatedInstances(-1);
-            series.setNumberOfSeriesRelatedRejectedInstances(-1);
-            study.setNumberOfStudyRelatedInstances(-1);
-            study.setNumberOfStudyRelatedRejectedInstances(-1);
+            series.resetNumberOfInstances();
+            study.resetNumberOfInstances();
             iuids.clear();
         }
     }

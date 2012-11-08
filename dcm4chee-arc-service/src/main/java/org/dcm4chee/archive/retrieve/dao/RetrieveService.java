@@ -55,7 +55,7 @@ import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
 import org.dcm4chee.archive.dao.SeriesService;
-import org.dcm4chee.archive.entity.Instance;
+import org.dcm4chee.archive.entity.Availability;
 import org.dcm4chee.archive.entity.QFileRef;
 import org.dcm4chee.archive.entity.QFileSystem;
 import org.dcm4chee.archive.entity.QInstance;
@@ -70,7 +70,6 @@ import org.hibernate.ejb.HibernateEntityManagerFactory;
 
 import com.mysema.query.BooleanBuilder;
 import com.mysema.query.jpa.hibernate.HibernateQuery;
-import com.mysema.query.types.ExpressionUtils;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -109,13 +108,10 @@ public class RetrieveService {
         builder.and(Builder.uids(QInstance.instance.sopInstanceUID,
                 keys.getStrings(Tag.SOPInstanceUID), false));
         builder.and(QInstance.instance.replaced.isFalse());
-        if (queryParam.isShowRejectedInstances())
-            builder.and(ExpressionUtils.or(
-                    QInstance.instance.rejectionFlags.eq(0),
-                    QInstance.instance.rejectionFlags.eq(
-                            Instance.REJECTED_FOR_QUALITY_REASONS)));
-        else
-            builder.and(QInstance.instance.rejectionFlags.eq(0));
+        builder.and(QInstance.instance.availability.loe(
+                queryParam.isShowRejectedInstances()
+                    ? Availability.OFFLINE
+                    : Availability.REJECTED_FOR_QUALITY_REASONS));
         return locate(new HibernateQuery(session)
             .from(QInstance.instance)
             .leftJoin(QInstance.instance.fileRefs, QFileRef.fileRef)
@@ -149,7 +145,7 @@ public class RetrieveService {
             long nextSeriesPk = (Long) tuple[3];
             long nextInstPk = (Long) tuple[4];
             if (seriesPk != nextSeriesPk) {
-                seriesAttrs = seriesService.getAttributes(nextSeriesPk, null);
+                seriesAttrs = seriesService.getAttributes(nextSeriesPk);
                 seriesPk = nextSeriesPk;
             }
             if (instPk != nextInstPk) {

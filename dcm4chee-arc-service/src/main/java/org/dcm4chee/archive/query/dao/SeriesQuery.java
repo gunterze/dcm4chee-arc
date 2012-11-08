@@ -79,70 +79,83 @@ class SeriesQuery extends AbstractQuery {
             .innerJoin(QStudy.study.patient, QPatient.patient)
             .where(builder)
             .scroll(ScrollMode.FORWARD_ONLY,
-                QStudy.study.pk,
-                QSeries.series.pk,
-                QStudy.study.numberOfStudyRelatedSeries,
-                QStudy.study.numberOfStudyRelatedInstances,
-                QStudy.study.numberOfStudyRelatedRejectedInstances,
-                QSeries.series.numberOfSeriesRelatedInstances,
-                QSeries.series.numberOfSeriesRelatedRejectedInstances,
-                QStudy.study.modalitiesInStudy,
-                QStudy.study.sopClassesInStudy,
-                QSeries.series.retrieveAETs,
-                QSeries.series.externalRetrieveAET,
-                QSeries.series.availability,
-                QSeries.series.encodedAttributes,
-                QStudy.study.encodedAttributes,
-                QPatient.patient.encodedAttributes);
+                QStudy.study.pk,                         // (0)
+                QSeries.series.pk,                       // (1)
+                QStudy.study.numberOfSeries,             // (2)
+                QStudy.study.numberOfSeriesA,            // (3)
+                QStudy.study.numberOfInstances,          // (4)
+                QStudy.study.numberOfInstancesA,         // (5)
+                QSeries.series.numberOfInstances,        // (6)
+                QSeries.series.numberOfInstancesA,       // (7)
+                QStudy.study.modalitiesInStudy,          // (8)
+                QStudy.study.sopClassesInStudy,          // (9)
+                QSeries.series.retrieveAETs,             // (10)
+                QSeries.series.externalRetrieveAET,      // (11)
+                QSeries.series.availability,             // (12)
+                QSeries.series.encodedAttributes,        // (13)
+                QStudy.study.encodedAttributes,          // (14)
+                QPatient.patient.encodedAttributes);     // (15)
     }
 
     @Override
     protected Attributes toAttributes(ScrollableResults results) {
         Long studyPk = results.getLong(0);
         Long seriesPk = results.getLong(1);
-        int[] numInsts = { results.getInteger(5), results.getInteger(6) };
-        String retrieveAETs = results.getString(9);
-        String externalRetrieveAET = results.getString(10);
-        Availability availability = (Availability) results.get(11);
-        byte[] seriesAttributes = results.getBinary(12);
+        int[] a = {
+                results.getInteger(6),  // series.numberOfInstances
+                results.getInteger(7)}; // series.numberOfInstancesA
+        String retrieveAETs = results.getString(10);
+        String externalRetrieveAET = results.getString(11);
+        Availability availability = (Availability) results.get(12);
+        byte[] seriesAttributes = results.getBinary(13);
         if (!studyPk.equals(this.studyPk)) {
             this.studyAttrs = toStudyAttributes(studyPk, results);
             this.studyPk = studyPk;
         }
         Attributes attrs = new Attributes(studyAttrs);
         Utils.decodeAttributes(attrs, seriesAttributes);
-        if (numInsts[0] == -1)
-            numInsts = queryService.seriesService()
+        if (a[0] == -1)
+            a = queryService.seriesService()
                     .calculateNumberOfSeriesRelatedInstances(seriesPk);
+        int numberOfSeriesRelatedInstances = 
+                queryParam.isShowRejectedInstances() ? a[1] : a[0];
+
+        // skip match for empty Series
+        if (numberOfSeriesRelatedInstances == 0)
+            return null;
+
         Utils.setSeriesQueryAttributes(attrs,
-                queryParam.isShowRejectedInstances()
-                        ? numInsts[0] + numInsts[1]
-                        : numInsts[0]);
+                numberOfSeriesRelatedInstances);
         Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
         Utils.setAvailability(attrs, availability);
+
         return attrs;
     }
 
     private Attributes toStudyAttributes(Long studyPk, ScrollableResults results) {
-        int[] numInsts = { results.getInteger(2), results.getInteger(3), results.getInteger(4) };
-        String modalitiesInStudy = results.getString(7);
-        String sopClassesInStudy = results.getString(8);
-        byte[] studyAttributes = results.getBinary(13);
-        byte[] patientAttributes = results.getBinary(14);
+        int[] a = {
+                results.getInteger(2),  // study.numberOfSeries
+                results.getInteger(3),  // study.numberOfSeriesA
+                results.getInteger(4),  // study.numberOfInstances
+                results.getInteger(5)}; // study.numberOfInstancesA
+        String modalitiesInStudy = results.getString(8);
+        String sopClassesInStudy = results.getString(9);
+        byte[] studyAttributes = results.getBinary(14);
+        byte[] patientAttributes = results.getBinary(15);
         Attributes attrs = new Attributes();
         Utils.decodeAttributes(attrs, patientAttributes);
         Utils.decodeAttributes(attrs, studyAttributes);
-        if (numInsts[1] == -1) {
-            numInsts = queryService.seriesService()
-                    .calculateNumberOfStudyRelatedSeriesAndInstances(studyPk);
-        };
+        if ((a[0] | a[1] | a[2] | a[3]) < 0)
+            a = queryService.seriesService()
+                    .calculateNumberOfStudyRelatedInstances(studyPk);
+
+        boolean showRejectedInstances = queryParam.isShowRejectedInstances();
         Utils.setStudyQueryAttributes(attrs,
-                numInsts[0],
-                queryParam.isShowRejectedInstances() 
-                        ? numInsts[1] + numInsts[2]
-                        : numInsts[1],
+                showRejectedInstances ? a[1] : a[0],
+                queryParam.isShowRejectedInstances() ? a[3] : a[2],
                 modalitiesInStudy,
                 sopClassesInStudy);
+
         return attrs;
     }
 }

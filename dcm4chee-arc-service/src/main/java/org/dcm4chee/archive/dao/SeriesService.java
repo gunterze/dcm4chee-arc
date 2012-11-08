@@ -43,8 +43,10 @@ import javax.persistence.PersistenceContext;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4chee.archive.common.QueryParam;
+import org.dcm4chee.archive.entity.Availability;
 import org.dcm4chee.archive.entity.Instance;
 import org.dcm4chee.archive.entity.PatientStudySeriesAttributes;
+import org.dcm4chee.archive.entity.QueryPatientStudySeriesAttributes;
 import org.dcm4chee.archive.entity.Series;
 import org.dcm4chee.archive.entity.Study;
 
@@ -58,69 +60,74 @@ public class SeriesService {
     @PersistenceContext
     private EntityManager em;
 
-    public Attributes getAttributes(Long seriesPk, QueryParam queryParam) {
+    public Attributes getAttributes(Long seriesPk) {
         PatientStudySeriesAttributes result = (PatientStudySeriesAttributes)
                 em.createNamedQuery(Series.PATIENT_STUDY_SERIES_ATTRIBUTES)
                   .setParameter(1, seriesPk)
                   .getSingleResult();
-        boolean includeQueryAttributes = queryParam != null;
-        if (includeQueryAttributes )
-            updateQueryAttributes(seriesPk, queryParam, result);
-        return result.getAttributes(includeQueryAttributes,
-                queryParam.isShowRejectedInstances());
+        return result.getAttributes();
     }
 
-
-    private void updateQueryAttributes(Long seriesPk, QueryParam queryParam,
-            PatientStudySeriesAttributes result) {
-        if (result.getNumberOfSeriesRelatedInstances() == -1) {
-            int[] a = calculateNumberOfSeriesRelatedInstances(seriesPk);
-            result.setNumberOfSeriesRelatedInstances(
-                    queryParam.isShowRejectedInstances() ? a[0] + a[1] : a[0]);
-        }
-        if (result.getNumberOfStudyRelatedInstances() == -1) {
-            int[] a = calculateNumberOfStudyRelatedSeriesAndInstances(result.getStudyPk());
-            result.setNumberOfStudyRelatedSeries(a[0]);
-            result.setNumberOfStudyRelatedInstances(
-                    queryParam.isShowRejectedInstances() ? a[1] + a[2] : a[1]);
-        }
+    public Attributes getAttributes(Long seriesPk, QueryParam queryParam) {
+        QueryPatientStudySeriesAttributes result = (QueryPatientStudySeriesAttributes)
+                em.createNamedQuery(Series.QUERY_PATIENT_STUDY_SERIES_ATTRIBUTES)
+                  .setParameter(1, seriesPk)
+                  .getSingleResult();
+        Attributes attrs = result.getAttributes();
+        if (result.isNumberOfSeriesRelatedInstancesInitialized())
+            result.initNumberOfSeriesRelatedInstances(
+                    calculateNumberOfSeriesRelatedInstances(seriesPk));
+        if (result.isNumberOfStudyRelatedInstancesInitialized())
+            result.initNumberOfStudyRelatedInstances(
+                    calculateNumberOfStudyRelatedInstances(result.getStudyPk()));
+        result.setQueryAttributes(attrs, queryParam.isShowRejectedInstances());
+        return attrs;
     }
 
     public int[] calculateNumberOfSeriesRelatedInstances(Long seriesPk) {
         int num = em.createNamedQuery(Instance.NUMBER_OF_SERIES_RELATED_INSTANCES, Long.class)
                 .setParameter(1, seriesPk)
-                .setParameter(2, 0)
+                .setParameter(2, Availability.OFFLINE)
                 .getSingleResult().intValue();
-        int rejected = em.createNamedQuery(Instance.NUMBER_OF_SERIES_RELATED_INSTANCES, Long.class)
+        int numA = em.createNamedQuery(Instance.NUMBER_OF_SERIES_RELATED_INSTANCES, Long.class)
                 .setParameter(1, seriesPk)
-                .setParameter(2, Instance.REJECTED_FOR_QUALITY_REASONS)
+                .setParameter(2, Availability.REJECTED_FOR_QUALITY_REASONS)
                 .getSingleResult().intValue();
-        em.createNamedQuery(Series.UPDATE_NUMBER_OF_SERIES_RELATED_INSTANCES)
+        em.createNamedQuery(Series.UPDATE_NUMBER_OF_INSTANCES)
             .setParameter(1, num)
-            .setParameter(2, rejected)
+            .setParameter(2, numA)
             .setParameter(3, seriesPk)
             .executeUpdate();
-        return new int[] { num, rejected };
+        return new int[] { num, numA };
     }
 
-    public int[] calculateNumberOfStudyRelatedSeriesAndInstances(Long studyPk) {
-        int numSeries = em.createNamedQuery(Series.NUMBER_OF_STUDY_RELATED_SERIES, Long.class)
-                .setParameter(1, studyPk).getSingleResult().intValue();
-        int numInstances = em.createNamedQuery(Instance.NUMBER_OF_STUDY_RELATED_INSTANCES, Long.class)
+    public int[] calculateNumberOfStudyRelatedInstances(Long studyPk) {
+        int numSeries = em.createNamedQuery(Series.NUMBER_OF_SERIES, Long.class)
                 .setParameter(1, studyPk)
-                .setParameter(2, 0)
+                .setParameter(2, Availability.OFFLINE)
                 .getSingleResult().intValue();
-        int rejected = em.createNamedQuery(Instance.NUMBER_OF_STUDY_RELATED_INSTANCES, Long.class)
+        int numSeriesA = em.createNamedQuery(Series.NUMBER_OF_SERIES, Long.class)
                 .setParameter(1, studyPk)
-                .setParameter(2, Instance.REJECTED_FOR_QUALITY_REASONS)
+                .setParameter(2, Availability.REJECTED_FOR_QUALITY_REASONS)
                 .getSingleResult().intValue();
-        em.createNamedQuery(Study.UPDATE_NUMBER_OF_STUDY_RELATED_INSTANCES)
+        int numInstances = em.createNamedQuery(
+                    Instance.NUMBER_OF_STUDY_RELATED_INSTANCES, Long.class)
+                .setParameter(1, studyPk)
+                .setParameter(2, Availability.OFFLINE)
+                .getSingleResult().intValue();
+        int numInstancesA = em.createNamedQuery(
+                    Instance.NUMBER_OF_STUDY_RELATED_INSTANCES, Long.class)
+                .setParameter(1, studyPk)
+                .setParameter(2, Availability.REJECTED_FOR_QUALITY_REASONS)
+                .getSingleResult().intValue();
+        em.createNamedQuery(Study.UPDATE_NUMBER_OF_INSTANCES)
             .setParameter(1, numSeries)
-            .setParameter(2, numInstances)
-            .setParameter(3, rejected)
-            .setParameter(4, studyPk)
+            .setParameter(2, numSeriesA)
+            .setParameter(3, numInstances)
+            .setParameter(4, numInstancesA)
+            .setParameter(5, studyPk)
             .executeUpdate();
-        return new int[] { numSeries, numInstances, rejected };
+        return new int[] { numSeries, numSeriesA, numInstances, numInstancesA };
     }
 
 }

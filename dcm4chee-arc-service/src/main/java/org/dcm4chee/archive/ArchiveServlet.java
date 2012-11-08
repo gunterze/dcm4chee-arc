@@ -38,11 +38,9 @@
 
 package org.dcm4chee.archive;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.lang.management.ManagementFactory;
-import java.net.URI;
 import java.net.URL;
 import java.util.Properties;
 
@@ -64,6 +62,7 @@ import org.dcm4chee.archive.conf.ldap.LdapArchiveConfiguration;
 import org.dcm4chee.archive.conf.prefs.PreferencesArchiveConfiguration;
 import org.dcm4chee.archive.dao.PatientService;
 import org.dcm4chee.archive.jms.JMSService;
+import org.dcm4chee.archive.mpps.dao.IANQueryService;
 import org.dcm4chee.archive.mpps.dao.MPPSService;
 import org.dcm4chee.archive.retrieve.dao.RetrieveService;
 import org.dcm4chee.archive.stgcmt.dao.StgCmtService;
@@ -103,6 +102,9 @@ public class ArchiveServlet extends HttpServlet {
     private MPPSService mppsService;
 
     @EJB
+    private IANQueryService ianQueryService;
+
+    @EJB
     private RetrieveService retrieveService;
 
     private JMSService jmsService;
@@ -122,12 +124,6 @@ public class ArchiveServlet extends HttpServlet {
             String jmxName = System.getProperty(
                     "org.dcm4chee.archive.jmxName",
                     config.getInitParameter("jmxName"));
-            String storageFileSystemURI = new File(
-                    new URI(StringUtils.replaceSystemProperties(
-                        System.getProperty(
-                            "org.dcm4chee.archive.storageFileSystemURL",
-                            config.getInitParameter("storageFileSystemURL")))))
-                    .toURI().toString();
             InputStream ldapConf = null;
             try {
                 ldapConf = new URL(ldapPropertiesURL)
@@ -144,10 +140,10 @@ public class ArchiveServlet extends HttpServlet {
             }
             archive = new Archive(dicomConfig,
                     (ArchiveDevice) dicomConfig.findDevice(deviceName),
-                    storageFileSystemURI,
                     patientService,
                     stgCmtService,
                     mppsService,
+                    ianQueryService,
                     retrieveService,
                     jmsService,
                     mppsSCUQueue,

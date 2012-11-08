@@ -132,9 +132,8 @@ public class Utils {
                         externalRetrieveAET);
     }
 
-    public static void setAvailability(Attributes attrs,
-            Availability availability) {
-        attrs.setString(Tag.InstanceAvailability, VR.CS, availability.toString());
+    public static void setAvailability(Attributes attrs, Availability availability) {
+        attrs.setString(Tag.InstanceAvailability, VR.CS, availability.toCodeString());
     }
 
     public static String toFuzzy(FuzzyStr fuzzyStr, String s) {

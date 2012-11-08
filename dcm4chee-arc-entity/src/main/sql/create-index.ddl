@@ -21,7 +21,7 @@
     create index inst_content_time_idx on instance (content_time);
     create index inst_sr_verified_idx on instance (sr_verified);
     create index inst_sr_complete_idx on instance (sr_complete);
-    create index inst_rejection_flags_idx on instance (rejection_flags);
+    create index inst_availability on instance (availability);
     create index inst_srcode_fk_idx on instance (srcode_fk);
     create index inst_custom1_idx on instance (inst_custom1);
     create index inst_custom2_idx on instance (inst_custom2);

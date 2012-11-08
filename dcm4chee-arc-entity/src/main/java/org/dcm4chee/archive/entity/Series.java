@@ -83,12 +83,20 @@ import org.dcm4chee.archive.conf.AttributeFilter;
 @NamedQuery(
     name="Series.patientStudySeriesAttributes",
     query="SELECT NEW org.dcm4chee.archive.entity.PatientStudySeriesAttributes("
+            + "s.encodedAttributes, "
+            + "s.study.encodedAttributes, "
+            + "s.study.patient.encodedAttributes) "
+            + "FROM Series s WHERE s.pk = ?1"),
+@NamedQuery(
+    name="Series.queryPatientStudySeriesAttributes",
+    query="SELECT NEW org.dcm4chee.archive.entity.QueryPatientStudySeriesAttributes("
             + "s.study.pk, "
-            + "s.study.numberOfStudyRelatedSeries, "
-            + "s.study.numberOfStudyRelatedInstances, "
-            + "s.study.numberOfStudyRelatedRejectedInstances, "
-            + "s.numberOfSeriesRelatedInstances, "
-            + "s.numberOfSeriesRelatedRejectedInstances, "
+            + "s.study.numberOfSeries, "
+            + "s.study.numberOfSeriesA, "
+            + "s.study.numberOfInstances, "
+            + "s.study.numberOfInstancesA, "
+            + "s.numberOfInstances, "
+            + "s.numberOfInstancesA, "
             + "s.study.modalitiesInStudy, "
             + "s.study.sopClassesInStudy, "
             + "s.encodedAttributes, "
@@ -96,13 +104,15 @@ import org.dcm4chee.archive.conf.AttributeFilter;
             + "s.study.patient.encodedAttributes) "
             + "FROM Series s WHERE s.pk = ?1"),
 @NamedQuery(
-    name="Series.numberOfStudyRelatedSeries",
-    query="SELECT COUNT(s) FROM Series s WHERE s.study.pk = ?1"),
+    name="Series.numberOfSeries",
+    query="SELECT COUNT(s) FROM Series s WHERE s.study.pk = ?1 AND EXISTS ("
+            + "SELECT i FROM Instance i WHERE i.series = s "
+            + "AND i.replaced = FALSE AND i.availability <= ?2)"),
 @NamedQuery(
-    name="Series.updateNumberOfSeriesRelatedInstances",
+    name="Series.updateNumberOfInstances",
     query="UPDATE Series s "
-            + "SET s.numberOfSeriesRelatedInstances = ?1, "
-                + "s.numberOfSeriesRelatedRejectedInstances = ?2 "
+            + "SET s.numberOfInstances = ?1, "
+                + "s.numberOfInstancesA = ?2 "
             + "WHERE s.pk = ?3")
 })
 @Entity
@@ -113,8 +123,9 @@ public class Series implements Serializable {
 
     public static final String FIND_BY_SERIES_INSTANCE_UID = "Series.findBySeriesInstanceUID";
     public static final String PATIENT_STUDY_SERIES_ATTRIBUTES = "Series.patientStudySeriesAttributes";
-    public static final String NUMBER_OF_STUDY_RELATED_SERIES = "Series.numberOfStudyRelatedSeries";
-    public static final String UPDATE_NUMBER_OF_SERIES_RELATED_INSTANCES = "Series.updateNumberOfSeriesRelatedInstances";
+    public static final String QUERY_PATIENT_STUDY_SERIES_ATTRIBUTES = "Series.queryPatientStudySeriesAttributes";
+    public static final String NUMBER_OF_SERIES = "Series.numberOfSeries";
+    public static final String UPDATE_NUMBER_OF_INSTANCES = "Series.updateNumberOfInstances";
 
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -215,11 +226,11 @@ public class Series implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "num_instances")
-    private int numberOfSeriesRelatedInstances;
+    private int numberOfInstances = -1;
 
     @Basic(optional = false)
-    @Column(name = "num_rejected")
-    private int numberOfSeriesRelatedRejectedInstances;
+    @Column(name = "num_instances_a")
+    private int numberOfInstancesA = -1;
 
     @Column(name = "src_aet")
     private String sourceAET;
@@ -264,8 +275,8 @@ public class Series implements Serializable {
                 + ", uid=" + seriesInstanceUID
                 + ", no=" + seriesNumber
                 + ", mod=" + modality
-                + ", numI=" + numberOfSeriesRelatedInstances
-                + "(+" + numberOfSeriesRelatedRejectedInstances
+                + ", numI=" + numberOfInstances
+                + "(" + numberOfInstancesA
                 + ")]";
     }
 
@@ -383,20 +394,25 @@ public class Series implements Serializable {
         return seriesCustomAttribute3;
     }
 
-    public int getNumberOfSeriesRelatedInstances() {
-        return numberOfSeriesRelatedInstances;
+    public int getNumberOfInstances() {
+        return numberOfInstances;
     }
 
-    public void setNumberOfSeriesRelatedInstances(int number) {
-        this.numberOfSeriesRelatedInstances = number;
+    public void setNumberOfInstances(int numberOfInstances) {
+        this.numberOfInstances = numberOfInstances;
     }
 
-    public int getNumberOfSeriesRelatedRejectedInstances() {
-        return numberOfSeriesRelatedRejectedInstances;
+    public int getNumberOfInstancesA() {
+        return numberOfInstancesA;
     }
 
-    public void setNumberOfSeriesRelatedRejectedInstances(int number) {
-        this.numberOfSeriesRelatedRejectedInstances = number;
+    public void setNumberOfInstancesA(int numberOfInstancesA) {
+        this.numberOfInstancesA = numberOfInstancesA;
+    }
+
+    public void resetNumberOfInstances() {
+        this.numberOfInstances = -1;
+        this.numberOfInstancesA = -1;
     }
 
     public String getSourceAET() {

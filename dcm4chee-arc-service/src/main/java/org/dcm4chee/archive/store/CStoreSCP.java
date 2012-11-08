@@ -61,8 +61,10 @@ import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
+import org.dcm4chee.archive.entity.FileRef;
 import org.dcm4chee.archive.entity.FileSystem;
 import org.dcm4chee.archive.mpps.IANSCU;
+import org.dcm4chee.archive.mpps.dao.IANQueryService;
 import org.dcm4chee.archive.store.dao.StoreService;
 import org.dcm4chee.archive.util.BeanLocator;
 
@@ -76,14 +78,14 @@ public class CStoreSCP extends BasicCStoreSCP {
 
     private final ApplicationEntityCache aeCache;
     private final IANSCU ianSCU;
-    private final String storageFileSystemURI;
+    private final IANQueryService ianQueryService;
 
-    public CStoreSCP(String storageFileSystemURI,
-            ApplicationEntityCache aeCache, IANSCU ianSCU) {
+    public CStoreSCP(ApplicationEntityCache aeCache, IANSCU ianSCU,
+            IANQueryService ianQueryService) {
         super("*");
         this.aeCache = aeCache;
         this.ianSCU = ianSCU;
-        this.storageFileSystemURI = storageFileSystemURI;
+        this.ianQueryService = ianQueryService;
     }
 
     private static class LazyInitialization {
@@ -178,13 +180,26 @@ public class CStoreSCP extends BasicCStoreSCP {
                 Supplements.supplementComposite(ds, sourceAE.getDevice());
             StoreService store = (StoreService) as.getProperty(
                             STORE_SERVICE_PROPERTY);
-            if (!store.addFileRef(sourceAET, ds, modified, file, 
-                    digest(digest), fmi.getString(Tag.TransferSyntaxUID))) {
+            FileRef fileRef = store.addFileRef(sourceAET, ds, modified, file, 
+                    digest(digest), fmi.getString(Tag.TransferSyntaxUID));
+            if (fileRef == null) {
                 delete(as, file);
             } else if (ae.hasIANDestinations()) {
                 scheduleIAN(ae, store.createIANforPreviousMPPS());
-                for (Attributes ian : store.createIANsforRejectionNote())
-                    scheduleIAN(ae, ian);
+                switch (fileRef.getInstance().getAvailability()) {
+                case REJECTED_FOR_QUALITY_REASONS_REJECTION_NOTE:
+                case REJECTED_FOR_PATIENT_SAFETY_REASONS_REJECTION_NOTE:
+                case DATA_RETENTION_PERIOD_EXPIRED_REJECTION_NOTE:
+                    scheduleIAN(ae, ianQueryService.createIANforRejectionNote(ds));
+                    break;
+                case INCORRECT_MODALITY_WORKLIST_ENTRY_REJECTION_NOTE:
+                    for (Attributes ian : ianQueryService
+                            .createIANsforIncorrectModalityWorklistEntry(ds))
+                        scheduleIAN(ae, ian);
+                    break;
+                default:
+                    break;
+                }
             }
             if (!modified.isEmpty()) {
                 if (LOG.isInfoEnabled()) {
@@ -224,7 +239,7 @@ public class CStoreSCP extends BasicCStoreSCP {
                         "No File System Group ID configured for " + ae.getAETitle());
             store = BeanLocator.lookup(StoreService.class);
             store.setStoreParam(StoreParam.valueOf(ae));
-            store.selectFileSystem(fsGroupID, storageFileSystemURI);
+            store.selectFileSystem(fsGroupID);
             as.setProperty(STORE_SERVICE_PROPERTY, store);
         }
         return store;

@@ -39,7 +39,6 @@
 package org.dcm4chee.archive.query.dao;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
 import org.dcm4chee.archive.entity.Availability;
@@ -75,50 +74,56 @@ class StudyQuery extends AbstractQuery {
             .innerJoin(QStudy.study.patient, QPatient.patient)
             .where(builder)
             .scroll(ScrollMode.FORWARD_ONLY,
-                QStudy.study.pk,
-                QStudy.study.numberOfStudyRelatedSeries,
-                QStudy.study.numberOfStudyRelatedInstances,
-                QStudy.study.modalitiesInStudy,
-                QStudy.study.sopClassesInStudy,
-                QStudy.study.retrieveAETs,
-                QStudy.study.externalRetrieveAET,
-                QStudy.study.availability,
-                QStudy.study.encodedAttributes,
-                QPatient.patient.encodedAttributes);
+                QStudy.study.pk,                        // (0)
+                QStudy.study.numberOfSeries,            // (1)
+                QStudy.study.numberOfSeriesA,           // (2)
+                QStudy.study.numberOfInstances,         // (3)
+                QStudy.study.numberOfInstancesA,        // (4)
+                QStudy.study.modalitiesInStudy,         // (5)
+                QStudy.study.sopClassesInStudy,         // (6)
+                QStudy.study.retrieveAETs,              // (7)
+                QStudy.study.externalRetrieveAET,       // (8)
+                QStudy.study.availability,              // (9)
+                QStudy.study.encodedAttributes,         // (10)
+                QPatient.patient.encodedAttributes);    // (11)
     }
 
     @Override
     protected Attributes toAttributes(ScrollableResults results) {
         Long studyPk = results.getLong(0);
-        int studyRelatedSeries = results.getInteger(1);
-        int studyRelatedInstances = results.getInteger(2);
-        String modalitiesInStudy = results.getString(3);
-        String sopClassesInStudy = results.getString(4);
-        String retrieveAETs = results.getString(5);
-        String externalRetrieveAET = results.getString(6);
-        Availability availability = (Availability) results.get(7);
-        byte[] studyAttributes = results.getBinary(8);
-        byte[] patientAttributes = results.getBinary(9);
+        int[] a = {
+                results.getInteger(1),  // study.numberOfSeries
+                results.getInteger(2),  // study.numberOfSeriesA
+                results.getInteger(3),  // study.numberOfInstances
+                results.getInteger(4)}; // study.numberOfInstancesA
+        String modalitiesInStudy = results.getString(5);
+        String sopClassesInStudy = results.getString(6);
+        String retrieveAETs = results.getString(7);
+        String externalRetrieveAET = results.getString(8);
+        Availability availability = (Availability) results.get(9);
+        byte[] studyAttributes = results.getBinary(10);
+        byte[] patientAttributes = results.getBinary(11);
         Attributes attrs = new Attributes();
         Utils.decodeAttributes(attrs, patientAttributes);
         Utils.decodeAttributes(attrs, studyAttributes);
-        if (studyRelatedInstances == -1) {
-            int[] a = queryService.seriesService()
-                    .calculateNumberOfStudyRelatedSeriesAndInstances(studyPk);
-            studyRelatedSeries = a[0];
-            studyRelatedInstances = a[1];
-        };
+        if (a[2] == -1)
+            a = queryService.seriesService()
+                    .calculateNumberOfStudyRelatedInstances(studyPk);
+
+        boolean showRejectedInstances = queryParam.isShowRejectedInstances();
+        int numberOfStudyRelatedInstances = showRejectedInstances ? a[3] : a[2];
+
+        // skip match for empty Study
+        if (numberOfStudyRelatedInstances == 0)
+            return null;
+
         Utils.setStudyQueryAttributes(attrs,
-                studyRelatedSeries,
-                studyRelatedInstances,
+                showRejectedInstances ? a[1] : a[0],
+                numberOfStudyRelatedInstances,
                 modalitiesInStudy,
                 sopClassesInStudy);
         Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
         Utils.setAvailability(attrs, availability);
-
-        // skip match for empty Study
-        if (attrs.getInt(Tag.NumberOfStudyRelatedInstances, 0) == 0)
-            return null;
 
         return attrs;
     }
