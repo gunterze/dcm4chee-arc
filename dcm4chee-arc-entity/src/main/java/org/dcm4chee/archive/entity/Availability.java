@@ -57,7 +57,11 @@ public enum Availability {
     DATA_RETENTION_PERIOD_EXPIRED;
 
     public String toCodeString() {
-        return compareTo(OFFLINE) <= 0 ? name() : "UNAVAILABLE";
+        return available() ? name() : "UNAVAILABLE";
+    }
+
+    public boolean available() {
+        return compareTo(OFFLINE) <= 0;
     }
 
 }

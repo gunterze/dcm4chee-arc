@@ -61,6 +61,7 @@ import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
+import org.dcm4chee.archive.entity.Availability;
 import org.dcm4chee.archive.entity.FileRef;
 import org.dcm4chee.archive.entity.FileSystem;
 import org.dcm4chee.archive.mpps.IANSCU;
@@ -188,9 +189,16 @@ public class CStoreSCP extends BasicCStoreSCP {
                 scheduleIAN(ae, store.createIANforPreviousMPPS());
                 switch (fileRef.getInstance().getAvailability()) {
                 case REJECTED_FOR_QUALITY_REASONS_REJECTION_NOTE:
+                    scheduleIAN(ae, ianQueryService.createIANforRejectionNote(
+                            ds, Availability.REJECTED_FOR_QUALITY_REASONS));
+                    break;
                 case REJECTED_FOR_PATIENT_SAFETY_REASONS_REJECTION_NOTE:
+                    scheduleIAN(ae, ianQueryService.createIANforRejectionNote(
+                            ds, Availability.REJECTED_FOR_PATIENT_SAFETY_REASONS));
+                    break;
                 case DATA_RETENTION_PERIOD_EXPIRED_REJECTION_NOTE:
-                    scheduleIAN(ae, ianQueryService.createIANforRejectionNote(ds));
+                    scheduleIAN(ae, ianQueryService.createIANforRejectionNote(
+                            ds, Availability.DATA_RETENTION_PERIOD_EXPIRED));
                     break;
                 case INCORRECT_MODALITY_WORKLIST_ENTRY_REJECTION_NOTE:
                     for (Attributes ian : ianQueryService
