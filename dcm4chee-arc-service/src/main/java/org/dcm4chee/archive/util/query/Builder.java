@@ -61,9 +61,7 @@ import org.dcm4chee.archive.entity.QScheduledStationAETitle;
 import org.dcm4chee.archive.entity.QSeries;
 import org.dcm4chee.archive.entity.QServiceRequest;
 import org.dcm4chee.archive.entity.QStudy;
-import org.dcm4chee.archive.entity.QStudyPermission;
 import org.dcm4chee.archive.entity.QVerifyingObserver;
-import org.dcm4chee.archive.entity.StudyPermissionAction;
 
 import com.mysema.query.BooleanBuilder;
 import com.mysema.query.jpa.hibernate.HibernateSubQuery;
@@ -155,7 +153,15 @@ public abstract class Builder {
                     AttributeFilter.selectStringValue(keys, attrFilter.getCustomAttribute3(), "*"),
                     matchUnknown, true));
         }
-        builder.and(permission(queryParam.getRoles(), StudyPermissionAction.QUERY));
+        builder.and(permission(queryParam.getAccessControlIDs()));
+    }
+
+    private static Predicate permission(String[] accessControlIDs) {
+        return accessControlIDs == null || accessControlIDs.length == 0
+                ? QStudy.study.accessControlID.isNull()
+                : ExpressionUtils.or(
+                        QStudy.study.accessControlID.isNull(),
+                        QStudy.study.accessControlID.in(accessControlIDs));
     }
 
     public static void addSeriesLevelPredicates(BooleanBuilder builder, Attributes keys,
@@ -533,18 +539,6 @@ public abstract class Builder {
         return new HibernateSubQuery()
             .from(QContentItem.contentItem)
             .where(QInstance.instance.contentItems.contains(QContentItem.contentItem), predicate)
-            .exists();
-    }
-
-    static Predicate permission(String[] roles, StudyPermissionAction action) {
-        if (roles == null || roles.length == 0)
-            return null;
-        
-        return new HibernateSubQuery()
-            .from(QStudyPermission.studyPermission)
-            .where(QStudyPermission.studyPermission.studyInstanceUID.eq(QStudy.study.studyInstanceUID),
-                   QStudyPermission.studyPermission.action.eq(action),
-                   QStudyPermission.studyPermission.role.in(roles))
             .exists();
     }
 

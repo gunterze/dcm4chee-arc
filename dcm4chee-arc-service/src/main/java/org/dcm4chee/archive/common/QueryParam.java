@@ -61,7 +61,7 @@ public class QueryParam {
     private boolean fuzzySemanticMatching;
     private boolean matchUnknown;
     private boolean showRejectedInstances;
-    private String[] roles;
+    private String[] accessControlIDs;
     private boolean returnOtherPatientIDs;
     private boolean returnOtherPatientNames;
     private Issuer defaultIssuerOfPatientID;
@@ -91,12 +91,12 @@ public class QueryParam {
         this.matchUnknown = matchUnknown;
     }
 
-    public final String[] getRoles() {
-        return roles != null ? roles.clone() : null;
+    public final String[] getAccessControlIDs() {
+        return accessControlIDs;
     }
 
-    public final void setRoles(String... roles) {
-        this.roles = roles != null ? roles.clone() : null;
+    public final void setAccessControlIDs(String[] accessControlIDs) {
+        this.accessControlIDs = accessControlIDs;
     }
 
     public final void setFuzzyStr(FuzzyStr fuzzyStr) {
@@ -157,7 +157,7 @@ public class QueryParam {
 
     public static QueryParam valueOf(ArchiveApplicationEntity ae,
             EnumSet<QueryOption> queryOpts, ApplicationEntity sourceAE,
-            String[] roles) throws Exception {
+            String[] accessControlIDs) throws Exception {
         ArchiveDevice dev = ae.getArchiveDevice();
         QueryParam queryParam = new QueryParam();
         queryParam.setFuzzyStr(dev.getFuzzyStr());
@@ -167,7 +167,7 @@ public class QueryParam {
         queryParam.setFuzzySemanticMatching(queryOpts
                 .contains(QueryOption.FUZZY));
         queryParam.setMatchUnknown(ae.isMatchUnknown());
-        queryParam.setRoles(roles);
+        queryParam.setAccessControlIDs(accessControlIDs);
         queryParam.setShowRejectedInstances(ae.isShowRejectedInstances());
         queryParam.setReturnOtherPatientIDs(ae.isReturnOtherPatientIDs());
         queryParam.setReturnOtherPatientNames(ae.isReturnOtherPatientNames());

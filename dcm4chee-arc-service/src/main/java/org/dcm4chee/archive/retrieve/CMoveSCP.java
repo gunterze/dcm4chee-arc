@@ -109,7 +109,8 @@ public class CMoveSCP extends BasicCMoveSCP {
     
             ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
             ApplicationEntity sourceAE = aeCache.get(as.getRemoteAET());
-            QueryParam queryParam = QueryParam.valueOf(ae, queryOpts, sourceAE, roles());
+            QueryParam queryParam = QueryParam.valueOf(ae, queryOpts, sourceAE,
+                    accessControlIDs());
             IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys,
                     queryParam.getDefaultIssuerOfPatientID());
             IDWithIssuer[] pids = pixConsumer.pixQuery(ae, pid);
@@ -146,7 +147,7 @@ public class CMoveSCP extends BasicCMoveSCP {
         }
     }
 
-    private String[] roles() {
+    private String[] accessControlIDs() {
         // TODO Auto-generated method stub
         return null;
     }

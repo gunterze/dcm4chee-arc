@@ -123,6 +123,7 @@
     create index study_custom1_idx on study (study_custom1);
     create index study_custom2_idx on study (study_custom2);
     create index study_custom3_idx on study (study_custom3);
+    create index study_access_control_id_idx on study (access_control_id);
 
     create index vo_instance_fk_idx on verify_observer (instance_fk);
     create index vo_verify_datetime_idx on verify_observer (verify_datetime);

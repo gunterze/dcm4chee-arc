@@ -88,7 +88,8 @@ public class RetrieveService {
 
     @PostConstruct
     public void init() {
-        SessionFactory sessionFactory = ((HibernateEntityManagerFactory) emf).getSessionFactory();
+        SessionFactory sessionFactory = 
+                ((HibernateEntityManagerFactory) emf).getSessionFactory();
         session = sessionFactory.openStatelessSession();
     }
 

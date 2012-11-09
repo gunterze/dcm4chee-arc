@@ -91,7 +91,7 @@ public class CFindSCP extends BasicCFindSCP {
                 as.getApplicationEntity();
         try {
             QueryParam queryParam = QueryParam.valueOf(ae, queryOpts,
-                    aeCache.get(as.getRemoteAET()), roles(as));
+                    aeCache.get(as.getRemoteAET()), accessControlID(as));
             IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys,
                     queryParam.getDefaultIssuerOfPatientID());
             IDWithIssuer[] pids = pixConsumer.pixQuery(ae, pid);
@@ -104,7 +104,7 @@ public class CFindSCP extends BasicCFindSCP {
         }
     }
 
-    private String[] roles(Association as) {
+    private String[] accessControlID(Association as) {
         // TODO Auto-generated method stub
         return null;
     }

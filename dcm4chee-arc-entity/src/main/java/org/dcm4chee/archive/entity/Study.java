@@ -172,6 +172,9 @@ public class Study implements Serializable {
     @Column(name = "study_custom3")
     private String studyCustomAttribute3;
 
+    @Column(name = "access_control_id")
+    private String accessControlID;
+
     @Basic(optional = false)
     @Column(name = "num_series")
     private int numberOfSeries = -1;
@@ -435,6 +438,14 @@ public class Study implements Serializable {
     public void floorAvailability(Availability availability) {
         if (this.availability.compareTo(availability) < 0)
             this.availability = availability;
+    }
+
+    public String getAccessControlID() {
+        return accessControlID;
+    }
+
+    public void setAccessControlID(String accessControlID) {
+        this.accessControlID = accessControlID;
     }
 
     public byte[] getEncodedAttributes() {
