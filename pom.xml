@@ -10,7 +10,7 @@
     <dcm4che.version>3.0.0</dcm4che.version>
     <slf4j.version>1.6.1</slf4j.version>
     <hibernate.version>4.0.1.Final</hibernate.version>
-    <querydsl.version>2.7.0</querydsl.version>
+    <querydsl.version>2.8.1</querydsl.version>
     <db>mysql</db>
     <ds>java:/PacsDS</ds>
   </properties>
