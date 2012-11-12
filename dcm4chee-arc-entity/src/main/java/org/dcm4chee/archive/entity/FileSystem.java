@@ -115,7 +115,9 @@ public class FileSystem implements Serializable {
     }
 
     public void setURI(String uri) {
-        this.uri = uri;
+        this.uri = uri.endsWith("/")
+                ? uri.substring(0, uri.length() - 1)
+                : uri;
     }
 
     public String getGroupID() {

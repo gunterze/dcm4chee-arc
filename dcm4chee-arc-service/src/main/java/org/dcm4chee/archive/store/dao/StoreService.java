@@ -39,8 +39,6 @@
 package org.dcm4chee.archive.store.dao;
 
 import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -64,7 +62,6 @@ import org.dcm4che.data.VR;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.soundex.FuzzyStr;
-import org.dcm4che.util.StringUtils;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.conf.AttributeFilter;
@@ -354,7 +351,7 @@ public class StoreService {
                 .setOffendingElements(Tag.CurrentRequestedProcedureEvidenceSequence);
     }
 
-    public FileSystem selectFileSystem(String groupID)
+    public FileSystem selectFileSystem(String groupID, String defFileSystemURI)
             throws DicomServiceException {
         try {
             return curFileSystem =
@@ -370,7 +367,7 @@ public class StoreService {
             if (resultList.isEmpty()) {
                 FileSystem fs = new FileSystem();
                 fs.setGroupID(groupID);
-                fs.setURI(defaultFileSystemURI());
+                fs.setURI(defFileSystemURI);
                 fs.setAvailability(Availability.ONLINE);
                 fs.setStatus(FileSystemStatus.RW);
                 em.persist(fs);
@@ -385,22 +382,6 @@ public class StoreService {
             }
             throw new DicomServiceException(Status.OutOfResources,
                     "No writeable File System in File System Group " + groupID);
-        }
-    }
-
-    private String defaultFileSystemURI() throws DicomServiceException {
-        String storageFileSystemURL = System.getProperty(
-                "org.dcm4chee.archive.storageFileSystemURL",
-                "file:${jboss.server.data.dir}");
-        try {
-            return new File(
-                new URI(StringUtils.replaceSystemProperties(
-                    storageFileSystemURL)))
-                .toURI().toString();
-        } catch (URISyntaxException e) {
-            throw new DicomServiceException(Status.ProcessingFailure,
-                    "Invalid system property org.dcm4chee.archive.storageFileSystemURL="
-                            + storageFileSystemURL);
         }
     }
 

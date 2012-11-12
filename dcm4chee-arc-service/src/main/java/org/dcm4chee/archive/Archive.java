@@ -110,7 +110,8 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
             JMSService jmsService,
             Queue mppsSCUQueue,
             Queue ianSCUQueue,
-            Queue stgcmtSCPQueue) {
+            Queue stgcmtSCPQueue,
+            String defFileSystemURI) {
         init(device);
         this.dicomConfiguration = dicomConfiguration;
         this.aeCache = new ApplicationEntityCache(dicomConfiguration);
@@ -119,7 +120,8 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         this.jmsService = jmsService;
         this.mppsSCU = new MPPSSCU(aeCache, jmsService, mppsSCUQueue);
         this.ianSCU = new IANSCU(aeCache, jmsService, ianSCUQueue);
-        this.storeSCP = new CStoreSCP(aeCache, ianSCU, ianQueryService);
+        this.storeSCP = new CStoreSCP(aeCache, ianSCU, ianQueryService,
+                defFileSystemURI);
         this.stgCmtSCP = new StgCmtSCP(aeCache, stgCmtService,
                 jmsService, stgcmtSCPQueue);
         this.mppsSCP = new MPPSSCP(aeCache, mppsSCU, ianSCU, mppsService);
@@ -160,7 +162,7 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         device.setDimseRQHandler(serviceRegistry());
         device.setHL7MessageListener(hl7ServiceRegistry(patientService));
         setConfigurationStaleTimeout();
-   }
+    }
 
     private HL7MessageListener hl7ServiceRegistry(PatientService patientService) {
         HL7ServiceRegistry serviceRegistry = new HL7ServiceRegistry();
