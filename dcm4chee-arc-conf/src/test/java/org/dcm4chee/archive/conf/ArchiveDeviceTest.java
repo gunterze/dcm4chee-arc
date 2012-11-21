@@ -804,6 +804,7 @@ public class ArchiveDeviceTest {
         ae.setAssociationAcceptor(true);
         ae.setAssociationInitiator(true);
         ae.setFileSystemGroupID("DEFAULT");
+        ae.setInitFileSystemURI("file:${jboss.server.data.dir}");
         ae.setSpoolFilePathFormat(new AttributesFormat(
                 "archive/spool/{00020016,urlencoded}/{00020002}/{00020003}") );
         ae.setStorageFilePathFormat(new AttributesFormat(

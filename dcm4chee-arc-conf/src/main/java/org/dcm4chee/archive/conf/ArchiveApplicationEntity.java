@@ -67,6 +67,7 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     private String[] retrieveAETs;
     private String externalRetrieveAET;
     private String fileSystemGroupID;
+    private String initFileSystemURI;
     private String digestAlgorithm;
     private AttributesFormat spoolFilePathFormat;
     private AttributesFormat storageFilePathFormat;
@@ -176,6 +177,14 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
 
     public void setFileSystemGroupID(String fileSystemGroupID) {
         this.fileSystemGroupID = fileSystemGroupID;
+    }
+
+    public String getInitFileSystemURI() {
+        return initFileSystemURI;
+    }
+
+    public void setInitFileSystemURI(String initFileSystemURI) {
+        this.initFileSystemURI = initFileSystemURI;
     }
 
     public String getDigestAlgorithm() {
@@ -383,6 +392,7 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         setRetrieveAETs(arcae.retrieveAETs);
         setExternalRetrieveAET(arcae.externalRetrieveAET);
         setFileSystemGroupID(arcae.fileSystemGroupID);
+        setInitFileSystemURI(arcae.initFileSystemURI);
         setDigestAlgorithm(arcae.digestAlgorithm);
         setSpoolFilePathFormat(arcae.spoolFilePathFormat);
         setStorageFilePathFormat(arcae.storageFilePathFormat);

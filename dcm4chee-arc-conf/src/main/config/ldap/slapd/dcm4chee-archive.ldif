@@ -2,6 +2,11 @@
 dn: cn=dcm4chee-arc,cn=schema,cn=config
 objectClass: olcSchemaConfig
 cn: dcm4chee-arc
+olcAttributeTypes: ( 1.2.40.0.13.1.1.15.0.3.0 NAME 'dcmInitFileSystemURI'
+  DESC 'URI of directory path of initial Storage File System.'
+  EQUALITY caseExactIA5Match
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+  SINGLE-VALUE )
 olcAttributeTypes: ( 1.2.40.0.13.1.1.15.0.3.1 NAME 'dcmFileSystemGroupID'
   DESC 'ID of File System Group where received objects are stored'
   EQUALITY caseIgnoreMatch
@@ -226,6 +231,7 @@ olcObjectClasses: ( 1.2.40.0.13.1.1.15.0.4.5 NAME 'dcmArchiveNetworkAE'
   DESC 'DICOM Archive Network AE related information'
   SUP top AUXILIARY
   MAY (
+    dcmInitFileSystemURI $
     dcmFileSystemGroupID $
     dcmSpoolFilePathFormat $
     dcmStorageFilePathFormat $

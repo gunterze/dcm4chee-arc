@@ -8,6 +8,14 @@
   </formats>
   <fileSets>
     <fileSet>
+      <directory>..</directory>
+      <includes>
+        <include>INSTALL.md</include>
+      </includes>
+      <outputDirectory>.</outputDirectory>
+      <lineEnding>dos</lineEnding>
+    </fileSet>
+    <fileSet>
       <directory>../../dcm4che/dcm4che-conf/dcm4che-conf-ldap/src/main/config</directory>
       <outputDirectory>ldap</outputDirectory>
       <lineEnding>dos</lineEnding>

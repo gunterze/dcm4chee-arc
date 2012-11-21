@@ -505,6 +505,7 @@ dcmTLSProtocol: SSLv3
 cn: hl7-tls
 
 dn: dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmInitFileSystemURI: file:${jboss.server.data.dir}
 dcmDigestAlgorithm: MD5
 dcmFileSystemGroupID: DEFAULT
 dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com

@@ -213,6 +213,7 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
             return attrs;
         ArchiveApplicationEntity arcAE = (ArchiveApplicationEntity) ae;
         storeNotNull(attrs, "dcmFileSystemGroupID", arcAE.getFileSystemGroupID());
+        storeNotNull(attrs, "dcmInitFileSystemURI", arcAE.getInitFileSystemURI());
         storeNotNull(attrs, "dcmSpoolFilePathFormat", arcAE.getSpoolFilePathFormat());
         storeNotNull(attrs, "dcmStorageFilePathFormat", arcAE.getStorageFilePathFormat());
         storeNotNull(attrs, "dcmDigestAlgorithm", arcAE.getDigestAlgorithm());
@@ -335,6 +336,7 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
            return;
        ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) ae;
        arcae.setFileSystemGroupID(stringValue(attrs.get("dcmFileSystemGroupID")));
+       arcae.setInitFileSystemURI(stringValue(attrs.get("dcmInitFileSystemURI")));
        arcae.setSpoolFilePathFormat(attributesFormat(attrs.get("dcmSpoolFilePathFormat")));
        arcae.setStorageFilePathFormat(attributesFormat(attrs.get("dcmStorageFilePathFormat")));
        arcae.setDigestAlgorithm(stringValue(attrs.get("dcmDigestAlgorithm")));
@@ -457,6 +459,9 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         storeDiff(mods, "dcmFileSystemGroupID",
                 aa.getFileSystemGroupID(),
                 bb.getFileSystemGroupID());
+        storeDiff(mods, "dcmInitFileSystemURI",
+                aa.getInitFileSystemURI(),
+                bb.getInitFileSystemURI());
         storeDiff(mods, "dcmSpoolFilePathFormat",
                 aa.getSpoolFilePathFormat(),
                 bb.getSpoolFilePathFormat());

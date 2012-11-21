@@ -176,17 +176,6 @@
     </attributes>
   </entity>
 
-  <entity class="StudyPermission">
-    <table name="study_permission" />
-    <sequence-generator name="seq" sequence-name="study_permission_pk_seq" allocation-size="1" />
-    <attributes>
-      <id name="pk">
-        <column name="pk" />
-        <generated-value strategy="SEQUENCE" generator="seq" />
-      </id>
-    </attributes>
-  </entity>
-
   <entity class="Visit">
     <table name="visit" />
     <sequence-generator name="seq" sequence-name="visit_pk_seq" allocation-size="1" />

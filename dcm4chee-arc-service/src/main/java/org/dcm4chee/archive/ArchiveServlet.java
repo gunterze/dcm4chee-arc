@@ -38,7 +38,6 @@
 
 package org.dcm4chee.archive;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.lang.management.ManagementFactory;
@@ -122,12 +121,6 @@ public class ArchiveServlet extends HttpServlet {
             String deviceName = System.getProperty(
                     "org.dcm4chee.archive.deviceName",
                     config.getInitParameter("deviceName"));
-            String defFileSystemURI = new File(
-                        StringUtils.replaceSystemProperties(
-                            System.getProperty(
-                                "org.dcm4chee.archive.storageDirectory",
-                                config.getInitParameter("storageDirectory"))))
-                    .toURI().toString();
             String jmxName = System.getProperty(
                     "org.dcm4chee.archive.jmxName",
                     config.getInitParameter("jmxName"));
@@ -155,8 +148,7 @@ public class ArchiveServlet extends HttpServlet {
                     jmsService,
                     mppsSCUQueue,
                     ianSCUQueue,
-                    stgcmtSCPQueue,
-                    defFileSystemURI);
+                    stgcmtSCPQueue);
             archive.start();
             mbean = ManagementFactory.getPlatformMBeanServer()
                     .registerMBean(archive, new ObjectName(jmxName));

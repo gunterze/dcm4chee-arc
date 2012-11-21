@@ -158,6 +158,7 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         ArchiveApplicationEntity arcAE = (ArchiveApplicationEntity) ae;
         prefs.putBoolean("dcmArchiveNetworkAE", true);
         storeNotNull(prefs, "dcmFileSystemGroupID", arcAE.getFileSystemGroupID());
+        storeNotNull(prefs, "dcmInitFileSystemURI", arcAE.getInitFileSystemURI());
         storeNotNull(prefs, "dcmSpoolFilePathFormat", arcAE.getSpoolFilePathFormat());
         storeNotNull(prefs, "dcmStorageFilePathFormat", arcAE.getStorageFilePathFormat());
         storeNotNull(prefs, "dcmDigestAlgorithm", arcAE.getDigestAlgorithm());
@@ -268,6 +269,7 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
             return;
         ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) ae;
         arcae.setFileSystemGroupID(prefs.get("dcmFileSystemGroupID", null));
+        arcae.setInitFileSystemURI(prefs.get("dcmInitFileSystemURI", null));
         arcae.setSpoolFilePathFormat(
                 AttributesFormat.valueOf(
                         prefs.get("dcmSpoolFilePathFormat", null)));
@@ -412,6 +414,9 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
          storeDiff(prefs, "dcmFileSystemGroupID",
                  aa.getFileSystemGroupID(),
                  bb.getFileSystemGroupID());
+         storeDiff(prefs, "dcmInitFileSystemURI",
+                 aa.getInitFileSystemURI(),
+                 bb.getInitFileSystemURI());
          storeDiff(prefs, "dcmSpoolFilePathFormat",
                  aa.getSpoolFilePathFormat(),
                  bb.getSpoolFilePathFormat());

@@ -80,15 +80,13 @@ public class CStoreSCP extends BasicCStoreSCP {
     private final ApplicationEntityCache aeCache;
     private final IANSCU ianSCU;
     private final IANQueryService ianQueryService;
-    private final String defFileSystemURI;
 
     public CStoreSCP(ApplicationEntityCache aeCache, IANSCU ianSCU,
-            IANQueryService ianQueryService, String defFileSystemURI) {
+            IANQueryService ianQueryService) {
         super("*");
         this.aeCache = aeCache;
         this.ianSCU = ianSCU;
         this.ianQueryService = ianQueryService;
-        this.defFileSystemURI = defFileSystemURI;
     }
 
     private static class LazyInitialization {
@@ -249,7 +247,7 @@ public class CStoreSCP extends BasicCStoreSCP {
                         "No File System Group ID configured for " + ae.getAETitle());
             store = BeanLocator.lookup(StoreService.class);
             store.setStoreParam(StoreParam.valueOf(ae));
-            store.selectFileSystem(fsGroupID, defFileSystemURI);
+            store.selectFileSystem(fsGroupID, ae.getInitFileSystemURI());
             as.setProperty(STORE_SERVICE_PROPERTY, store);
         }
         return store;

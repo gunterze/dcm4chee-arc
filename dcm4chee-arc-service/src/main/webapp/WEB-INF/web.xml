@@ -24,7 +24,7 @@
     </init-param>
     <init-param>
       <param-name>jmxName</param-name>
-      <param-value>dcm4che:dcm4chee=dcm4chee-arc</param-value>
+      <param-value>org.dcm4chee.archive:type=Service</param-value>
     </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>

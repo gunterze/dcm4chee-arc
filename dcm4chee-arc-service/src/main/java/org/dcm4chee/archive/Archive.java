@@ -110,8 +110,7 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
             JMSService jmsService,
             Queue mppsSCUQueue,
             Queue ianSCUQueue,
-            Queue stgcmtSCPQueue,
-            String defFileSystemURI) {
+            Queue stgcmtSCPQueue) {
         init(device);
         this.dicomConfiguration = dicomConfiguration;
         this.aeCache = new ApplicationEntityCache(dicomConfiguration);
@@ -120,8 +119,7 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         this.jmsService = jmsService;
         this.mppsSCU = new MPPSSCU(aeCache, jmsService, mppsSCUQueue);
         this.ianSCU = new IANSCU(aeCache, jmsService, ianSCUQueue);
-        this.storeSCP = new CStoreSCP(aeCache, ianSCU, ianQueryService,
-                defFileSystemURI);
+        this.storeSCP = new CStoreSCP(aeCache, ianSCU, ianQueryService);
         this.stgCmtSCP = new StgCmtSCP(aeCache, stgCmtService,
                 jmsService, stgcmtSCPQueue);
         this.mppsSCP = new MPPSSCP(aeCache, mppsSCU, ianSCU, mppsService);

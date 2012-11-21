@@ -62,6 +62,7 @@ import org.dcm4che.data.VR;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.soundex.FuzzyStr;
+import org.dcm4che.util.StringUtils;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.conf.AttributeFilter;
@@ -351,7 +352,7 @@ public class StoreService {
                 .setOffendingElements(Tag.CurrentRequestedProcedureEvidenceSequence);
     }
 
-    public FileSystem selectFileSystem(String groupID, String defFileSystemURI)
+    public FileSystem selectFileSystem(String groupID, String initFileSystemURI)
             throws DicomServiceException {
         try {
             return curFileSystem =
@@ -364,15 +365,6 @@ public class StoreService {
                     em.createNamedQuery(FileSystem.FIND_BY_GROUP_ID, FileSystem.class)
                         .setParameter(1, groupID)
                         .getResultList();
-            if (resultList.isEmpty()) {
-                FileSystem fs = new FileSystem();
-                fs.setGroupID(groupID);
-                fs.setURI(defFileSystemURI);
-                fs.setAvailability(Availability.ONLINE);
-                fs.setStatus(FileSystemStatus.RW);
-                em.persist(fs);
-                return curFileSystem = fs;
-            }
             for (FileSystem fs : resultList) {
                 if (fs.getStatus() == FileSystemStatus.Rw) {
                     fs.setStatus(FileSystemStatus.RW);
@@ -380,8 +372,16 @@ public class StoreService {
                     return curFileSystem;
                 }
             }
-            throw new DicomServiceException(Status.OutOfResources,
-                    "No writeable File System in File System Group " + groupID);
+            if (initFileSystemURI == null || !resultList.isEmpty())
+                throw new DicomServiceException(Status.OutOfResources,
+                        "No writeable File System in File System Group " + groupID);
+            FileSystem fs = new FileSystem();
+            fs.setGroupID(groupID);
+            fs.setURI(StringUtils.replaceSystemProperties(initFileSystemURI));
+            fs.setAvailability(Availability.ONLINE);
+            fs.setStatus(FileSystemStatus.RW);
+            em.persist(fs);
+            return curFileSystem = fs;
         }
     }
 
