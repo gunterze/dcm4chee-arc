@@ -368,8 +368,6 @@ Import sample configuration into LDAP Server
     the first object. It is not effective, if the `filesystem` table already contains
     such record. 
 
-8.  By default configuration, DCM4CHEE Archive      
-
 
 Setup JBoss AS 7
 ----------------
