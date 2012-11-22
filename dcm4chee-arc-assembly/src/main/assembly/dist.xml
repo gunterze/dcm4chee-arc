@@ -27,9 +27,6 @@
     </fileSet>
     <fileSet>
       <directory>../dcm4chee-arc-conf/src/main/config</directory>
-      <excludes>
-        <exclude>ldap/unldif.sed</exclude>
-      </excludes>
       <outputDirectory>.</outputDirectory>
       <lineEnding>dos</lineEnding>
     </fileSet>
