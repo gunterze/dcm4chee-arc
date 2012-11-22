@@ -91,7 +91,8 @@ provided by DCM4CHEE Archive 4.0.0 final release.
 
 2. Create user
 
-        gsec -user sysdba -password masterkey -add <user-name> -pw <user-password>
+        gsec -user sysdba -password masterkey \
+          -add <user-name> -pw <user-password>
 
 3. Create database, tables and indexes
 
@@ -272,10 +273,20 @@ See also [Converting old style slapd.conf file to cn=config format][1]
 
     using the LDIF import function of Apache Directory Studio LDAP Browser.
 
-4.  You may modify the default Directory Base DN (dc=example,dc=com) by changing
-    the value of attribute `ads-partitionsuffix: dc=example,dc=com` of object
-    `ads-partitionId=example,ou=partitions,ads-directoryServiceId=default,ou=config`
+4.  You may modify the default Directory Base DN `dc=example,dc=com` by changing
+    the value of attribute 
+
+        ads-partitionsuffix: dc=example,dc=com`
+
+    of object
+
+        ou=config
+        + ads-directoryServiceId=default
+          + ou=partitions
+              ads-partitionId=example
+    
     using Apache Directory Studio LDAP Browser.
+
 
 Import sample configuration into LDAP Server
 --------------------------------------------  
@@ -307,7 +318,6 @@ Import sample configuration into LDAP Server
         sed -i s/dc=example,dc=com/dc=my-domain,dc=com/ init-config.ldif
         sed -i s/dc=example,dc=com/dc=my-domain,dc=com/ sample-config.ldif
 
-
 3.  If there is not already a base entry in the directory data base, import
     `$DCM4CHEE_ARC/ldap/init-baseDN.ldif` using the LDIF import function of
     Apache Directory Studio LDAP Browser.
@@ -320,21 +330,36 @@ Import sample configuration into LDAP Server
     of Apache Directory Studio LDAP Browser.  
 
 6.  By default configuration, DCM4CHEE Archive does not accept remote connections.
-    To enable remote connections, replace the value of attribute `dicomHostname=localhost`
+    To enable remote connections, replace the value of attribute
+
+        dicomHostname=localhost
+    
     of the 4 `dicomNetworkConnection` objects
 
-        cn=dicom,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-        cn=dicom-tls,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-        cn=hl7,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-        cn=hl7-tls,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+        dc=example,dc=com
+        + cn=DICOM Configuration
+          + cn=Devices
+            + dicomDeviceName=dcm4chee-arc
+                cn=dicom
+                cn=dicom-tls
+                cn=hl7,dicomDeviceName
+                cn=hl7-tls,dicomDeviceName
 
-    by the actual hostname of your system, using Apache Directory Studio LDAP Browser.
+    by the actual hostname of your system, using Apache Directory Studio LDAP Browser. 
 
-7.  By default configuration, DCM4CHEE Archive stores received objects below $JBOSS_HOME/standalone/data.
-    To specify a different storage location, replace the value of attribute
-    `dcmInitFileSystemURI=file:${jboss.server.data.dir}` of the `dicomNetworkAE` object
+7.  By default configuration, DCM4CHEE Archive stores received objects below
+    `$JBOSS_HOME/standalone/data`. To specify a different storage location,
+    replace the value of attribute
+    
+        dcmInitFileSystemURI=file:${jboss.server.data.dir}
 
-        dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+    of the `dicomNetworkAE` object
+
+        dc=example,dc=com
+        + cn=DICOM Configuration
+          + cn=Devices
+            + dicomDeviceName=dcm4chee-arc
+                dicomAETitle=DCM4CHEE
 
     by `file:<absolute-directory-path>`, using Apache Directory Studio LDAP Browser.
 
@@ -342,7 +367,9 @@ Import sample configuration into LDAP Server
     the (first) record in the `filesystem` table of the archive data base on receive of
     the first object. It is not effective, if the `filesystem` table already contains
     such record. 
-    
+
+8.  By default configuration, DCM4CHEE Archive      
+
 
 Setup JBoss AS 7
 ----------------
@@ -364,7 +391,8 @@ Setup JBoss AS 7
         xcopy %DCM4CHEE_ARC%\configuration\dcm4chee-arc %JBOSS_HOME%\standalone\configuration [Windows]
 
     *Note*: Beside LDAP Connection configuration, the private key used in TLS connections
-    and XSLT stylesheets are not stored in LDAP.
+    and XSLT stylesheets specifing attribute coercion in incoming or outgoing DICOM messages
+    and mapping of HL7 fields in incoming HL7 messages are not stored in LDAP.
 
 3.  Install DCM4CHE 3.0.0 libraries as JBoss AS 7 module:
 
@@ -448,9 +476,7 @@ Setup JBoss AS 7
         13:01:48,926 INFO  [org.jboss.msc] JBoss MSC version 1.0.2.GA
         13:01:48,969 INFO  [org.jboss.as] JBAS015899: JBoss AS 7.1.1.Final "Brontes" starting
         :
-        13:01:51,217 INFO  [org.jboss.as.deployment.connector] (MSC service thread 1-8) JBAS010401: Bound JCA ConnectionFactory [java:/JmsXA]
-        13:01:51,239 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015951: Admin console listening on http://127.0.0.1:9990
-        13:01:51,239 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015874: JBoss AS 7.1.1.Final "Brontes" started in 2652ms - ...
+        13:01:51,239 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015874: JBoss AS 7.1.1.Final "Brontes" started ...
                 
     Running JBoss AS 7 in domain mode should work, but was not yet tested.
 
@@ -547,6 +573,7 @@ Setup JBoss AS 7
 
 Java Monitoring and Management Console `jconsole`
 -------------------------------------------------
+
 1.  Invoke `jconsole` using the launcher script provided by JBoss AS 7:
 
         $JBOSS_HOME/bin/jconsole.sh -c [UNIX]
@@ -638,7 +665,7 @@ Invoke a retrieve request for a study with given Study Instance UID
 to STORESCP using DCM4CHE 3.x's `movescu` utility:
 
     $DCM4CHE_HOME/bin/movescu -cDCM4CHEE@localhost:11112 --dest STORESCP \
-                              -mStudyInstanceUID=1.2.840.113674.514.212.200
+      -mStudyInstanceUID=1.2.840.113674.514.212.200
 
 Verify the success status=0H in the final `C-MOVE-RSP` messages, e.g.:
 
@@ -676,5 +703,5 @@ You may also try to retrieve the same study by C-GET instead of C-MOVE, using
 DCM4CHE 3.x's `getscu` utility:
 
     $DCM4CHE_HOME/bin/getscu -cDCM4CHEE@localhost:11112 \
-                             -mStudyInstanceUID=1.2.840.113674.514.212.200
+      -mStudyInstanceUID=1.2.840.113674.514.212.200
 
