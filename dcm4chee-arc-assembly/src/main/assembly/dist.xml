@@ -16,16 +16,6 @@
       <lineEnding>dos</lineEnding>
     </fileSet>
     <fileSet>
-      <directory>../../dcm4che/dcm4che-conf/dcm4che-conf-ldap/src/main/config</directory>
-      <outputDirectory>ldap</outputDirectory>
-      <lineEnding>dos</lineEnding>
-    </fileSet>
-    <fileSet>
-      <directory>../../dcm4che/dcm4che-conf/dcm4che-conf-ldap-hl7/src/main/config</directory>
-      <outputDirectory>ldap</outputDirectory>
-      <lineEnding>dos</lineEnding>
-    </fileSet>
-    <fileSet>
       <directory>../dcm4chee-arc-conf/src/main/config</directory>
       <outputDirectory>.</outputDirectory>
       <lineEnding>dos</lineEnding>
