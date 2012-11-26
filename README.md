@@ -1,7 +1,7 @@
 DCM4CHEE Archive 4.x
 ====================
-http://www.dcm4che.org
-[Sources] (https://github.com/dcm4che/dcm4chee-arc)
+http://www.dcm4che.org  
+[Sources] (https://github.com/dcm4che/dcm4chee-arc)  
 [Issue Tracker] (http://www.dcm4che.org/jira/browse/ARCH)
 
 DICOM Archive Java EE application running in JBoss AS 7.
