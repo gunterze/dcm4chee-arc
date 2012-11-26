@@ -372,7 +372,7 @@ Import sample configuration into LDAP Server
     Quality Reasons, as specified by IHE Radiology Technical Framework 
     Supplement [Imaging Object Change Management (IOCM)][2].
 
-    [2]: http://www.ihe.net/Technical_Framework/upload/IHE_RAD_Suppl_IOCM_Rev1-1_TI_2011-05-17.pdf
+[2]: http://www.ihe.net/Technical_Framework/upload/IHE_RAD_Suppl_IOCM_Rev1-1_TI_2011-05-17.pdf
 
 8.  By default configuration, DCM4CHEE Archive stores received objects below
     `$JBOSS_HOME/standalone/data`. To specify a different storage location,
