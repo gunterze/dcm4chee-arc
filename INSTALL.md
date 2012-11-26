@@ -54,33 +54,33 @@ provided by DCM4CHEE Archive 4.0.0 final release.
 
 2. Create database and grant access to user
 
-        mysql -u root -p<root-password>
+        > mysql -u root -p<root-password>
         mysql> CREATE DATABASE <database-name>;
         mysql> GRANT ALL ON <database-name>.* TO '<user-name>' IDENTIFIED BY '<user-password>';
         mysql> quit
 
 3. Create tables and indexes
        
-        mysql -u <user-name> -p<user-password> < $DCM4CHEE_ARC/sql/create-table-mysql.ddl
-        mysql -u <user-name> -p<user-password> < $DCM4CHEE_ARC/sql/create-index.ddl
+        > mysql -u <user-name> -p<user-password> < $DCM4CHEE_ARC/sql/create-table-mysql.ddl
+        > mysql -u <user-name> -p<user-password> < $DCM4CHEE_ARC/sql/create-index.ddl
 
 
 ### PostgreSQL
 
 1. Create user with permission to create databases 
 
-        createuser -U postgres -P -d <user-name>
+        > createuser -U postgres -P -d <user-name>
         Enter password for new role: <user-password> 
         Enter it again: <user-password> 
 
 2. Create database
 
-        createdb -U <user-name> <database-name>
+        > createdb -U <user-name> <database-name>
 
 3. Create tables and indexes
        
-        psql -U <user-name> < $DCM4CHEE_ARC/sql/create-table-psql.ddl
-        psql -U <user-name> < $DCM4CHEE_ARC/sql/create-index.ddl
+        > psql -U <user-name> < $DCM4CHEE_ARC/sql/create-table-psql.ddl
+        > psql -U <user-name> < $DCM4CHEE_ARC/sql/create-index.ddl
 
 
 ### Firebird
@@ -91,12 +91,12 @@ provided by DCM4CHEE Archive 4.0.0 final release.
 
 2. Create user
 
-        gsec -user sysdba -password masterkey \
+        > gsec -user sysdba -password masterkey \
           -add <user-name> -pw <user-password>
 
 3. Create database, tables and indexes
 
-        isql 
+        > isql 
         Use CONNECT or CREATE DATABASE to specify a database
         SQL> CREATE DATABASE 'localhost:<database-name>'
         CON> user '<user-name>' password '<user-password>';
@@ -110,8 +110,8 @@ provided by DCM4CHEE Archive 4.0.0 final release.
 1. Create database and grant authority to create tables to user
    (must match existing OS user)
 
-        sudo su db2inst1
-        db2
+        > sudo su db2inst1
+        > db2
         db2 => CREATE DATABASE <database-name> PAGESIZE 16 K
         db2 => connect to <database-name>
         db2 => GRANT CREATETAB ON DATABASE TO USER <user-name>
@@ -119,12 +119,12 @@ provided by DCM4CHEE Archive 4.0.0 final release.
  
 2. Create tables and indexes
 
-        su <user-name>
+        > su <user-name>
         Password: <user-password>
-        db2 connect to <database-name>
-        db2 -t < $DCM4CHEE_ARC/sql/create-table-db2.ddl
-        db2 -t < $DCM4CHEE_ARC/sql/create-index.ddl
-        db2 terminate
+        > db2 connect to <database-name>
+        > db2 -t < $DCM4CHEE_ARC/sql/create-table-db2.ddl
+        > db2 -t < $DCM4CHEE_ARC/sql/create-index.ddl
+        > db2 terminate
         
 
 ### Oracle 11g 
@@ -140,12 +140,12 @@ Setup LDAP Server
 1.  Copy LDAP schema files for OpenDJ from DCM4CHEE Archive distribution to
     OpenDJ schema configuration directory:
 
-        cp $DCM4CHEE_ARC/ldap/opendj/* $OPENDJ_HOME/config/schema/ [UNIX]
-        copy %DCM4CHEE_ARC%\ldap\opendj\* %OPENDJ_HOME%\config\schema\ [Windows]
+        > cp $DCM4CHEE_ARC/ldap/opendj/* $OPENDJ_HOME/config/schema/ [UNIX]
+        > copy %DCM4CHEE_ARC%\ldap\opendj\* %OPENDJ_HOME%\config\schema\ [Windows]
 
 2.  Run OpenDJ GUI based setup utility
 
-        $OPENDJ_HOME/setup
+        > $OPENDJ_HOME/setup
 
     Log the values choosen for
 
@@ -158,8 +158,8 @@ Setup LDAP Server
 
 4. After initial setup, you may start and stop OpenDJ by
 
-        $OPENDJ_HOME/bin/start-ds
-        $OPENDJ_HOME/bin/stopt-ds
+        > $OPENDJ_HOME/bin/start-ds
+        > $OPENDJ_HOME/bin/stopt-ds
 
 
 ### OpenLDAP
@@ -181,8 +181,8 @@ See also [Converting old style slapd.conf file to cn=config format][1]
 1.  Copy LDAP schema files for OpenLDAP from DCM4CHEE Archive distribution to
     OpenLDAP schema configuration directory:
 
-        cp $DCM4CHEE_ARC/ldap/schema/* /etc/openldap/schema/ [UNIX]
-        copy %DCM4CHEE_ARC%\ldap\schema\* \Program Files\OpenLDAP\schema\ [Windows]
+        > cp $DCM4CHEE_ARC/ldap/schema/* /etc/openldap/schema/ [UNIX]
+        > copy %DCM4CHEE_ARC%\ldap\schema\* \Program Files\OpenLDAP\schema\ [Windows]
 
 2.  Add references to schema files in `slapd.conf`, e.g.:
 
@@ -206,10 +206,10 @@ See also [Converting old style slapd.conf file to cn=config format][1]
 1.  Import LDAP schema files for OpenLDAP runtime configuration, binding as
     root user of the config backend, using OpenLDAP CL utility ldapadd, e.g.:
 
-        ldapadd -xW -Dcn=config -f $DCM4CHEE_ARC/ldap/slapd/dicom.ldif
-        ldapadd -xW -Dcn=config -f $DCM4CHEE_ARC/ldap/slapd/dcm4che.ldif
-        ldapadd -xW -Dcn=config -f $DCM4CHEE_ARC/ldap/slapd/dcm4che-hl7.ldif
-        ldapadd -xW -Dcn=config -f $DCM4CHEE_ARC/ldap/slapd/dcm4chee-archive.ldif
+        > ldapadd -xW -Dcn=config -f $DCM4CHEE_ARC/ldap/slapd/dicom.ldif
+        > ldapadd -xW -Dcn=config -f $DCM4CHEE_ARC/ldap/slapd/dcm4che.ldif
+        > ldapadd -xW -Dcn=config -f $DCM4CHEE_ARC/ldap/slapd/dcm4che-hl7.ldif
+        > ldapadd -xW -Dcn=config -f $DCM4CHEE_ARC/ldap/slapd/dcm4chee-archive.ldif
 
     If you don't know the root user and its password of the config backend, you may
     look into `/etc/openldap/slap.d/cn=config/olcDatabase={0}config.ldif`:
@@ -219,7 +219,7 @@ See also [Converting old style slapd.conf file to cn=config format][1]
 
     and decode the base64 decoded password, e.g:
 
-        echo -n VmVyeVNlY3JldA== | base64 -d
+        > echo -n VmVyeVNlY3JldA== | base64 -d
         VerySecret
 
     or specify a new password in plan text in `{0}config.ldif`, e.g:
@@ -246,7 +246,7 @@ See also [Converting old style slapd.conf file to cn=config format][1]
 
     and applying it using OpenLDAP CL utility ldapmodify, e.g.:
 
-        ldapmodify -xW -Dcn=config -f modify-baseDN.ldif
+        > ldapmodify -xW -Dcn=config -f modify-baseDN.ldif
 
 
 ### Apache DS 2.0
@@ -313,10 +313,10 @@ Import sample configuration into LDAP Server
 
     by your Directory Base DN, e.g.:
 
-        cd $DCM4CHEE_ARC/ldap
-        sed -i s/dc=example,dc=com/dc=my-domain,dc=com/ init-baseDN.ldif
-        sed -i s/dc=example,dc=com/dc=my-domain,dc=com/ init-config.ldif
-        sed -i s/dc=example,dc=com/dc=my-domain,dc=com/ sample-config.ldif
+        > cd $DCM4CHEE_ARC/ldap
+        > sed -i s/dc=example,dc=com/dc=my-domain,dc=com/ init-baseDN.ldif
+        > sed -i s/dc=example,dc=com/dc=my-domain,dc=com/ init-config.ldif
+        > sed -i s/dc=example,dc=com/dc=my-domain,dc=com/ sample-config.ldif
 
 3.  If there is not already a base entry in the directory data base, import
     `$DCM4CHEE_ARC/ldap/init-baseDN.ldif` using the LDIF import function of
@@ -347,7 +347,34 @@ Import sample configuration into LDAP Server
 
     by the actual hostname of your system, using Apache Directory Studio LDAP Browser. 
 
-7.  By default configuration, DCM4CHEE Archive stores received objects below
+7.  To change the default AE Title: `DCM4CHEE`, modify the _Relative Distinguished Name_
+    (RDN) of the `dicomNetworkAE` object
+        
+        dc=example,dc=com
+        + cn=DICOM Configuration
+          + cn=Devices
+            + dicomDeviceName=dcm4chee-arc
+                dicomAETitle=DCM4CHEE
+
+     to
+
+        dicomAETitle=<aet>
+
+     You may also modify the AE Title: `DCM4CHEE_ADMIN` of the additional AE:
+
+        dc=example,dc=com
+        + cn=DICOM Configuration
+          + cn=Devices
+            + dicomDeviceName=dcm4chee-arc
+                dicomAETitle=DCM4CHEE_ADMIN
+
+    which is configured to provide also Access to Rejected Instances for
+    Quality Reasons, as specified by IHE Radiology Technical Framework 
+    Supplement [Imaging Object Change Management (IOCM)][2].
+
+    [2]: http://www.ihe.net/Technical_Framework/upload/IHE_RAD_Suppl_IOCM_Rev1-1_TI_2011-05-17.pdf
+
+8.  By default configuration, DCM4CHEE Archive stores received objects below
     `$JBOSS_HOME/standalone/data`. To specify a different storage location,
     replace the value of attribute
     
@@ -385,8 +412,8 @@ Setup JBoss AS 7
 
 2.  Copy configuration files into JBoss AS 7 installation:
 
-        cp -r $DCM4CHEE_ARC/configuration/dcm4chee-arc $JBOSS_HOME/standalone/configuration [UNIX]
-        xcopy %DCM4CHEE_ARC%\configuration\dcm4chee-arc %JBOSS_HOME%\standalone\configuration [Windows]
+        > cp -r $DCM4CHEE_ARC/configuration/dcm4chee-arc $JBOSS_HOME/standalone/configuration [UNIX]
+        > xcopy %DCM4CHEE_ARC%\configuration\dcm4chee-arc %JBOSS_HOME%\standalone\configuration [Windows]
 
     *Note*: Beside LDAP Connection configuration, the private key used in TLS connections
     and XSLT stylesheets specifing attribute coercion in incoming or outgoing DICOM messages
@@ -394,13 +421,13 @@ Setup JBoss AS 7
 
 3.  Install DCM4CHE 3.0.0 libraries as JBoss AS 7 module:
 
-        cd  $JBOSS_HOME
-        unzip $DCM4CHEE_ARC/jboss-module/dcm4che-jboss-modules-3.0.0.zip
+        > cd  $JBOSS_HOME
+        > unzip $DCM4CHEE_ARC/jboss-module/dcm4che-jboss-modules-3.0.0.zip
 
 4.  Install QueryDSL 2.8.1 libraries as JBoss AS 7 module:
 
-        cd  $JBOSS_HOME
-        unzip $DCM4CHEE_ARC/jboss-module/querydsl-jboss-modules-2.8.1.zip
+        > cd  $JBOSS_HOME
+        > unzip $DCM4CHEE_ARC/jboss-module/querydsl-jboss-modules-2.8.1.zip
 
 5.  Install JDBC Driver. DCM4CHEE Archive 4.x binary distributions do not include
     a JDBC driver for the database for license issues. You may download it from:
@@ -422,10 +449,10 @@ Setup JBoss AS 7
     already provides a module definition file `module.xml`. You just need to extract the ZIP file into
     $JBOSS_HOME and copy the JDBC Driver file(s) into the sub-directory, e.g.:
 
-        cd $JBOSS_HOME
-        unzip $DCM4CHEE_ARC/jboss-module/jdbc-jboss-modules-1.0.0-db2.zip
-        cd $DB2_HOME/java
-        cp db2jcc4.jar db2jcc_license_cu.jar $JBOSS_HOME/modules/com/ibm/db2/main/
+        > cd $JBOSS_HOME
+        > unzip $DCM4CHEE_ARC/jboss-module/jdbc-jboss-modules-1.0.0-db2.zip
+        > cd $DB2_HOME/java
+        > cp db2jcc4.jar db2jcc_license_cu.jar $JBOSS_HOME/modules/com/ibm/db2/main/
 
     Verify, that the actual JDBC Driver file(s) name matches the path(s) in the provided
     `module.xml`, e.g.:
@@ -448,13 +475,13 @@ Setup JBoss AS 7
     To preserve the original JBoss AS 7 configuration you may copy the original
     configuration file for JavaEE 6 Full Profile:
 
-        cd $JBOSS_HOME/standalone/configuration/
-        cp standalone-full.xml dcm4chee-arc.xml
+        > cd $JBOSS_HOME/standalone/configuration/
+        > cp standalone-full.xml dcm4chee-arc.xml
 
     and start JBoss AS 7 specifying the new configuration file:
         
-        $JBOSS_HOME/bin/standalone.sh -c dcm4chee-arc.xml [UNIX]
-        %JBOSS_HOME%\bin\standalone.bat -c dcm4chee-arc.xml [Windows]
+        > $JBOSS_HOME/bin/standalone.sh -c dcm4chee-arc.xml [UNIX]
+        > %JBOSS_HOME%\bin\standalone.bat -c dcm4chee-arc.xml [Windows]
    
     Verify, that JBoss AS 7 started successfully, e.g.:
 
@@ -480,8 +507,8 @@ Setup JBoss AS 7
 
 7.  Add JDBC Driver into the server configuration using JBoss AS 7 CLI in a new console window:
 
-        $JBOSS_HOME/bin/jboss-cli.sh -c [UNIX]
-        %JBOSS_HOME%\bin\jboss-cli.bat -c [Windows]
+        > $JBOSS_HOME/bin/jboss-cli.sh -c [UNIX]
+        > %JBOSS_HOME%\bin\jboss-cli.bat -c [Windows]
         [standalone@localhost:9999 /] /subsystem=datasources/jdbc-driver=<driver-name>:add(driver-module-name=<module-name>)
 
     You may choose any `<driver-name>` for the JDBC Driver, `<module-name>` must match the name
@@ -557,16 +584,16 @@ Setup JBoss AS 7
 
 14. You may undeploy DCM4CHEE Archive at any time using JBoss AS 7 CLI, e.g.:
 
-         [standalone@localhost:9999 /] undeploy dcm4chee-arc-4.1.0.Alpha1-mysql.war
+        [standalone@localhost:9999 /] undeploy dcm4chee-arc-4.1.0.Alpha1-mysql.war
 
-         14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-2) Stop listening on localhost/127.0.0.1:2762
-         14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-4) Stop listening on localhost/127.0.0.1:12575
-         14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-1) Stop listening on localhost/127.0.0.1:11112
-         14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-3) Stop listening on localhost/127.0.0.1:2575
-         14:06:09,955 INFO  [org.jboss.as.jpa] (MSC service thread 1-7) JBAS011403: Stopping Persistence Unit Service 'dcm4chee-arc-4.1.0.Alpha1-mysql.war#dcm4chee-arc'
-         14:06:10,000 INFO  [org.jboss.as.server.deployment] (MSC service thread 1-5) JBAS015877: Stopped deployment dcm4chee-arc-4.1.0.Alpha1-mysql.war in 132ms
-         14:06:10,561 INFO  [org.jboss.as.repository] (management-handler-thread - 7) JBAS014901: Content removed from location ... 
-         14:06:10,563 INFO  [org.jboss.as.server] (management-handler-thread - 7) JBAS018558: Undeployed "dcm4chee-arc-4.1.0.Alpha1-mysql.war"
+        14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-2) Stop listening on localhost/127.0.0.1:2762
+        14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-4) Stop listening on localhost/127.0.0.1:12575
+        14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-1) Stop listening on localhost/127.0.0.1:11112
+        14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-3) Stop listening on localhost/127.0.0.1:2575
+        14:06:09,955 INFO  [org.jboss.as.jpa] (MSC service thread 1-7) JBAS011403: Stopping Persistence Unit Service 'dcm4chee-arc-4.1.0.Alpha1-mysql.war#dcm4chee-arc'
+        14:06:10,000 INFO  [org.jboss.as.server.deployment] (MSC service thread 1-5) JBAS015877: Stopped deployment dcm4chee-arc-4.1.0.Alpha1-mysql.war in 132ms
+        14:06:10,561 INFO  [org.jboss.as.repository] (management-handler-thread - 7) JBAS014901: Content removed from location ... 
+        14:06:10,563 INFO  [org.jboss.as.server] (management-handler-thread - 7) JBAS018558: Undeployed "dcm4chee-arc-4.1.0.Alpha1-mysql.war"
 
 
 Java Monitoring and Management Console `jconsole`
@@ -574,8 +601,8 @@ Java Monitoring and Management Console `jconsole`
 
 1.  Invoke `jconsole` using the launcher script provided by JBoss AS 7:
 
-        $JBOSS_HOME/bin/jconsole.sh -c [UNIX]
-        %JBOSS_HOME%\bin\jconsole.bat -c [Windows]
+        > $JBOSS_HOME/bin/jconsole.sh -c [UNIX]
+        > %JBOSS_HOME%\bin\jconsole.bat -c [Windows]
           
 2.  Select Local Process: `jboss-modules.jar ...` in the New Connection dialog.
 
@@ -599,7 +626,7 @@ extraction, you will find launcher scripts for Linux and Windows in directory
 
 Use DCM4CHE 3.x's `storescu` utility to send DICOM Composite Objects to DCM4CHEE Archive 4.x, e.g.:
 
-    $DCM4CHE_HOME/bin/storescu -cDCM4CHEE@localhost:11112 ~/MESA-storage-A_12_5_0/modality/CT/CT1
+    > $DCM4CHE_HOME/bin/storescu -cDCM4CHEE@localhost:11112 ~/MESA-storage-A_12_5_0/modality/CT/CT1
 
 Verify the success status=0H in logged `C-STORE-RSP` messages, e.g.:
 
@@ -610,7 +637,7 @@ Verify the success status=0H in logged `C-STORE-RSP` messages, e.g.:
 
 You may try to send another set of objects via dicom-tls:
 
-    $DCM4CHE_HOME/bin/storescu -cDCM4CHEE@localhost:2762 --tls ~/MESA-storage-A_12_5_0/modality/CT/CT2
+    > $DCM4CHE_HOME/bin/storescu -cDCM4CHEE@localhost:2762 --tls ~/MESA-storage-A_12_5_0/modality/CT/CT2
 
 
 ### Test Query for DICOM Composite Objects
@@ -618,13 +645,13 @@ You may try to send another set of objects via dicom-tls:
 Use DCM4CHE 3.x's `dcmdump` utility to determine the `Patient ID` of one of the
 previous stored DICOM Composite Objects:
 
-    $DCM4CHE_HOME/bin/dcmdump ~/MESA-storage-A_12_5_0/modality/CT/CT1/CT1S1/CT1S1IM1.dcm | grep PatientID
+    > $DCM4CHE_HOME/bin/dcmdump ~/MESA-storage-A_12_5_0/modality/CT/CT1/CT1S1/CT1S1IM1.dcm | grep PatientID
     360: (0010,0020) LO #6 [GE0514] PatientID
 
 and invoke a query for studies of this patient using DCM4CHE 3.x's `findscu` utility:
 
-    $DCM4CHE_HOME/bin/findscu -cDCM4CHEE@localhost:11112 \
-                              -mPatientID=GE0514 -rStudyInstanceUID
+    > $DCM4CHE_HOME/bin/findscu -cDCM4CHEE@localhost:11112 \
+      -mPatientID=GE0514 -rStudyInstanceUID
 
 Verify, that there is at least one C-FIND-RSP with pending status=ff00H, e.g.:
 
@@ -656,13 +683,13 @@ and that there is a final C-FIND-RSP with success status=0H, e.g.:
 Start DCM4CHE 3.x's `storescp` utility in a new console window for
 acting as retrieve destination, listening on port 11115:
 
-    $DCM4CHE_HOME/bin/storescp -b11115
+    > $DCM4CHE_HOME/bin/storescp -b11115
     16:28:46,910 INFO  - Start listening on 0.0.0.0/0.0.0.0:11115
 
 Invoke a retrieve request for a study with given Study Instance UID
 to STORESCP using DCM4CHE 3.x's `movescu` utility:
 
-    $DCM4CHE_HOME/bin/movescu -cDCM4CHEE@localhost:11112 --dest STORESCP \
+    > $DCM4CHE_HOME/bin/movescu -cDCM4CHEE@localhost:11112 --dest STORESCP \
       -mStudyInstanceUID=1.2.840.113674.514.212.200
 
 Verify the success status=0H in the final `C-MOVE-RSP` messages, e.g.:
@@ -700,6 +727,6 @@ and that `storescp` actually received the objects of the study, e.g.:
 You may also try to retrieve the same study by C-GET instead of C-MOVE, using
 DCM4CHE 3.x's `getscu` utility:
 
-    $DCM4CHE_HOME/bin/getscu -cDCM4CHEE@localhost:11112 \
+    > $DCM4CHE_HOME/bin/getscu -cDCM4CHEE@localhost:11112 \
       -mStudyInstanceUID=1.2.840.113674.514.212.200
 
