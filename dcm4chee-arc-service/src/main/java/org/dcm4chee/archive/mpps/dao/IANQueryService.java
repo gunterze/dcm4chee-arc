@@ -39,7 +39,9 @@
 package org.dcm4chee.archive.mpps.dao;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -52,7 +54,6 @@ import org.dcm4che.data.UID;
 import org.dcm4che.data.VR;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.DicomServiceException;
-import org.dcm4chee.archive.entity.Availability;
 import org.dcm4chee.archive.entity.Instance;
 import org.dcm4chee.archive.entity.PerformedProcedureStep;
 import org.dcm4chee.archive.entity.SOPInstanceReference;
@@ -163,9 +164,9 @@ public class IANQueryService {
         return null;
     }
 
-    public Attributes createIANforRejectionNote(Attributes rejectionNote,
-            Availability rejection) {
+    public Attributes createIANforRejectionNote(Attributes rejectionNote) {
         String studyIUID = rejectionNote.getString(Tag.StudyInstanceUID);
+        Set<String>iuids = extractIUIDs(rejectionNote);
 
         Attributes ian = new Attributes(3);
         Attributes rnRefPPS = rejectionNote
@@ -189,7 +190,7 @@ public class IANQueryService {
         int size = storedSOPs.size();
         for (SOPInstanceReference storedSOP : storedSOPs) {
             if (storedSOP.availability.available()
-                    || storedSOP.availability == rejection)
+                    || iuids.contains(storedSOP.sopInstanceUID))
                 refSeries(refSeriesSeq, storedSOP.seriesInstanceUID, size)
                     .getSequence(Tag.ReferencedSOPSequence)
                     .add(makeRefSOPItem(storedSOP));
@@ -200,6 +201,7 @@ public class IANQueryService {
     public List<Attributes> createIANsforIncorrectModalityWorklistEntry(
             Attributes rejectionNote) {
         String studyIUID = rejectionNote.getString(Tag.StudyInstanceUID);
+        Set<String>iuids = extractIUIDs(rejectionNote);
         List<Attributes> ians = new ArrayList<Attributes>();
         @SuppressWarnings("unchecked")
         List<SOPInstanceReference> storedSOPs =
@@ -209,8 +211,8 @@ public class IANQueryService {
               .getResultList();
         int size = storedSOPs.size();
         for (SOPInstanceReference storedSOP : storedSOPs) {
-            if (storedSOP.availability.available() || storedSOP.availability
-                        == Availability.INCORRECT_MODALITY_WORKLIST_ENTRY) {
+            if (storedSOP.availability.available()
+                    || iuids.contains(storedSOP.sopInstanceUID)) {
                 Sequence refSeriesSeq = ian(ians, storedSOP)
                         .getSequence(Tag.ReferencedSeriesSequence);
                 
@@ -220,6 +222,24 @@ public class IANQueryService {
             }
         }
         return ians;
+    }
+
+    private Set<String> extractIUIDs(Attributes rejectionNote) {
+        Set<String> iuids = new HashSet<String>();
+        Sequence refStudySeq = rejectionNote.getSequence(
+                Tag.CurrentRequestedProcedureEvidenceSequence);
+        for (Attributes refStudy : refStudySeq) {
+            Sequence refSeriesSeq = refStudy
+                    .getSequence(Tag.ReferencedSeriesSequence);
+            for (Attributes refSeries : refSeriesSeq) {
+                Sequence refSOPSeq =
+                        refSeries.getSequence(Tag.ReferencedSOPSequence);
+                for (Attributes refSOP : refSOPSeq) {
+                    iuids.add(refSOP.getString(Tag.ReferencedSOPInstanceUID));
+                }
+            }
+        }
+        return iuids;
     }
 
     private Attributes refSeries(Sequence refSeriesSeq, String seriesIUID, int size) {
