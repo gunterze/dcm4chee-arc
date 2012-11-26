@@ -9,13 +9,28 @@ DICOM Archive Java EE application running in JBoss AS 7.
 This is a complete rewrite of DCM4CHEE Archive 2.x.
 
 One major improvement to 2.x is the use of LDAP as central configuration,
-compliant to the DICOM Application Configuration Management Profile.
+compliant to the DICOM Application Configuration Management Profile,
+specified in [DICOM 2011, Part 15][1], Annex H.
+
+[1]: ftp://medical.nema.org/medical/dicom/2011/11_15pu.pdf
 
 This first Alpha version supports DICOM and HL7 Services required for
-compliance with IHE Radiology Integration Profiles Scheduled Workflow (SWF),
-Patient Information Reconciliation (PIR) and the new Imaging Object Change
-Management (IOCM) Profile, including the new Multiple Identity Resolution
-Option for these Profiles.
+compliance with IHE Radiology Workflow Integration Profiles:
+
+- [Scheduled Workflow (SWF)][2]
+- [Patient Information Reconciliation (PIR)][3]
+- [Imaging Object Change Management (IOCM)][4]
+
+for IHE Actor Image Manager/Archive, including the new 
+
+- [Multiple Identity Resolution Option][5]
+
+for these Profiles.
+
+[2]: http://wiki.ihe.net/index.php?title=Scheduled_Workflow
+[3]: http://wiki.ihe.net/index.php?title=Patient_Information_Reconciliation
+[4]: http://www.ihe.net/Technical_Framework/upload/IHE_RAD_Suppl_IOCM_Rev1-1_TI_2011-05-17.pdf
+[5]: http://www.ihe.net/Technical_Framework/upload/IHE_RAD_Suppl_MIMA.pdf
 
 There are still major gaps compared to the functionallity of DCM4CHEE Archive 2.x:
 
@@ -38,7 +53,7 @@ After installation of [Maven 3](http://maven.apache.org):
 
 Installation
 ------------
-See INSTALL.md.
+See [INSTALL.md](INSTALL.md).
 
 License
 -------
