@@ -53,7 +53,7 @@ After installation of [Maven 3](http://maven.apache.org):
 
 Installation
 ------------
-See [INSTALL.md](INSTALL.md).
+See [INSTALL.md](dcm4chee-arc/INSTALL.md).
 
 License
 -------
