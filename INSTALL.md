@@ -146,13 +146,12 @@ Setup LDAP Server
 2.  Run OpenDJ GUI based setup utility
 
         > $OPENDJ_HOME/setup
-
+    
     Log the values choosen for
-
-    - LDAP Listener port (1389)
-    - Root User DN (cn=Directory Manager)
-    - Root User Password (secret)
-    - Directory Base DN (dc=example,dc=com)
+    -  LDAP Listener port (1389)
+    -  Root User DN (cn=Directory Manager)
+    -  Root User Password (secret)
+    -  Directory Base DN (dc=example,dc=com)
 
     needed for the LDAP connection configuration of DCM4CHEE Archive.
 
@@ -419,7 +418,7 @@ Setup JBoss AS 7
     and XSLT stylesheets specifing attribute coercion in incoming or outgoing DICOM messages
     and mapping of HL7 fields in incoming HL7 messages are not stored in LDAP.
 
-3.  Install DCM4CHE 3.0.0 libraries as JBoss AS 7 module:
+3.  Install DCM4CHE 3.0.1 libraries as JBoss AS 7 module:
 
         > cd  $JBOSS_HOME
         > unzip $DCM4CHEE_ARC/jboss-module/dcm4che-jboss-modules-3.0.0.zip
@@ -431,7 +430,6 @@ Setup JBoss AS 7
 
 5.  Install JDBC Driver. DCM4CHEE Archive 4.x binary distributions do not include
     a JDBC driver for the database for license issues. You may download it from:
-
     -   [MySQL](http://www.mysql.com/products/connector/)
     -   [PostgreSQL]( http://jdbc.postgresql.org/)
     -   [Firebird](http://www.firebirdsql.org/en/jdbc-driver/)
@@ -527,19 +525,18 @@ Setup JBoss AS 7
         [standalone@localhost:9999 /] data-source enable --name=PacsDS
 
     The format of `<jdbc-url>` is JDBC Driver specific, e.g.:
-
-    - MySQL: `jdbc:mysql://localhost:3306/<database-name>`
-    - PostgreSQL: `jdbc:postgresql://localhost:5432/<database-name>`
-    - Firebird: `jdbc:firebirdsql:localhost/3050:<database-name>`
-    - DB2: `jdbc:db2://localhost:50000/<database-name>`
-    - Oracle: `jdbc:oracle:thin:@localhost:1521:<database-name>`
-    - Microsoft SQL Server: `jdbc:sqlserver://localhost:1433;databaseName=<database-name>`
+    -  MySQL: `jdbc:mysql://localhost:3306/<database-name>`
+    -  PostgreSQL: `jdbc:postgresql://localhost:5432/<database-name>`
+    -  Firebird: `jdbc:firebirdsql:localhost/3050:<database-name>`
+    -  DB2: `jdbc:db2://localhost:50000/<database-name>`
+    -  Oracle: `jdbc:oracle:thin:@localhost:1521:<database-name>`
+    -  Microsoft SQL Server: `jdbc:sqlserver://localhost:1433;databaseName=<database-name>`
 
 9.  Create JMS Queues using JBoss AS 7 CLI:
 
-        [standalone@localhost:9999 /] jms-queue add --queue-address=ianscu --entries="queue/ianscu
-        [standalone@localhost:9999 /] jms-queue add --queue-address=mppsscu --entries="queue/mppsscu
-        [standalone@localhost:9999 /] jms-queue add --queue-address=stgcmtscp --entries="queue/stgcmtscp
+        [standalone@localhost:9999 /] jms-queue add --queue-address=ianscu --entries=queue/ianscu
+        [standalone@localhost:9999 /] jms-queue add --queue-address=mppsscu --entries=queue/mppsscu
+        [standalone@localhost:9999 /] jms-queue add --queue-address=stgcmtscp --entries=queue/stgcmtscp
 
 10. At default, DCM4CHEE Archive 4.x will look for the LDAP connection configuration file at
 
