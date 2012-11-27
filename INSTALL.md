@@ -221,7 +221,7 @@ See also [Converting old style slapd.conf file to cn=config format][1]
         > echo -n VmVyeVNlY3JldA== | base64 -d
         VerySecret
 
-    or specify a new password in plan text in `{0}config.ldif`, e.g:
+    or specify a new password in plan text, e.g:
 
         olcRootPW: VerySecret
 
