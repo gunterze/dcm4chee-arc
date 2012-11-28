@@ -1,6 +1,5 @@
 DCM4CHEE Archive 4.x
 ====================
-Wiki: http://www.dcm4che.org/confluence/display/arc4/DCM4CHEE+Archive+4.x  
 Sources: https://github.com/dcm4che/dcm4chee-arc   
 Issue Tracker: http://www.dcm4che.org/jira/browse/ARCH  
 
