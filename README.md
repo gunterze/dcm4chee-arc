@@ -1,7 +1,7 @@
 DCM4CHEE Archive 4.x
 ====================
-Sources: https://github.com/dcm4che/dcm4chee-arc   
-Binaries: https://sourceforge.net/projects/dcm4che/files/dcm4chee-arc4
+Sources: https://github.com/dcm4che/dcm4chee-arc  
+Binaries: https://sourceforge.net/projects/dcm4che/files/dcm4chee-arc4  
 Issue Tracker: http://www.dcm4che.org/jira/browse/ARCH  
 
 DICOM Archive Java EE application running in JBoss AS 7.
