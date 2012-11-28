@@ -11,6 +11,8 @@
       <directory>..</directory>
       <includes>
         <include>INSTALL.md</include>
+        <include>README.md</include>
+        <include>LICENSE.txt</include>
       </includes>
       <outputDirectory>.</outputDirectory>
       <lineEnding>dos</lineEnding>

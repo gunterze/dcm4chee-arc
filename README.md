@@ -1,11 +1,12 @@
 DCM4CHEE Archive 4.x
 ====================
 Sources: https://github.com/dcm4che/dcm4chee-arc   
+Binaries: https://sourceforge.net/projects/dcm4che/files/dcm4chee-arc4
 Issue Tracker: http://www.dcm4che.org/jira/browse/ARCH  
 
 DICOM Archive Java EE application running in JBoss AS 7.
 
-This is a complete rewrite of DCM4CHEE Archive 2.x.
+This is a complete rewrite of [DCM4CHEE Archive 2.x](http://www.dcm4che.org/confluence/display/ee2/Home).
 
 One major improvement to 2.x is the use of LDAP as central configuration,
 compliant to the DICOM Application Configuration Management Profile,
@@ -31,7 +32,7 @@ for these Profiles.
 [4]: http://www.ihe.net/Technical_Framework/upload/IHE_RAD_Suppl_IOCM_Rev1-1_TI_2011-05-17.pdf
 [5]: http://www.ihe.net/Technical_Framework/upload/IHE_RAD_Suppl_MIMA.pdf
 
-There are still major gaps compared to the functionallity of DCM4CHEE Archive 2.x:
+There are still major gaps compared to the functionality of DCM4CHEE Archive 2.x:
 
 - no Web-interface
 - no WADO Service
@@ -52,7 +53,7 @@ After installation of [Maven 3](http://maven.apache.org):
 
 Installation
 ------------
-See [INSTALL.md](/dcm4che/dcm4chee-arc/blob/master/INSTALL.md).
+See [INSTALL.md](https://github.com/dcm4che/dcm4chee-arc/blob/master/INSTALL.md).
 
 License
 -------
