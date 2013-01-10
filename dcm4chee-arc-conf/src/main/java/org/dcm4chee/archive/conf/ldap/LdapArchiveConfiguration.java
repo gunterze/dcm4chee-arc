@@ -113,21 +113,21 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
     protected Device newDevice(Attributes attrs) throws NamingException {
         if (!hasObjectClass(attrs, "dcmArchiveDevice"))
             return super.newDevice(attrs);
-        return new ArchiveDevice(stringValue(attrs.get("dicomDeviceName")));
+        return new ArchiveDevice(stringValue(attrs.get("dicomDeviceName"), null));
     }
 
     @Override
     protected ApplicationEntity newApplicationEntity(Attributes attrs) throws NamingException {
         if (!hasObjectClass(attrs, "dcmArchiveNetworkAE"))
             return super.newApplicationEntity(attrs);
-        return new ArchiveApplicationEntity(stringValue(attrs.get("dicomAETitle")));
+        return new ArchiveApplicationEntity(stringValue(attrs.get("dicomAETitle"), null));
     }
 
     @Override
     protected HL7Application newHL7Application(Attributes attrs) throws NamingException {
         if (!hasObjectClass(attrs, "dcmArchiveHL7Application"))
             return super.newHL7Application(attrs);
-        return new ArchiveHL7Application(stringValue(attrs.get("hl7ApplicationName")));
+        return new ArchiveHL7Application(stringValue(attrs.get("hl7ApplicationName"), null));
     }
 
     @Override
@@ -268,22 +268,23 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
             return;
         ArchiveDevice arcdev = (ArchiveDevice) device;
         arcdev.setIncorrectWorklistEntrySelectedCode(new Code(
-                stringValue(attrs.get("dcmIncorrectWorklistEntrySelectedCode"))));
+                stringValue(attrs.get("dcmIncorrectWorklistEntrySelectedCode"), null)));
         arcdev.setRejectedForQualityReasonsCode(new Code(
-                stringValue(attrs.get("dcmRejectedForQualityReasonsCode"))));
+                stringValue(attrs.get("dcmRejectedForQualityReasonsCode"), null)));
         arcdev.setRejectedForPatientSafetyReasonsCode(new Code(
-                stringValue(attrs.get("dcmRejectedForPatientSafetyReasonsCode"))));
+                stringValue(attrs.get("dcmRejectedForPatientSafetyReasonsCode"), null)));
         arcdev.setIncorrectModalityWorklistEntryCode(new Code(
-                stringValue(attrs.get("dcmIncorrectModalityWorklistEntryCode"))));
+                stringValue(attrs.get("dcmIncorrectModalityWorklistEntryCode"), null)));
         arcdev.setDataRetentionPeriodExpiredCode(new Code(
-                stringValue(attrs.get("dcmDataRetentionPeriodExpiredCode"))));
-        arcdev.setFuzzyAlgorithmClass(stringValue(attrs.get("dcmFuzzyAlgorithmClass")));
+                stringValue(attrs.get("dcmDataRetentionPeriodExpiredCode"), null)));
+        arcdev.setFuzzyAlgorithmClass(stringValue(attrs.get("dcmFuzzyAlgorithmClass"), null));
         arcdev.setConfigurationStaleTimeout(
                 intValue(attrs.get("dcmConfigurationStaleTimeout"), 0));
     }
 
     @Override
-    protected void loadChilds(Device device, String deviceDN) throws NamingException {
+    protected void loadChilds(Device device, String deviceDN)
+            throws NamingException, ConfigurationException {
         super.loadChilds(device, deviceDN);
         if (!(device instanceof ArchiveDevice))
             return;
@@ -305,7 +306,7 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
                 filter.setCustomAttribute2(valueSelector(attrs.get("dcmCustomAttribute2")));
                 filter.setCustomAttribute3(valueSelector(attrs.get("dcmCustomAttribute3")));
                 device.setAttributeFilter(
-                        Entity.valueOf(stringValue(attrs.get("dcmEntity"))), filter);
+                        Entity.valueOf(stringValue(attrs.get("dcmEntity"), null)), filter);
             }
         } finally {
            safeClose(ne);
@@ -335,12 +336,12 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
        if (!(ae instanceof ArchiveApplicationEntity))
            return;
        ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) ae;
-       arcae.setFileSystemGroupID(stringValue(attrs.get("dcmFileSystemGroupID")));
-       arcae.setInitFileSystemURI(stringValue(attrs.get("dcmInitFileSystemURI")));
+       arcae.setFileSystemGroupID(stringValue(attrs.get("dcmFileSystemGroupID"), null));
+       arcae.setInitFileSystemURI(stringValue(attrs.get("dcmInitFileSystemURI"), null));
        arcae.setSpoolFilePathFormat(attributesFormat(attrs.get("dcmSpoolFilePathFormat")));
        arcae.setStorageFilePathFormat(attributesFormat(attrs.get("dcmStorageFilePathFormat")));
-       arcae.setDigestAlgorithm(stringValue(attrs.get("dcmDigestAlgorithm")));
-       arcae.setExternalRetrieveAET(stringValue(attrs.get("dcmExternalRetrieveAET")));
+       arcae.setDigestAlgorithm(stringValue(attrs.get("dcmDigestAlgorithm"), null));
+       arcae.setExternalRetrieveAET(stringValue(attrs.get("dcmExternalRetrieveAET"), null));
        arcae.setRetrieveAETs(stringArray(attrs.get("dcmRetrieveAET")));
        arcae.setMatchUnknown(booleanValue(attrs.get("dcmMatchUnknown"), false));
        arcae.setSendPendingCGet(booleanValue(attrs.get("dcmSendPendingCGet"), false));
@@ -351,7 +352,7 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
                booleanValue(attrs.get("dcmStoreOriginalAttributes"), false));
        arcae.setPreserveSpoolFileOnFailure(
                booleanValue(attrs.get("dcmPreserveSpoolFileOnFailure"), false));
-       arcae.setModifyingSystem(stringValue(attrs.get("dcmModifyingSystem")));
+       arcae.setModifyingSystem(stringValue(attrs.get("dcmModifyingSystem"), null));
        arcae.setStorageCommitmentDelay(intValue(attrs.get("dcmStgCmtDelay"), 0));
        arcae.setStorageCommitmentMaxRetries(intValue(attrs.get("dcmStgCmtMaxRetries"), 0));
        arcae.setStorageCommitmentRetryInterval(intValue(attrs.get("dcmStgCmtRetryInterval"),
@@ -370,8 +371,8 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
                booleanValue(attrs.get("dcmReturnOtherPatientNames"), false));
        arcae.setShowRejectedInstances(
                booleanValue(attrs.get("dcmShowRejectedInstances"), false));
-       arcae.setLocalPIXConsumerApplication(stringValue(attrs.get("hl7PIXConsumerApplication")));
-       arcae.setRemotePIXManagerApplication(stringValue(attrs.get("hl7PIXManagerApplication")));
+       arcae.setLocalPIXConsumerApplication(stringValue(attrs.get("hl7PIXConsumerApplication"), null));
+       arcae.setRemotePIXManagerApplication(stringValue(attrs.get("hl7PIXManagerApplication"), null));
     }
 
     @Override
@@ -397,9 +398,9 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
     private StoreDuplicate storeDuplicate(Attributes attrs) throws NamingException {
         return new StoreDuplicate(
                 StoreDuplicate.Condition.valueOf(
-                        stringValue(attrs.get("dcmStoreDuplicateCondition"))),
+                        stringValue(attrs.get("dcmStoreDuplicateCondition"), null)),
                 StoreDuplicate.Action.valueOf(
-                        stringValue(attrs.get("dcmStoreDuplicateAction"))));
+                        stringValue(attrs.get("dcmStoreDuplicateAction"), null)));
     }
 
     @Override

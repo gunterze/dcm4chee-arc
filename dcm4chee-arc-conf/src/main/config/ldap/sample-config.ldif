@@ -406,6 +406,7 @@ dicomHostname: localhost
 dicomPort: 2576
 objectClass: dicomNetworkConnection
 objectClass: dcmNetworkConnection
+dcmProtocol: HL7
 cn: hl7
 
 dn: cn=hl7-tls,dicomDeviceName=hl7rcv,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
@@ -415,6 +416,7 @@ objectClass: dicomNetworkConnection
 objectClass: dcmNetworkConnection
 dicomTLSCipherSuite: TLS_RSA_WITH_AES_128_CBC_SHA
 dicomTLSCipherSuite: SSL_RSA_WITH_3DES_EDE_CBC_SHA
+dcmProtocol: HL7
 dcmTLSProtocol: TLSv1
 dcmTLSProtocol: SSLv3
 cn: hl7-tls
@@ -491,6 +493,7 @@ dicomHostname: localhost
 dicomPort: 2575
 objectClass: dicomNetworkConnection
 objectClass: dcmNetworkConnection
+dcmProtocol: HL7
 cn: hl7
 
 dn: cn=hl7-tls,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
@@ -500,6 +503,7 @@ objectClass: dicomNetworkConnection
 objectClass: dcmNetworkConnection
 dicomTLSCipherSuite: TLS_RSA_WITH_AES_128_CBC_SHA
 dicomTLSCipherSuite: SSL_RSA_WITH_3DES_EDE_CBC_SHA
+dcmProtocol: HL7
 dcmTLSProtocol: TLSv1
 dcmTLSProtocol: SSLv3
 cn: hl7-tls

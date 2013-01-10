@@ -699,15 +699,17 @@ public class ArchiveDeviceTest {
          init(device, issuer, institutionCode);
          HL7Application hl7app = new HL7Application(appName);
          device.addHL7Application(hl7app);
-         Connection dicom = new Connection("hl7", host, port);
-         device.addConnection(dicom);
-         hl7app.addConnection(dicom);
-         Connection dicomTLS = new Connection("hl7-tls", host, tlsPort);
-         dicomTLS.setTlsCipherSuites(
+         Connection hl7 = new Connection("hl7", host, port);
+         hl7.setProtocol(Connection.Protocol.HL7);
+         device.addConnection(hl7);
+         hl7app.addConnection(hl7);
+         Connection hl7TLS = new Connection("hl7-tls", host, tlsPort);
+         hl7TLS.setProtocol(Connection.Protocol.HL7);
+         hl7TLS.setTlsCipherSuites(
                  Connection.TLS_RSA_WITH_AES_128_CBC_SHA, 
                  Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
-         device.addConnection(dicomTLS);
-         hl7app.addConnection(dicomTLS);
+         device.addConnection(hl7TLS);
+         hl7app.addConnection(hl7TLS);
          return device;
      }
 
@@ -757,9 +759,11 @@ public class ArchiveDeviceTest {
                 "file:${jboss.server.config.dir}/dcm4chee-arc/hl7-adt2dcm.xsl");
         device.addHL7Application(hl7App);
         Connection hl7 = new Connection("hl7", "localhost", 2575);
+        hl7.setProtocol(Connection.Protocol.HL7);
         device.addConnection(hl7);
         hl7App.addConnection(hl7);
         Connection hl7TLS = new Connection("hl7-tls", "localhost", 12575);
+        hl7TLS.setProtocol(Connection.Protocol.HL7);
         hl7TLS.setTlsCipherSuites(
                 Connection.TLS_RSA_WITH_AES_128_CBC_SHA, 
                 Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);

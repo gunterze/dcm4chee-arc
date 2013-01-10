@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.conf.prefs.hl7.PreferencesHL7Configuration;
 import org.dcm4che.data.Code;
 import org.dcm4che.data.ValueSelector;
@@ -254,7 +255,7 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
 
     @Override
     protected void loadChilds(Device device, Preferences deviceNode)
-            throws BackingStoreException {
+            throws BackingStoreException, ConfigurationException {
         super.loadChilds(device, deviceNode);
         if (!(device instanceof ArchiveDevice))
             return;

@@ -5813,6 +5813,7 @@
             <node name="3">
               <map>
                 <entry key="cn" value="hl7"/>
+                <entry key="dcmProtocol" value="HL7"/>
                 <entry key="dicomHostname" value="localhost"/>
                 <entry key="dicomPort" value="2575"/>
               </map>
@@ -5820,6 +5821,7 @@
             <node name="4">
               <map>
                 <entry key="cn" value="hl7-tls"/>
+                <entry key="dcmProtocol" value="HL7"/>
                 <entry key="dcmTLSProtocol.#" value="2"/>
                 <entry key="dcmTLSProtocol.1" value="TLSv1"/>
                 <entry key="dcmTLSProtocol.2" value="SSLv3"/>
@@ -6023,6 +6025,7 @@
             <node name="1">
               <map>
                 <entry key="cn" value="hl7"/>
+                <entry key="dcmProtocol" value="HL7"/>
                 <entry key="dicomHostname" value="localhost"/>
                 <entry key="dicomPort" value="2576"/>
               </map>
@@ -6030,6 +6033,7 @@
             <node name="2">
               <map>
                 <entry key="cn" value="hl7-tls"/>
+                <entry key="dcmProtocol" value="HL7"/>
                 <entry key="dcmTLSProtocol.#" value="2"/>
                 <entry key="dcmTLSProtocol.1" value="TLSv1"/>
                 <entry key="dcmTLSProtocol.2" value="SSLv3"/>
