@@ -38,13 +38,25 @@
 
 package org.dcm4chee.archive;
 
+import static org.dcm4che.audit.AuditMessages.createEventIdentification;
+
+import java.util.Calendar;
+
 import javax.jms.Queue;
 
+import org.dcm4che.audit.AuditMessage;
+import org.dcm4che.audit.AuditMessages;
+import org.dcm4che.audit.AuditMessages.EventActionCode;
+import org.dcm4che.audit.AuditMessages.EventID;
+import org.dcm4che.audit.AuditMessages.EventOutcomeIndicator;
+import org.dcm4che.audit.AuditMessages.EventTypeCode;
+import org.dcm4che.audit.AuditMessages.RoleIDCode;
 import org.dcm4che.conf.api.ApplicationEntityCache;
 import org.dcm4che.conf.api.hl7.HL7ApplicationCache;
 import org.dcm4che.conf.api.hl7.HL7Configuration;
 import org.dcm4che.data.UID;
 import org.dcm4che.net.DeviceService;
+import org.dcm4che.net.audit.AuditLogger;
 import org.dcm4che.net.hl7.HL7MessageListener;
 import org.dcm4che.net.hl7.service.HL7ServiceRegistry;
 import org.dcm4che.net.service.BasicCEchoSCP;
@@ -209,6 +221,7 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         ianSCU.start(device);
         stgCmtSCP.start(device);
         jmsService.start();
+        log(AuditMessages.EventTypeCode.ApplicationStart);
     }
 
     @Override
@@ -218,6 +231,38 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         mppsSCU.stop();
         ianSCU.stop();
         stgCmtSCP.stop();
+        log(EventTypeCode.ApplicationStop);
+    }
+
+    private void log(EventTypeCode eventType) {
+        AuditLogger logger = device.getDeviceExtension(AuditLogger.class);
+        if (logger != null && logger.isInstalled()) {
+            Calendar timeStamp = logger.timeStamp();
+            try {
+                logger.write(timeStamp,
+                        createApplicationActivityMessage(logger, timeStamp, eventType));
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private AuditMessage createApplicationActivityMessage(AuditLogger logger,
+            Calendar timeStamp, EventTypeCode eventType) {
+        AuditMessage msg = new AuditMessage();
+        msg.setEventIdentification(createEventIdentification(
+                EventID.ApplicationActivity, 
+                EventActionCode.Execute,
+                timeStamp,
+                EventOutcomeIndicator.Success,
+                null,
+                eventType));
+        msg.getAuditSourceIdentification().add(
+                logger.createAuditSourceIdentification());
+        msg.getActiveParticipant().add(
+                logger.createActiveParticipant(true, RoleIDCode.Application));
+        return msg ;
     }
 
 }

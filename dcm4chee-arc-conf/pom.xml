@@ -13,11 +13,19 @@
   <dependencies>
     <dependency>
       <groupId>org.dcm4che</groupId>
-      <artifactId>dcm4che-conf-prefs-hl7</artifactId>
+      <artifactId>dcm4che-conf-ldap-audit</artifactId>
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
       <artifactId>dcm4che-conf-ldap-hl7</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dcm4che</groupId>
+      <artifactId>dcm4che-conf-prefs-audit</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dcm4che</groupId>
+      <artifactId>dcm4che-conf-prefs-hl7</artifactId>
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
@@ -32,7 +40,7 @@
         <configuration>
           <archive>
             <manifestEntries>
-              <Dependencies>org.dcm4che.conf.ldap-hl7, org.dcm4che.conf.prefs-hl7, org.dcm4che.soundex</Dependencies>
+              <Dependencies>org.dcm4che.conf.ldap-audit, org.dcm4che.conf.prefs-audit,org.dcm4che.conf.ldap-hl7, org.dcm4che.conf.prefs-hl7, org.dcm4che.soundex</Dependencies>
             </manifestEntries>
           </archive>
         </configuration>

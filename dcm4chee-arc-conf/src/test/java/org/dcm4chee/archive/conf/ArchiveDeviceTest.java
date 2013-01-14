@@ -46,22 +46,29 @@ import java.io.OutputStream;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.EnumSet;
-import java.util.prefs.Preferences;
 
 import org.dcm4che.conf.api.AttributeCoercion;
+import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.conf.api.ConfigurationNotFoundException;
 import org.dcm4che.conf.api.hl7.HL7Configuration;
+import org.dcm4che.conf.ldap.audit.LdapAuditLoggerConfiguration;
+import org.dcm4che.conf.ldap.audit.LdapAuditRecordRepositoryConfiguration;
+import org.dcm4che.conf.prefs.audit.PreferencesAuditLoggerConfiguration;
+import org.dcm4che.conf.prefs.audit.PreferencesAuditRecordRepositoryConfiguration;
 import org.dcm4che.data.Code;
 import org.dcm4che.data.Issuer;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Connection;
+import org.dcm4che.net.Connection.Protocol;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.Dimse;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.SSLManagerFactory;
 import org.dcm4che.net.TransferCapability;
+import org.dcm4che.net.audit.AuditLogger;
+import org.dcm4che.net.audit.AuditRecordRepository;
 import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.net.hl7.HL7Device;
 import org.dcm4che.util.AttributesFormat;
@@ -592,9 +599,28 @@ public class ArchiveDeviceTest {
         keystore = SSLManagerFactory.loadKeyStore("JKS", 
                 StringUtils.resourceURL("cacerts.jks"), "secret");
         config = System.getProperty("ldap") == null
-                ? new PreferencesArchiveConfiguration(Preferences.userRoot())
-                : new LdapArchiveConfiguration();
+                ? newPreferencesArchiveConfiguration()
+                : newLdapArchiveConfiguration();
         cleanUp();
+    }
+
+    private HL7Configuration newLdapArchiveConfiguration() throws ConfigurationException {
+        LdapArchiveConfiguration config = new LdapArchiveConfiguration();
+        config.addDicomConfigurationExtension(
+                new LdapAuditLoggerConfiguration());
+        config.addDicomConfigurationExtension(
+                new LdapAuditRecordRepositoryConfiguration());
+        return config;
+    }
+
+    private HL7Configuration newPreferencesArchiveConfiguration() {
+        PreferencesArchiveConfiguration config =
+                new PreferencesArchiveConfiguration();
+        config.addDicomConfigurationExtension(
+                new PreferencesAuditLoggerConfiguration());
+        config.addDicomConfigurationExtension(
+                new PreferencesAuditRecordRepositoryConfiguration());
+        return config;
     }
 
     @After
@@ -616,12 +642,25 @@ public class ArchiveDeviceTest {
             config.persist(createDevice(OTHER_DEVICES[i]));
         config.persist(createHL7Device("hl7rcv", SITE_A, INST_A, PIX_MANAGER,
                 "localhost", 2576, 12576));
+        Device arrDevice = createARRDevice("syslog", Protocol.SYSLOG_UDP, 514);
+        config.persist(arrDevice);
         config.registerAETitle("DCM4CHEE");
         config.registerAETitle("DCM4CHEE_ADMIN");
-        config.persist(createArchiveDevice("dcm4chee-arc"));
+        config.persist(createArchiveDevice("dcm4chee-arc", arrDevice ));
         config.findApplicationEntity("DCM4CHEE");
         if (config instanceof PreferencesArchiveConfiguration)
             export(System.getProperty("export"));
+    }
+
+    private Device createARRDevice(String name, Protocol protocol, int port) {
+        Device arrDevice = new Device(name);
+        AuditRecordRepository arr = new AuditRecordRepository();
+        arrDevice.addDeviceExtension(arr);
+        Connection auditUDP = new Connection("audit-udp", "localhost", port);
+        auditUDP.setProtocol(protocol);
+        arrDevice.addConnection(auditUDP);
+        arr.addConnection(auditUDP);
+        return arrDevice ;
     }
 
     private void cleanUp() throws Exception {
@@ -632,6 +671,9 @@ public class ArchiveDeviceTest {
 
         try {
             config.removeDevice("dcm4chee-arc");
+        } catch (ConfigurationNotFoundException e) {}
+        try {
+            config.removeDevice("syslog");
         } catch (ConfigurationNotFoundException e) {}
         try {
             config.removeDevice("hl7rcv");
@@ -713,7 +755,7 @@ public class ArchiveDeviceTest {
          return device;
      }
 
-    private Device createArchiveDevice(String name) throws Exception {
+    private Device createArchiveDevice(String name, Device arrDevice) throws Exception {
         ArchiveDevice device = new ArchiveDevice(name);
         device.setIncorrectWorklistEntrySelectedCode(INCORRECT_WORKLIST_ENTRY_SELECTED);
         device.setRejectedForQualityReasonsCode(REJECTED_FOR_QUALITY_REASONS);
@@ -759,7 +801,7 @@ public class ArchiveDeviceTest {
                 "file:${jboss.server.config.dir}/dcm4chee-arc/hl7-adt2dcm.xsl");
         device.addHL7Application(hl7App);
         Connection hl7 = new Connection("hl7", "localhost", 2575);
-        hl7.setProtocol(Connection.Protocol.HL7);
+        hl7.setProtocol(Protocol.HL7);
         device.addConnection(hl7);
         hl7App.addConnection(hl7);
         Connection hl7TLS = new Connection("hl7-tls", "localhost", 12575);
@@ -769,6 +811,14 @@ public class ArchiveDeviceTest {
                 Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
         device.addConnection(hl7TLS);
         hl7App.addConnection(hl7TLS);
+        AuditLogger auditLogger = new AuditLogger();
+        device.addDeviceExtension(auditLogger);
+        Connection auditUDP = new Connection("audit-udp", "localhost");
+        auditUDP.setProtocol(Protocol.SYSLOG_UDP);
+        device.addConnection(auditUDP);
+        auditLogger.addConnection(auditUDP);
+        auditLogger.setAuditSourceTypeCodes("4");
+        auditLogger.setAuditRecordRepositoryDevice(arrDevice);
         return device ;
     }
 

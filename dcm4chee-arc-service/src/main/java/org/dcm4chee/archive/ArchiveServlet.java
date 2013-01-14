@@ -55,6 +55,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
 import org.dcm4che.conf.api.hl7.HL7Configuration;
+import org.dcm4che.conf.ldap.audit.LdapAuditLoggerConfiguration;
+import org.dcm4che.conf.ldap.audit.LdapAuditRecordRepositoryConfiguration;
+import org.dcm4che.conf.prefs.audit.PreferencesAuditLoggerConfiguration;
+import org.dcm4che.conf.prefs.audit.PreferencesAuditRecordRepositoryConfiguration;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.conf.ArchiveDevice;
@@ -130,11 +134,23 @@ public class ArchiveServlet extends HttpServlet {
                     .openStream();
                 Properties p = new Properties();
                 p.load(ldapConf);
-                dicomConfig = new LdapArchiveConfiguration(p);
+                LdapArchiveConfiguration ldapConfig =
+                        new LdapArchiveConfiguration(p);
+                ldapConfig.addDicomConfigurationExtension(
+                        new LdapAuditLoggerConfiguration());
+                ldapConfig.addDicomConfigurationExtension(
+                        new LdapAuditRecordRepositoryConfiguration());
+                dicomConfig = ldapConfig;
             } catch(FileNotFoundException e) {
                 LOG.info("Could not find " + ldapPropertiesURL
                         + " - use Java Preferences as Configuration Backend");
-                dicomConfig = new PreferencesArchiveConfiguration();
+                PreferencesArchiveConfiguration prefsConfig =
+                        new PreferencesArchiveConfiguration();
+                prefsConfig.addDicomConfigurationExtension(
+                        new PreferencesAuditLoggerConfiguration());
+                prefsConfig.addDicomConfigurationExtension(
+                        new PreferencesAuditRecordRepositoryConfiguration());
+                dicomConfig = prefsConfig;
             } finally {
                 SafeClose.close(ldapConf);
             }

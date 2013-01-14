@@ -324,6 +324,16 @@
               </map>
             </node>
           </node>
+          <node name="dcmAuditLogger">
+            <map>
+              <entry key="dcmAuditMessageSchemaURI" value="http://www.dcm4che.org/DICOM/audit-message.rnc"/>
+              <entry key="dcmAuditRecordRepositoryDeviceReference" value="dicomConfigurationRoot/dicomDevicesRoot/syslog"/>
+              <entry key="dcmAuditSourceTypeCode.#" value="1"/>
+              <entry key="dcmAuditSourceTypeCode.1" value="4"/>
+              <entry key="dicomNetworkConnectionReference.#" value="1"/>
+              <entry key="dicomNetworkConnectionReference.1" value="5"/>
+            </map>
+          </node>
           <node name="dcmNetworkAE">
             <map/>
             <node name="DCM4CHEE">
@@ -5832,6 +5842,13 @@
                 <entry key="dicomTLSCipherSuite.2" value="SSL_RSA_WITH_3DES_EDE_CBC_SHA"/>
               </map>
             </node>
+            <node name="5">
+              <map>
+                <entry key="cn" value="audit-udp"/>
+                <entry key="dcmProtocol" value="SYSLOG_UDP"/>
+                <entry key="dicomHostname" value="localhost"/>
+              </map>
+            </node>
           </node>
           <node name="hl7Application">
             <map/>
@@ -6374,6 +6391,34 @@
                 <entry key="dicomTLSCipherSuite.2" value="SSL_RSA_WITH_3DES_EDE_CBC_SHA"/>
               </map>
             </node>
+          </node>
+        </node>
+        <node name="syslog">
+          <map>
+            <entry key="dicomInstalled" value="true"/>
+          </map>
+          <node name="dcmAuditRecordRepository">
+            <map>
+              <entry key="dicomNetworkConnectionReference.#" value="1"/>
+              <entry key="dicomNetworkConnectionReference.1" value="1"/>
+            </map>
+          </node>
+          <node name="dcmNetworkAE">
+            <map/>
+          </node>
+          <node name="dcmNetworkConnection">
+            <map/>
+            <node name="1">
+              <map>
+                <entry key="cn" value="audit-udp"/>
+                <entry key="dcmProtocol" value="SYSLOG_UDP"/>
+                <entry key="dicomHostname" value="localhost"/>
+                <entry key="dicomPort" value="514"/>
+              </map>
+            </node>
+          </node>
+          <node name="hl7Application">
+            <map/>
           </node>
         </node>
       </node>

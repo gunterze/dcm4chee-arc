@@ -24,13 +24,25 @@
       </dependency>
       <dependency>
         <groupId>org.dcm4che</groupId>
-        <artifactId>dcm4che-conf-prefs-hl7</artifactId>
+        <artifactId>dcm4che-conf-ldap-audit</artifactId>
         <version>${dcm4che.version}</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.dcm4che</groupId>
         <artifactId>dcm4che-conf-ldap-hl7</artifactId>
+        <version>${dcm4che.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.dcm4che</groupId>
+        <artifactId>dcm4che-conf-prefs-audit</artifactId>
+        <version>${dcm4che.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.dcm4che</groupId>
+        <artifactId>dcm4che-conf-prefs-hl7</artifactId>
         <version>${dcm4che.version}</version>
         <scope>provided</scope>
       </dependency>
