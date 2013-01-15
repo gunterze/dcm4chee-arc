@@ -258,7 +258,7 @@ See also [Converting old style slapd.conf file to cn=config format][1]
 
         Network Parameter:
             Hostname: localhost
-            Port:     10398
+            Port:     10389
         Authentication Parameter:
             Bind DN or user: uid=admin,ou=system
             Bind password:   secret
@@ -618,27 +618,26 @@ Source Build With Eclipse
 
 1. Clone dcm4che, dcm4chee-arc, querydsl-jboss-modules and jdbc-jboss-modules from github
 
-1.4 run mvn install inside dcm4che, querydsl-jboss-modules and jdbc-jboss-modules projects.
+2. run mvn install inside dcm4che, querydsl-jboss-modules and jdbc-jboss-modules projects.
 
-1.5 In install instructions, use dcm4che project for dcm4che-jboss-modules zip file, and querydsl-jboss-modules project for querydsl jboss modules zip file.
+3. In install instructions, use dcm4che project for dcm4che-jboss-modules zip file, and querydsl-jboss-modules project for querydsl jboss modules zip file.
 
-2. import dcm4che and dcm4chee-arc into eclipse as maven projects
+4. import dcm4che and dcm4chee-arc into eclipse as maven projects
 
-3. under dcm4chee-arc project settings -> validation, disable JPA validation 
+5. under dcm4chee-arc project settings -> validation, disable JPA validation 
 
-4. under dcm4chee-arc-entity, add target/generated-sources/annotations as build path source folder
+6. under dcm4chee-arc-entity, add target/generated-sources/annotations as build path source folder
 
-5. set up a run configuration for dcm4chee-arc-parent, with install goal, and
+7. set up a run configuration for dcm4chee-arc-parent, with install goal, and
 db = psql, for example.
 
+8. verify that the run configuration will build the WAR
 
-6. verify that the run configuration will build the WAR
+9. Open Window -> Show View -> Servers, and create a new jboss 7.1 server
 
-7. Open Window -> Show View -> Servers, and create a new jboss 7.1 server
+10. add dcm4chee-arc-service when creating the server
 
-8. add dcm4chee-arc-service when creating the server
-
-9. now, you should be able to debug the archive from inside eclipse
+11. now, you should be able to debug the archive from inside eclipse
 
 
 
