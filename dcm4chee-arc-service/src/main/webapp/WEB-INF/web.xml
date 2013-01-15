@@ -19,10 +19,6 @@
       <param-value>dcm4chee-arc</param-value>
     </init-param>
     <init-param>
-      <param-name>storageDirectory</param-name>
-      <param-value>${jboss.server.data.dir}</param-value>
-    </init-param>
-    <init-param>
       <param-name>jmxName</param-name>
       <param-value>org.dcm4chee.archive:type=Service</param-value>
     </init-param>
