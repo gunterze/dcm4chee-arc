@@ -158,7 +158,7 @@ public class ArchiveDevice extends HL7Device {
         TemplatesCache tmp = templatesCache;
         if (tmp == null)
             templatesCache = tmp = new TemplatesCache();
-        return tmp.get(StringUtils.replaceSystemProperties(uri));
+        return tmp.get(StringUtils.replaceSystemProperties(uri).replace('\\', '/'));
     }
 
     public void setAttributeFilter(Entity entity, AttributeFilter filter) {

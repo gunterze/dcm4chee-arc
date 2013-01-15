@@ -377,7 +377,7 @@ public class StoreService {
                         "No writeable File System in File System Group " + groupID);
             FileSystem fs = new FileSystem();
             fs.setGroupID(groupID);
-            fs.setURI(StringUtils.replaceSystemProperties(initFileSystemURI));
+            fs.setURI(StringUtils.replaceSystemProperties(initFileSystemURI).replace('\\', '/'));
             fs.setAvailability(Availability.ONLINE);
             fs.setStatus(FileSystemStatus.RW);
             em.persist(fs);

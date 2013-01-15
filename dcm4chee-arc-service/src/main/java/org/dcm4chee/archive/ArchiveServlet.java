@@ -121,7 +121,8 @@ public class ArchiveServlet extends HttpServlet {
             String ldapPropertiesURL = StringUtils.replaceSystemProperties(
                     System.getProperty(
                         "org.dcm4chee.archive.ldapPropertiesURL",
-                        config.getInitParameter("ldapPropertiesURL")));
+                        config.getInitParameter("ldapPropertiesURL")))
+                    .replace('\\', '/');
             String deviceName = System.getProperty(
                     "org.dcm4chee.archive.deviceName",
                     config.getInitParameter("deviceName"));
