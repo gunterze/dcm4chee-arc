@@ -258,7 +258,7 @@ See also [Converting old style slapd.conf file to cn=config format][1]
 
         Network Parameter:
             Hostname: localhost
-            Port:     10398
+            Port:     10389
         Authentication Parameter:
             Bind DN or user: uid=admin,ou=system
             Bind password:   secret
@@ -296,9 +296,9 @@ Import sample configuration into LDAP Server
 
         Network Parameter:
             Hostname: localhost
-            Port:     1398
+            Port:     10389
         Authentication Parameter:
-            Bind DN or user: cn=Directory Manager
+            Bind DN or user: cn=uid=admin,ou=system
             Bind password:   secret
         Browser Options:
             Base DN: dc=example,dc=com
@@ -608,6 +608,38 @@ Java Monitoring and Management Console `jconsole`
 4.  Invoke the `Start`, `Stop` or `ReloadConfiguration` operation to start or stop
     DCM4CHEE Archive 4.x, or to reload its configuration from the configuration
     backend (LDAP Server or Java Preferences).
+
+
+Source Build With Eclipse
+--------------------------
+
+0. Use Eclipse Juno, and install Jboss Tools 4.0
+
+
+1. Clone dcm4che, dcm4chee-arc, querydsl-jboss-modules and jdbc-jboss-modules from github
+
+2. run mvn install inside dcm4che, querydsl-jboss-modules and jdbc-jboss-modules projects.
+
+3. In install instructions, use dcm4che project for dcm4che-jboss-modules zip file, and querydsl-jboss-modules project for querydsl jboss modules zip file.
+
+4. import dcm4che and dcm4chee-arc into eclipse as maven projects
+
+5. under dcm4chee-arc project settings -> validation, disable JPA validation 
+
+6. under dcm4chee-arc-entity, add target/generated-sources/annotations as build path source folder
+
+7. set up a run configuration for dcm4chee-arc-parent, with install goal, and
+db = psql, for example.
+
+8. verify that the run configuration will build the WAR
+
+9. Open Window -> Show View -> Servers, and create a new jboss 7.1 server
+
+10. add dcm4chee-arc-service when creating the server
+
+11. now, you should be able to debug the archive from inside eclipse
+
+
 
 
 Testing DCM4CHEE Archive 4.x
