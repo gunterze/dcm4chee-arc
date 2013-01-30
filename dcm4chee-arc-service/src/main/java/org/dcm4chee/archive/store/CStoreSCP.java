@@ -60,7 +60,7 @@ import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.common.StoreParam;
-import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
+import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.entity.FileRef;
 import org.dcm4chee.archive.entity.FileSystem;
 import org.dcm4chee.archive.mpps.IANSCU;
@@ -74,7 +74,7 @@ import org.dcm4chee.archive.util.BeanLocator;
 public class CStoreSCP extends BasicCStoreSCP {
 
     private static final String STORE_SERVICE_PROPERTY =
-            "org.dcm4chee.archive.store.impl.StoreService";
+            CStoreSCP.class.getName();
 
     private final ApplicationEntityCache aeCache;
     private final IANSCU ianSCU;
@@ -103,9 +103,9 @@ public class CStoreSCP extends BasicCStoreSCP {
         StoreService store = initStoreService(as);
         try {
             FileSystem fs = store.getCurrentFileSystem();
-            ArchiveApplicationEntity ae =
-                    (ArchiveApplicationEntity) as.getApplicationEntity();
-            AttributesFormat filePathFormat = ae.getSpoolFilePathFormat();
+            ApplicationEntity ae = as.getApplicationEntity();
+            ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
+            AttributesFormat filePathFormat = aeExt.getSpoolFilePathFormat();
             File file;
             synchronized (filePathFormat) {
                 file = new File(fs.getDirectory(), filePathFormat.format(fmi));
@@ -123,9 +123,9 @@ public class CStoreSCP extends BasicCStoreSCP {
 
     @Override
     protected MessageDigest getMessageDigest(Association as) {
-        ArchiveApplicationEntity ae =
-                (ArchiveApplicationEntity) as.getApplicationEntity();
-        String algorithm = ae.getDigestAlgorithm();
+        ApplicationEntity ae = as.getApplicationEntity();
+        ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
+        String algorithm = aeExt.getDigestAlgorithm();
         try {
             return algorithm != null 
                     ? MessageDigest.getInstance(algorithm)
@@ -138,9 +138,9 @@ public class CStoreSCP extends BasicCStoreSCP {
     @Override
     protected File getFinalFile(Association as, Attributes fmi, Attributes ds,
             File spoolFile) {
-        ArchiveApplicationEntity ae =
-                (ArchiveApplicationEntity) as.getApplicationEntity();
-        AttributesFormat filePathFormat = ae.getStorageFilePathFormat();
+        ApplicationEntity ae = as.getApplicationEntity();
+        ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
+        AttributesFormat filePathFormat = aeExt.getStorageFilePathFormat();
         if (filePathFormat == null)
             return spoolFile;
 
@@ -166,11 +166,11 @@ public class CStoreSCP extends BasicCStoreSCP {
             ds = new Attributes(ds, false);
         String sourceAET = as.getRemoteAET();
         String cuid = fmi.getString(Tag.MediaStorageSOPClassUID);
-        ArchiveApplicationEntity ae =
-                (ArchiveApplicationEntity) as.getApplicationEntity();
+        ApplicationEntity ae = as.getApplicationEntity();
+        ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
         try {
             Attributes modified = new Attributes();
-            Templates tpl = ae.getAttributeCoercionTemplates(cuid,
+            Templates tpl = aeExt.getAttributeCoercionTemplates(cuid,
                     Dimse.C_STORE_RQ, TransferCapability.Role.SCP, sourceAET);
             if (tpl != null)
                 ds.update(SAXTransformer.transform(ds, tpl, false, false),
@@ -184,7 +184,7 @@ public class CStoreSCP extends BasicCStoreSCP {
                     digest(digest), fmi.getString(Tag.TransferSyntaxUID));
             if (fileRef == null) {
                 delete(as, file);
-            } else if (ae.hasIANDestinations()) {
+            } else if (aeExt.hasIANDestinations()) {
                 scheduleIAN(ae, store.createIANforPreviousMPPS());
                 switch (fileRef.getInstance().getAvailability()) {
                 case REJECTED_FOR_QUALITY_REASONS_REJECTION_NOTE:
@@ -210,7 +210,7 @@ public class CStoreSCP extends BasicCStoreSCP {
                                 new Attributes(ds, ds.bigEndian(), modified.tags())
                             });
                 }
-                if (!ae.isSuppressWarningCoercionOfDataElements()) {
+                if (!aeExt.isSuppressWarningCoercionOfDataElements()) {
                     rsp.setInt(Tag.Status, VR.US, Status.CoercionOfDataElements);
                     rsp.setInt(Tag.OffendingElement, VR.AT, modified.tags());
                 }
@@ -232,14 +232,15 @@ public class CStoreSCP extends BasicCStoreSCP {
         StoreService store =
                     (StoreService) as.getProperty(STORE_SERVICE_PROPERTY);
         if (store == null) {
-            ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
-            String fsGroupID = ae.getFileSystemGroupID();
+            ApplicationEntity ae = as.getApplicationEntity();
+            ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
+            String fsGroupID = aeExt.getFileSystemGroupID();
             if (fsGroupID == null)
                 throw new IllegalStateException(
                         "No File System Group ID configured for " + ae.getAETitle());
             store = BeanLocator.lookup(StoreService.class);
             store.setStoreParam(StoreParam.valueOf(ae));
-            store.selectFileSystem(fsGroupID, ae.getInitFileSystemURI());
+            store.selectFileSystem(fsGroupID, aeExt.getInitFileSystemURI());
             as.setProperty(STORE_SERVICE_PROPERTY, store);
         }
         return store;
@@ -249,9 +250,9 @@ public class CStoreSCP extends BasicCStoreSCP {
         StoreService store =
                 (StoreService) as.clearProperty(STORE_SERVICE_PROPERTY);
         if (store != null) {
-            ArchiveApplicationEntity ae =
-                    (ArchiveApplicationEntity) as.getApplicationEntity();
-            if (ae.hasIANDestinations())
+            ApplicationEntity ae = as.getApplicationEntity();
+            ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
+            if (aeExt.hasIANDestinations())
                 try {
                     scheduleIAN(ae, store.createIANforCurrentMPPS());
                 } catch (Exception e) {
@@ -261,9 +262,10 @@ public class CStoreSCP extends BasicCStoreSCP {
         }
     }
 
-    private void scheduleIAN(ArchiveApplicationEntity ae, Attributes ian) {
+    private void scheduleIAN(ApplicationEntity ae, Attributes ian) {
         if (ian != null)
-            for (String remoteAET : ae.getIANDestinations())
+            for (String remoteAET : 
+                ae.getAEExtension(ArchiveAEExtension.class).getIANDestinations())
                 ianSCU.scheduleIAN(ae.getAETitle(), remoteAET, ian, 0, 0);
     }
 
@@ -274,9 +276,9 @@ public class CStoreSCP extends BasicCStoreSCP {
 
     @Override
     protected void cleanup(Association as, File spoolFile, File finalFile) {
-        ArchiveApplicationEntity ae =
-                (ArchiveApplicationEntity) as.getApplicationEntity();
-        if (!ae.isPreserveSpoolFileOnFailure())
+        ApplicationEntity ae = as.getApplicationEntity();
+        ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
+        if (!aeExt.isPreserveSpoolFileOnFailure())
             super.cleanup(as, spoolFile, finalFile);
         else
             if (finalFile != null && finalFile.exists())

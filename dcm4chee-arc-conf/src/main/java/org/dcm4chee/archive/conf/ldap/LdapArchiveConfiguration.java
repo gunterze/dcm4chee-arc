@@ -38,10 +38,20 @@
 
 package org.dcm4chee.archive.conf.ldap;
 
+import static org.dcm4che.conf.ldap.LdapDicomConfiguration.booleanValue;
+import static org.dcm4che.conf.ldap.LdapDicomConfiguration.hasObjectClass;
+import static org.dcm4che.conf.ldap.LdapDicomConfiguration.intValue;
+import static org.dcm4che.conf.ldap.LdapDicomConfiguration.safeClose;
+import static org.dcm4che.conf.ldap.LdapDicomConfiguration.storeDiff;
+import static org.dcm4che.conf.ldap.LdapDicomConfiguration.storeNotDef;
+import static org.dcm4che.conf.ldap.LdapDicomConfiguration.storeNotEmpty;
+import static org.dcm4che.conf.ldap.LdapDicomConfiguration.storeNotNull;
+import static org.dcm4che.conf.ldap.LdapDicomConfiguration.stringArray;
+import static org.dcm4che.conf.ldap.LdapDicomConfiguration.stringValue;
+
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Hashtable;
 import java.util.List;
 
 import javax.naming.NamingEnumeration;
@@ -55,7 +65,9 @@ import javax.naming.directory.ModificationItem;
 import javax.naming.directory.SearchResult;
 
 import org.dcm4che.conf.api.ConfigurationException;
-import org.dcm4che.conf.ldap.hl7.LdapHL7Configuration;
+import org.dcm4che.conf.ldap.LdapDicomConfiguration;
+import org.dcm4che.conf.ldap.LdapDicomConfigurationExtension;
+import org.dcm4che.conf.ldap.hl7.LdapHL7ConfigurationExtension;
 import org.dcm4che.data.Code;
 import org.dcm4che.data.ValueSelector;
 import org.dcm4che.net.ApplicationEntity;
@@ -63,9 +75,9 @@ import org.dcm4che.net.Device;
 import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
-import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
-import org.dcm4chee.archive.conf.ArchiveDevice;
-import org.dcm4chee.archive.conf.ArchiveHL7Application;
+import org.dcm4chee.archive.conf.ArchiveAEExtension;
+import org.dcm4chee.archive.conf.ArchiveDeviceExtension;
+import org.dcm4chee.archive.conf.ArchiveHL7ApplicationExtension;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
 import org.dcm4chee.archive.conf.StoreDuplicate;
@@ -75,67 +87,16 @@ import org.dcm4chee.archive.conf.StoreDuplicate.Condition;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
-public class LdapArchiveConfiguration extends LdapHL7Configuration {
-
-    public LdapArchiveConfiguration() throws ConfigurationException {
-    }
-
-    public LdapArchiveConfiguration(Hashtable<?, ?> env)
-            throws ConfigurationException {
-        super(env);
-    }
+public class LdapArchiveConfiguration extends LdapDicomConfigurationExtension
+    implements LdapHL7ConfigurationExtension {
 
     @Override
-    protected Attribute objectClassesOf(Device device, Attribute attr) {
-        super.objectClassesOf(device, attr);
-        if (device instanceof ArchiveDevice)
-            attr.add("dcmArchiveDevice");
-        return attr;
-    }
-
-    @Override
-    protected Attribute objectClassesOf(ApplicationEntity ae, Attribute attr) {
-        super.objectClassesOf(ae, attr);
-        if (ae instanceof ArchiveApplicationEntity)
-            attr.add("dcmArchiveNetworkAE");
-        return attr;
-    }
-
-    @Override
-    protected Attribute objectClassesOf(HL7Application app, Attribute attr) {
-        super.objectClassesOf(app, attr);
-        if (app instanceof ArchiveHL7Application)
-            attr.add("dcmArchiveHL7Application");
-        return attr;
-    }
-
-    @Override
-    protected Device newDevice(Attributes attrs) throws NamingException {
-        if (!hasObjectClass(attrs, "dcmArchiveDevice"))
-            return super.newDevice(attrs);
-        return new ArchiveDevice(stringValue(attrs.get("dicomDeviceName"), null));
-    }
-
-    @Override
-    protected ApplicationEntity newApplicationEntity(Attributes attrs) throws NamingException {
-        if (!hasObjectClass(attrs, "dcmArchiveNetworkAE"))
-            return super.newApplicationEntity(attrs);
-        return new ArchiveApplicationEntity(stringValue(attrs.get("dicomAETitle"), null));
-    }
-
-    @Override
-    protected HL7Application newHL7Application(Attributes attrs) throws NamingException {
-        if (!hasObjectClass(attrs, "dcmArchiveHL7Application"))
-            return super.newHL7Application(attrs);
-        return new ArchiveHL7Application(stringValue(attrs.get("hl7ApplicationName"), null));
-    }
-
-    @Override
-    protected Attributes storeTo(Device device, Attributes attrs) {
-        super.storeTo(device, attrs);
-        if (!(device instanceof ArchiveDevice))
-            return attrs;
-        ArchiveDevice arcDev = (ArchiveDevice) device;
+    protected void storeTo(Device device, Attributes attrs) {
+        ArchiveDeviceExtension arcDev = device.getDeviceExtension(ArchiveDeviceExtension.class);
+        if (arcDev == null)
+            return;
+        
+        attrs.get("objectclass").add("dcmArchiveDevice");
         storeNotNull(attrs, "dcmIncorrectWorklistEntrySelectedCode",
                 arcDev.getIncorrectWorklistEntrySelectedCode());
         storeNotNull(attrs, "dcmRejectedForQualityReasonsCode",
@@ -150,29 +111,30 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
                 arcDev.getFuzzyAlgorithmClass());
         storeNotDef(attrs, "dcmConfigurationStaleTimeout",
                 arcDev.getConfigurationStaleTimeout(), 0);
-        return attrs;
     }
 
     @Override
     protected void storeChilds(String deviceDN, Device device) throws NamingException {
-        super.storeChilds(deviceDN, device);
-        if (!(device instanceof ArchiveDevice))
+        ArchiveDeviceExtension arcDev = device.getDeviceExtension(ArchiveDeviceExtension.class);
+        if (arcDev == null)
             return;
-        ArchiveDevice arcDev = (ArchiveDevice) device;
+
         for (Entity entity : Entity.values())
-            createSubcontext(dnOf("dcmEntity", entity.toString(), deviceDN),
+            config.createSubcontext(
+                    LdapDicomConfiguration.dnOf("dcmEntity", entity.toString(), deviceDN),
                     storeTo(arcDev.getAttributeFilter(entity), entity, new BasicAttributes(true)));
     }
 
     @Override
     protected void storeChilds(String aeDN, ApplicationEntity ae) throws NamingException {
-        super.storeChilds(aeDN, ae);
-        if (!(ae instanceof ArchiveApplicationEntity))
+        ArchiveAEExtension arcAE = ae.getAEExtension(ArchiveAEExtension.class);
+        if (arcAE == null)
             return;
-        ArchiveApplicationEntity arcAE = (ArchiveApplicationEntity) ae;
-        store(arcAE.getAttributeCoercions(), aeDN);
+
+        config.store(arcAE.getAttributeCoercions(), aeDN);
         for (StoreDuplicate sd : arcAE.getStoreDuplicates())
-            createSubcontext(dnOf(sd, aeDN), storeTo(sd, new BasicAttributes(true)));
+            config.createSubcontext(dnOf(sd, aeDN),
+                    storeTo(sd, new BasicAttributes(true)));
     }
 
     private String dnOf(StoreDuplicate sd, String aeDN) {
@@ -207,11 +169,12 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
     }
 
     @Override
-    protected Attributes storeTo(ApplicationEntity ae, String deviceDN, Attributes attrs) {
-        super.storeTo(ae, deviceDN, attrs);
-        if (!(ae instanceof ArchiveApplicationEntity))
-            return attrs;
-        ArchiveApplicationEntity arcAE = (ArchiveApplicationEntity) ae;
+    protected void storeTo(ApplicationEntity ae, Attributes attrs) {
+        ArchiveAEExtension arcAE = ae.getAEExtension(ArchiveAEExtension.class);
+        if (arcAE == null)
+            return;
+
+        attrs.get("objectclass").add("dcmArchiveNetworkAE");
         storeNotNull(attrs, "dcmFileSystemGroupID", arcAE.getFileSystemGroupID());
         storeNotNull(attrs, "dcmInitFileSystemURI", arcAE.getInitFileSystemURI());
         storeNotNull(attrs, "dcmSpoolFilePathFormat", arcAE.getSpoolFilePathFormat());
@@ -232,41 +195,41 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         storeNotDef(attrs, "dcmStgCmtDelay", arcAE.getStorageCommitmentDelay(), 0);
         storeNotDef(attrs, "dcmStgCmtMaxRetries", arcAE.getStorageCommitmentMaxRetries(), 0);
         storeNotDef(attrs, "dcmStgCmtRetryInterval", arcAE.getStorageCommitmentRetryInterval(),
-                    ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
+                    ArchiveAEExtension.DEF_RETRY_INTERVAL);
         storeNotEmpty(attrs, "dcmFwdMppsDestination", arcAE.getForwardMPPSDestinations());
         storeNotDef(attrs, "dcmFwdMppsMaxRetries", arcAE.getForwardMPPSMaxRetries(), 0);
         storeNotDef(attrs, "dcmFwdMppsRetryInterval", arcAE.getForwardMPPSRetryInterval(),
-                    ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
+                    ArchiveAEExtension.DEF_RETRY_INTERVAL);
         storeNotEmpty(attrs, "dcmIanDestination", arcAE.getIANDestinations());
         storeNotDef(attrs, "dcmIanMaxRetries", arcAE.getIANMaxRetries(), 0);
         storeNotDef(attrs, "dcmIanRetryInterval", arcAE.getIANRetryInterval(),
-                    ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
+                    ArchiveAEExtension.DEF_RETRY_INTERVAL);
         storeNotDef(attrs, "dcmReturnOtherPatientIDs", arcAE.isReturnOtherPatientIDs(), false);
         storeNotDef(attrs, "dcmReturnOtherPatientNames", arcAE.isReturnOtherPatientNames(), false);
         storeNotDef(attrs, "dcmShowRejectedInstances", arcAE.isShowRejectedInstances(), false);
         storeNotNull(attrs, "hl7PIXConsumerApplication", arcAE.getLocalPIXConsumerApplication());
         storeNotNull(attrs, "hl7PIXManagerApplication", arcAE.getRemotePIXManagerApplication());
-        return attrs;
     }
 
     @Override
-    protected Attributes storeTo(HL7Application hl7App, String deviceDN, Attributes attrs) {
-        super.storeTo(hl7App, deviceDN, attrs);
-        if (!(hl7App instanceof ArchiveHL7Application))
-            return attrs;
+    public void storeTo(HL7Application hl7App, String deviceDN, Attributes attrs) {
+        ArchiveHL7ApplicationExtension arcHL7App =
+                hl7App.getHL7ApplicationExtension(ArchiveHL7ApplicationExtension.class);
+        if (arcHL7App == null)
+            return;
 
-        ArchiveHL7Application arcHL7App = (ArchiveHL7Application) hl7App;
+        attrs.get("objectclass").add("dcmArchiveHL7Application");
         storeNotEmpty(attrs, "labeledURI", arcHL7App.getTemplatesURIs());
-        return attrs;
     }
  
     @Override
     protected void loadFrom(Device device, Attributes attrs)
             throws NamingException, CertificateException {
-        super.loadFrom(device, attrs);
-        if (!(device instanceof ArchiveDevice))
+        if (!hasObjectClass(attrs, "dcmArchiveDevice"))
             return;
-        ArchiveDevice arcdev = (ArchiveDevice) device;
+
+        ArchiveDeviceExtension arcdev = new ArchiveDeviceExtension();
+        device.addDeviceExtension(arcdev);
         arcdev.setIncorrectWorklistEntrySelectedCode(new Code(
                 stringValue(attrs.get("dcmIncorrectWorklistEntrySelectedCode"), null)));
         arcdev.setRejectedForQualityReasonsCode(new Code(
@@ -285,18 +248,18 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
     @Override
     protected void loadChilds(Device device, String deviceDN)
             throws NamingException, ConfigurationException {
-        super.loadChilds(device, deviceDN);
-        if (!(device instanceof ArchiveDevice))
+        ArchiveDeviceExtension arcdev =
+                device.getDeviceExtension(ArchiveDeviceExtension.class);
+        if (arcdev == null)
             return;
-        ArchiveDevice arcdev = (ArchiveDevice) device;
+
         loadAttributeFilters(arcdev, deviceDN);
-        
     }
 
-    private void loadAttributeFilters(ArchiveDevice device, String deviceDN)
+    private void loadAttributeFilters(ArchiveDeviceExtension device, String deviceDN)
             throws NamingException {
         NamingEnumeration<SearchResult> ne = 
-                search(deviceDN, "(objectclass=dcmAttributeFilter)");
+                config.search(deviceDN, "(objectclass=dcmAttributeFilter)");
         try {
             while (ne.hasMore()) {
                 SearchResult sr = ne.next();
@@ -309,7 +272,7 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
                         Entity.valueOf(stringValue(attrs.get("dcmEntity"), null)), filter);
             }
         } finally {
-           safeClose(ne);
+            safeClose(ne);
         }
     }
 
@@ -329,13 +292,13 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         return is;
     }
 
-
     @Override
     protected void loadFrom(ApplicationEntity ae, Attributes attrs) throws NamingException {
-       super.loadFrom(ae, attrs);
-       if (!(ae instanceof ArchiveApplicationEntity))
+       if (!hasObjectClass(attrs, "dcmArchiveNetworkAE"))
            return;
-       ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) ae;
+
+       ArchiveAEExtension arcae = new ArchiveAEExtension();
+       ae.addAEExtension(arcae);
        arcae.setFileSystemGroupID(stringValue(attrs.get("dcmFileSystemGroupID"), null));
        arcae.setInitFileSystemURI(stringValue(attrs.get("dcmInitFileSystemURI"), null));
        arcae.setSpoolFilePathFormat(attributesFormat(attrs.get("dcmSpoolFilePathFormat")));
@@ -356,15 +319,15 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
        arcae.setStorageCommitmentDelay(intValue(attrs.get("dcmStgCmtDelay"), 0));
        arcae.setStorageCommitmentMaxRetries(intValue(attrs.get("dcmStgCmtMaxRetries"), 0));
        arcae.setStorageCommitmentRetryInterval(intValue(attrs.get("dcmStgCmtRetryInterval"),
-               ArchiveApplicationEntity.DEF_RETRY_INTERVAL));
+               ArchiveAEExtension.DEF_RETRY_INTERVAL));
        arcae.setForwardMPPSDestinations(stringArray(attrs.get("dcmFwdMppsDestination")));
        arcae.setForwardMPPSMaxRetries(intValue(attrs.get("dcmFwdMppsMaxRetries"), 0));
        arcae.setForwardMPPSRetryInterval(intValue(attrs.get("dcmFwdMppsRetryInterval"),
-               ArchiveApplicationEntity.DEF_RETRY_INTERVAL));
+               ArchiveAEExtension.DEF_RETRY_INTERVAL));
        arcae.setIANDestinations(stringArray(attrs.get("dcmIanDestination")));
        arcae.setIANMaxRetries(intValue(attrs.get("dcmIanMaxRetries"), 0));
        arcae.setIANRetryInterval(intValue(attrs.get("dcmIanRetryInterval"),
-               ArchiveApplicationEntity.DEF_RETRY_INTERVAL));
+               ArchiveAEExtension.DEF_RETRY_INTERVAL));
        arcae.setReturnOtherPatientIDs(
                booleanValue(attrs.get("dcmReturnOtherPatientIDs"), false));
        arcae.setReturnOtherPatientNames(
@@ -377,16 +340,18 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
 
     @Override
     protected void loadChilds(ApplicationEntity ae, String aeDN) throws NamingException {
-        super.loadChilds(ae, aeDN);
-        if (!(ae instanceof ArchiveApplicationEntity))
+        ArchiveAEExtension arcae = ae.getAEExtension(ArchiveAEExtension.class);
+        if (arcae == null)
             return;
-        ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) ae;
-        load(arcae.getAttributeCoercions(), aeDN);
+
+        config.load(arcae.getAttributeCoercions(), aeDN);
         loadStoreDuplicates(arcae.getStoreDuplicates(), aeDN);
     }
 
-    private void loadStoreDuplicates(List<StoreDuplicate> sds, String aeDN) throws NamingException {
-        NamingEnumeration<SearchResult> ne = search(aeDN, "(objectclass=dcmStoreDuplicate)");
+    private void loadStoreDuplicates(List<StoreDuplicate> sds, String aeDN)
+            throws NamingException {
+        NamingEnumeration<SearchResult> ne =
+                config.search(aeDN, "(objectclass=dcmStoreDuplicate)");
         try {
             while (ne.hasMore())
                 sds.add(storeDuplicate(ne.next().getAttributes()));
@@ -404,24 +369,23 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
     }
 
     @Override
-    protected void loadFrom(HL7Application hl7App, Attributes attrs)
+    public void loadFrom(HL7Application hl7App, Attributes attrs)
             throws NamingException {
-       super.loadFrom(hl7App, attrs);
-       if (!(hl7App instanceof ArchiveHL7Application))
-           return;
-       ArchiveHL7Application arcHL7App = (ArchiveHL7Application) hl7App;
+        if (!hasObjectClass(attrs, "dcmArchiveHL7Application"))
+            return;
+
+       ArchiveHL7ApplicationExtension arcHL7App = new ArchiveHL7ApplicationExtension();
+       hl7App.addHL7ApplicationExtension(arcHL7App);
        arcHL7App.setTemplatesURIs(stringArray(attrs.get("labeledURI")));
     }
 
     @Override
-    protected List<ModificationItem> storeDiffs(Device a, Device b,
-            List<ModificationItem> mods) {
-        super.storeDiffs(a, b, mods);
-        if (!(a instanceof ArchiveDevice && b instanceof ArchiveDevice))
-            return mods;
-        
-        ArchiveDevice aa = (ArchiveDevice) a;
-        ArchiveDevice bb = (ArchiveDevice) b;
+    protected void storeDiffs(Device a, Device b, List<ModificationItem> mods) {
+        ArchiveDeviceExtension aa = a.getDeviceExtension(ArchiveDeviceExtension.class);
+        ArchiveDeviceExtension bb = b.getDeviceExtension(ArchiveDeviceExtension.class);
+        if (aa == null || bb == null)
+            return;
+
         storeDiff(mods, "dcmIncorrectWorklistEntrySelectedCode",
                 aa.getIncorrectWorklistEntrySelectedCode(),
                 bb.getIncorrectWorklistEntrySelectedCode());
@@ -444,19 +408,16 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
                 aa.getConfigurationStaleTimeout(),
                 bb.getConfigurationStaleTimeout(),
                 0);
-        return mods;
     }
 
     @Override
-    protected List<ModificationItem> storeDiffs(ApplicationEntity a,
-            ApplicationEntity b, String deviceDN, List<ModificationItem> mods) {
-        super.storeDiffs(a, b, deviceDN, mods);
-        if (!(a instanceof ArchiveApplicationEntity 
-           && b instanceof ArchiveApplicationEntity))
-            return mods;
+    protected void storeDiffs(ApplicationEntity a, ApplicationEntity b,
+            List<ModificationItem> mods) {
+        ArchiveAEExtension aa = a.getAEExtension(ArchiveAEExtension.class);
+        ArchiveAEExtension bb = b.getAEExtension(ArchiveAEExtension.class);
+        if (aa == null || bb == null)
+            return;
         
-        ArchiveApplicationEntity aa = (ArchiveApplicationEntity) a;
-        ArchiveApplicationEntity bb = (ArchiveApplicationEntity) b;
         storeDiff(mods, "dcmFileSystemGroupID",
                 aa.getFileSystemGroupID(),
                 bb.getFileSystemGroupID());
@@ -516,7 +477,7 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         storeDiff(mods, "dcmStgCmtRetryInterval",
                 aa.getStorageCommitmentRetryInterval(),
                 bb.getStorageCommitmentRetryInterval(),
-                ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
+                ArchiveAEExtension.DEF_RETRY_INTERVAL);
         storeDiff(mods, "dcmFwdMppsDestination",
                 aa.getForwardMPPSDestinations(),
                 bb.getForwardMPPSDestinations());
@@ -527,7 +488,7 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         storeDiff(mods, "dcmFwdMppsRetryInterval",
                 aa.getForwardMPPSRetryInterval(),
                 bb.getForwardMPPSRetryInterval(),
-                ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
+                ArchiveAEExtension.DEF_RETRY_INTERVAL);
         storeDiff(mods, "dcmIanDestination",
                 aa.getIANDestinations(),
                 bb.getIANDestinations());
@@ -538,7 +499,7 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         storeDiff(mods, "dcmIanRetryInterval",
                 aa.getIANRetryInterval(),
                 bb.getIANRetryInterval(),
-                ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
+                ArchiveAEExtension.DEF_RETRY_INTERVAL);
         storeDiff(mods, "dcmReturnOtherPatientIDs",
                 aa.isReturnOtherPatientIDs(),
                 bb.isReturnOtherPatientIDs(),
@@ -557,36 +518,36 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         storeDiff(mods, "hl7PIXManagerApplication",
                 aa.getRemotePIXManagerApplication(),
                 bb.getRemotePIXManagerApplication());
-        return mods;
     }
 
     @Override
-    protected List<ModificationItem> storeDiffs(HL7Application a,
-            HL7Application b, String deviceDN, List<ModificationItem> mods) {
-        super.storeDiffs(a, b, deviceDN, mods);
-        if (!(a instanceof ArchiveHL7Application 
-           && b instanceof ArchiveHL7Application))
-            return mods;
-        
-        ArchiveHL7Application aa = (ArchiveHL7Application) a;
-        ArchiveHL7Application bb = (ArchiveHL7Application) b;
+    public void storeDiffs(HL7Application a, HL7Application b,
+            List<ModificationItem> mods) {
+        ArchiveHL7ApplicationExtension aa =
+                a.getHL7ApplicationExtension(ArchiveHL7ApplicationExtension.class);
+        ArchiveHL7ApplicationExtension bb =
+                b.getHL7ApplicationExtension(ArchiveHL7ApplicationExtension.class);
+        if (aa == null || bb == null)
+            return;
+
         storeDiff(mods, "labeledURI",
                 aa.getTemplatesURIs(),
                 bb.getTemplatesURIs());
-        return mods;
     }
 
     @Override
     protected void mergeChilds(Device prev, Device device, String deviceDN)
             throws NamingException {
-        super.mergeChilds(prev, device, deviceDN);
-        if (!(prev instanceof ArchiveDevice && device instanceof ArchiveDevice))
+        ArchiveDeviceExtension aa =
+                prev.getDeviceExtension(ArchiveDeviceExtension.class);
+        ArchiveDeviceExtension bb = 
+                device.getDeviceExtension(ArchiveDeviceExtension.class);
+        if (aa == null || bb == null)
             return;
-        
-        ArchiveDevice aa = (ArchiveDevice) prev;
-        ArchiveDevice bb = (ArchiveDevice) device;
+
         for (Entity entity : Entity.values())
-            modifyAttributes(dnOf("dcmEntity", entity.toString(), deviceDN),
+            config.modifyAttributes(
+                    LdapDicomConfiguration.dnOf("dcmEntity", entity.toString(), deviceDN),
                     storeDiffs(aa.getAttributeFilter(entity), bb.getAttributeFilter(entity),
                             new ArrayList<ModificationItem>()));
     }
@@ -594,14 +555,12 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
     @Override
     protected void mergeChilds(ApplicationEntity prev, ApplicationEntity ae, String aeDN)
             throws NamingException {
-        super.mergeChilds(prev, ae, aeDN);
-        if (!(prev instanceof ArchiveApplicationEntity 
-             && ae instanceof ArchiveApplicationEntity))
+        ArchiveAEExtension aa = prev.getAEExtension(ArchiveAEExtension.class);
+        ArchiveAEExtension bb = ae.getAEExtension(ArchiveAEExtension.class);
+        if (aa == null || bb == null)
             return;
 
-        ArchiveApplicationEntity aa = (ArchiveApplicationEntity) prev;
-        ArchiveApplicationEntity bb = (ArchiveApplicationEntity) ae;
-        merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), aeDN);
+        config.merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), aeDN);
         mergeStoreDuplicates(aa.getStoreDuplicates(), bb.getStoreDuplicates(), aeDN);
     }
 
@@ -609,14 +568,14 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
             throws NamingException {
         for (StoreDuplicate prev : prevs)
             if (findByCondition(acs, prev.getCondition()) == null)
-                destroySubcontext(dnOf(prev, parentDN));
+                config.destroySubcontext(dnOf(prev, parentDN));
         for (StoreDuplicate rn : acs) {
             String dn = dnOf(rn, parentDN);
             StoreDuplicate prev = findByCondition(prevs, rn.getCondition());
             if (prev == null)
-                createSubcontext(dn, storeTo(rn, new BasicAttributes(true)));
+                config.createSubcontext(dn, storeTo(rn, new BasicAttributes(true)));
             else
-                modifyAttributes(dn, storeDiffs(prev, rn, new ArrayList<ModificationItem>()));
+                config.modifyAttributes(dn, storeDiffs(prev, rn, new ArrayList<ModificationItem>()));
         }
     }
 

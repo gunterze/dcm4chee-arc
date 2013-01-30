@@ -56,6 +56,7 @@ import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.AssociationStateException;
 import org.dcm4che.net.Commands;
+import org.dcm4che.net.Device;
 import org.dcm4che.net.Dimse;
 import org.dcm4che.net.DimseRSP;
 import org.dcm4che.net.IncompatibleConnectionException;
@@ -66,8 +67,7 @@ import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.pdu.RoleSelection;
 import org.dcm4che.net.service.DicomService;
 import org.dcm4che.net.service.DicomServiceException;
-import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
-import org.dcm4chee.archive.conf.ArchiveDevice;
+import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.jms.JMSService;
 import org.dcm4chee.archive.stgcmt.dao.StgCmtService;
 
@@ -80,7 +80,7 @@ public class StgCmtSCP extends DicomService implements MessageListener {
     private final JMSService jmsService;
     private final Queue queue;
     private final StgCmtService stgCmtService;
-    private ArchiveDevice device;
+    private Device device;
 
     public StgCmtSCP(ApplicationEntityCache aeCache, StgCmtService stgCmtService,
             JMSService jmsService, Queue queue) {
@@ -91,7 +91,7 @@ public class StgCmtSCP extends DicomService implements MessageListener {
         this.stgCmtService = stgCmtService;
     }
 
-    public void start(ArchiveDevice device) throws JMSException {
+    public void start(Device device) throws JMSException {
        this.device = device;
        jmsService.addMessageListener(queue, this);
     }
@@ -120,13 +120,13 @@ public class StgCmtSCP extends DicomService implements MessageListener {
         String localAET = as.getLocalAET();
         String remoteAET = as.getRemoteAET();
         try {
-            ArchiveApplicationEntity ae =
-                    (ArchiveApplicationEntity) as.getApplicationEntity();
+            ApplicationEntity ae = as.getApplicationEntity();
             ApplicationEntity remoteAE = aeCache.findApplicationEntity(remoteAET);
             ae.findCompatibelConnection(remoteAE);
             Attributes eventInfo = stgCmtService.calculateResult(actionInfo);
+            ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
             scheduleNEventReport(localAET, remoteAET, eventInfo, 0,
-                    ae.getStorageCommitmentDelay());
+                    aeExt != null ? aeExt.getStorageCommitmentDelay() : 0);
         } catch (IncompatibleConnectionException e) {
             throw new DicomServiceException(Status.ProcessingFailure,
                     "No compatible connection to " + remoteAET);
@@ -157,8 +157,7 @@ public class StgCmtSCP extends DicomService implements MessageListener {
         String localAET = msg.getStringProperty("LocalAET");
         int retries = msg.getIntProperty("Retries");
         Attributes eventInfo = (Attributes) msg.getObject();
-        ArchiveApplicationEntity localAE =
-                (ArchiveApplicationEntity) device.getApplicationEntity(localAET);
+        ApplicationEntity localAE = device.getApplicationEntity(localAET);
         if (localAE == null) {
             LOG.warn("Failed to return Storage Commitment Result to {} - no such local AE: {}",
                     remoteAET, localAET);
@@ -195,8 +194,9 @@ public class StgCmtSCP extends DicomService implements MessageListener {
                 LOG.info("{}: Failed to release association to {}", as, remoteAET);
             }
         } catch (Exception e) {
-            if (retries < localAE.getStorageCommitmentMaxRetries()) {
-                int delay = localAE.getStorageCommitmentRetryInterval();
+            ArchiveAEExtension aeExt = localAE.getAEExtension(ArchiveAEExtension.class);
+            if (aeExt != null && retries < aeExt.getStorageCommitmentMaxRetries()) {
+                int delay = aeExt.getStorageCommitmentRetryInterval();
                 LOG.info("Failed to return Storage Commitment Result to "
                             + remoteAET + " - retry in "  + delay + "s", e);
                 scheduleNEventReport(localAET, remoteAET, eventInfo, retries + 1, delay);

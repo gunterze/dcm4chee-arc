@@ -49,7 +49,7 @@ import org.dcm4che.net.Status;
 import org.dcm4che.net.service.BasicMPPSSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.common.StoreParam;
-import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
+import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.mpps.dao.MPPSService;
 import org.dcm4chee.archive.mpps.dao.PPSWithIAN;
 import org.dcm4chee.archive.store.Supplements;
@@ -78,7 +78,8 @@ public class MPPSSCP extends BasicMPPSSCP {
         String localAET = as.getLocalAET();
         String sourceAET = as.getRemoteAET();
         String iuid = rq.getString(Tag.AffectedSOPInstanceUID);
-        ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+        ApplicationEntity ae = as.getApplicationEntity();
+        ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
         try {
             ApplicationEntity sourceAE = aeCache.get(sourceAET);
             if (sourceAE != null)
@@ -89,7 +90,7 @@ public class MPPSSCP extends BasicMPPSSCP {
         } catch (Exception e) {
             throw new DicomServiceException(Status.ProcessingFailure, e);
         }
-        for (String remoteAET : ae.getForwardMPPSDestinations())
+        for (String remoteAET : aeExt.getForwardMPPSDestinations())
             if (matchIssuerOfPatientID(remoteAET, rqAttrs))
                 mppsSCU.scheduleForwardMPPS(localAET, remoteAET, iuid, rqAttrs, true, 0, 0);
         return null;
@@ -116,7 +117,8 @@ public class MPPSSCP extends BasicMPPSSCP {
             Attributes rsp) throws DicomServiceException {
         String localAET = as.getLocalAET();
         String iuid = rq.getString(Tag.RequestedSOPInstanceUID);
-        ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+        ApplicationEntity ae = as.getApplicationEntity();
+        ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
         PPSWithIAN ppsWithIAN;
         try {
             ppsWithIAN = mppsService.updatePerformedProcedureStep(iuid, rqAttrs,
@@ -126,11 +128,11 @@ public class MPPSSCP extends BasicMPPSSCP {
         } catch (Exception e) {
             throw new DicomServiceException(Status.ProcessingFailure, e);
         }
-        for (String remoteAET : ae.getForwardMPPSDestinations())
+        for (String remoteAET : aeExt.getForwardMPPSDestinations())
             if (matchIssuerOfPatientID(remoteAET, ppsWithIAN.pps.getPatient().getAttributes()))
                 mppsSCU.scheduleForwardMPPS(localAET, remoteAET, iuid, rqAttrs, false, 0, 0);
         if (ppsWithIAN.ian != null)
-            for (String remoteAET : ae.getIANDestinations())
+            for (String remoteAET : aeExt.getIANDestinations())
                 ianSCU.scheduleIAN(localAET, remoteAET, ppsWithIAN.ian, 0, 0);
         return null;
     }

@@ -44,6 +44,7 @@ import java.util.EnumSet;
 import org.dcm4che.conf.api.ApplicationEntityCache;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.Status;
@@ -55,7 +56,6 @@ import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.QueryTask;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
-import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
 import org.dcm4chee.archive.pix.PIXConsumer;
 
 /**
@@ -87,8 +87,7 @@ public class CFindSCP extends BasicCFindSCP {
         boolean relational = queryOpts.contains(QueryOption.RELATIONAL);
         level.validateQueryKeys(keys, rootLevel, relational);
 
-        ArchiveApplicationEntity ae = (ArchiveApplicationEntity)
-                as.getApplicationEntity();
+        ApplicationEntity ae = as.getApplicationEntity();
         try {
             QueryParam queryParam = QueryParam.valueOf(ae, queryOpts,
                     aeCache.get(as.getRemoteAET()), accessControlID(as));

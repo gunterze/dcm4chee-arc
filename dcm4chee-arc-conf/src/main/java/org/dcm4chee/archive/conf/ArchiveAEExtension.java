@@ -47,17 +47,19 @@ import javax.xml.transform.TransformerConfigurationException;
 
 import org.dcm4che.conf.api.AttributeCoercion;
 import org.dcm4che.conf.api.AttributeCoercions;
-import org.dcm4che.net.ApplicationEntity;
+import org.dcm4che.io.TemplatesCache;
+import org.dcm4che.net.AEExtension;
 import org.dcm4che.net.Dimse;
 import org.dcm4che.net.TransferCapability;
 import org.dcm4che.net.TransferCapability.Role;
 import org.dcm4che.util.AttributesFormat;
+import org.dcm4che.util.StringUtils;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
-public class ArchiveApplicationEntity extends ApplicationEntity {
+public class ArchiveAEExtension extends AEExtension {
 
     private static final long serialVersionUID = -2390448404282661045L;
 
@@ -93,14 +95,6 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     private boolean showRejectedInstances;
     private String pixManagerApplication;
     private String pixConsumerApplication;
-
-    public ArchiveApplicationEntity(String aeTitle) {
-        super(aeTitle);
-    }
-
-    public ArchiveDevice getArchiveDevice() {
-        return ((ArchiveDevice) getDevice());
-    }
 
     public AttributeCoercion getAttributeCoercion(String sopClass,
             Dimse dimse, Role role, String aeTitle) {
@@ -148,7 +142,7 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     public String getEffectiveModifyingSystem() {
         return modifyingSystem != null 
                 ? modifyingSystem
-                : getDevice().getDeviceName();
+                : getApplicationEntity().getDevice().getDeviceName();
     }
 
     public void setModifyingSystem(String modifyingSystem) {
@@ -214,7 +208,11 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     public Templates getAttributeCoercionTemplates(String cuid, Dimse dimse,
             TransferCapability.Role role, String aet) throws TransformerConfigurationException {
         AttributeCoercion ac = getAttributeCoercion(cuid, dimse, role, aet);
-        return ac != null ? getArchiveDevice().getTemplates(ac.getURI()) : null;
+        return ac != null 
+                ? TemplatesCache.getDefault().get(
+                        StringUtils.replaceSystemProperties(ac.getURI())
+                                   .replace('\\', '/'))
+                : null;
     }
 
     public boolean isStoreOriginalAttributes() {
@@ -384,10 +382,8 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     }
 
     @Override
-    protected void setApplicationEntityAttributes(ApplicationEntity from) {
-        super.setApplicationEntityAttributes(from);
-
-        ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) from;
+    public void reconfigure(AEExtension from) {
+        ArchiveAEExtension arcae = (ArchiveAEExtension) from;
         setModifyingSystem(arcae.modifyingSystem);
         setRetrieveAETs(arcae.retrieveAETs);
         setExternalRetrieveAET(arcae.externalRetrieveAET);

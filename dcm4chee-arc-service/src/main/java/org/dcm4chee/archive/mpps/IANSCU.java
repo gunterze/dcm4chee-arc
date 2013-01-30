@@ -52,13 +52,13 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.UID;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
+import org.dcm4che.net.Device;
 import org.dcm4che.net.DimseRSP;
 import org.dcm4che.net.TransferCapability;
 import org.dcm4che.net.pdu.AAssociateRQ;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.util.UIDUtils;
-import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
-import org.dcm4chee.archive.conf.ArchiveDevice;
+import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.jms.JMSService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +73,7 @@ public class IANSCU implements MessageListener {
     private final ApplicationEntityCache aeCache;
     private final JMSService jmsService;
     private final Queue queue;
-    private ArchiveDevice device;
+    private Device device;
 
     public IANSCU(ApplicationEntityCache aeCache,
             JMSService jmsService, Queue queue) {
@@ -82,7 +82,7 @@ public class IANSCU implements MessageListener {
         this.queue = queue;
     }
 
-    public void start(ArchiveDevice device) throws JMSException {
+    public void start(Device device) throws JMSException {
         this.device = device;
         jmsService.addMessageListener(queue, this);
     }
@@ -129,8 +129,7 @@ public class IANSCU implements MessageListener {
         String localAET = msg.getStringProperty("LocalAET");
         int retries = msg.getIntProperty("Retries");
         Attributes ian = (Attributes) msg.getObject();
-        ArchiveApplicationEntity localAE =
-                (ArchiveApplicationEntity) device.getApplicationEntity(localAET);
+        ApplicationEntity localAE = device.getApplicationEntity(localAET);
         if (localAE == null) {
             LOG.warn("Failed to send IAN to {} - no such local AE: {}",
                     remoteAET, localAET);
@@ -161,8 +160,9 @@ public class IANSCU implements MessageListener {
                 LOG.info("{}: Failed to release association to {}", as, remoteAET);
             }
         } catch (Exception e) {
-            if (retries < localAE.getIANMaxRetries()) {
-                int delay = localAE.getIANRetryInterval();
+            ArchiveAEExtension aeExt = localAE.getAEExtension(ArchiveAEExtension.class);
+            if (aeExt != null && retries < aeExt.getIANMaxRetries()) {
+                int delay = aeExt.getIANRetryInterval();
                 LOG.info("Failed to send IAN to "
                             + remoteAET + " - retry in "  + delay + "s", e);
                 scheduleIAN(localAET, remoteAET, ian, retries + 1, delay);

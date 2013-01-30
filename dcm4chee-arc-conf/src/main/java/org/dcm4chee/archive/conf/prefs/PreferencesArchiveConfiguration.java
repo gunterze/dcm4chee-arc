@@ -38,6 +38,13 @@
 
 package org.dcm4chee.archive.conf.prefs;
 
+import static org.dcm4che.conf.prefs.PreferencesDicomConfiguration.removeKeys;
+import static org.dcm4che.conf.prefs.PreferencesDicomConfiguration.storeDiff;
+import static org.dcm4che.conf.prefs.PreferencesDicomConfiguration.storeNotDef;
+import static org.dcm4che.conf.prefs.PreferencesDicomConfiguration.storeNotEmpty;
+import static org.dcm4che.conf.prefs.PreferencesDicomConfiguration.storeNotNull;
+import static org.dcm4che.conf.prefs.PreferencesDicomConfiguration.stringArray;
+
 import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -46,18 +53,18 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import org.dcm4che.conf.api.ConfigurationException;
-import org.dcm4che.conf.prefs.hl7.PreferencesHL7Configuration;
+import org.dcm4che.conf.prefs.PreferencesDicomConfigurationExtension;
+import org.dcm4che.conf.prefs.hl7.PreferencesHL7ConfigurationExtension;
 import org.dcm4che.data.Code;
 import org.dcm4che.data.ValueSelector;
 import org.dcm4che.net.ApplicationEntity;
-import org.dcm4che.net.Connection;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
-import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
-import org.dcm4chee.archive.conf.ArchiveDevice;
-import org.dcm4chee.archive.conf.ArchiveHL7Application;
+import org.dcm4chee.archive.conf.ArchiveAEExtension;
+import org.dcm4chee.archive.conf.ArchiveDeviceExtension;
+import org.dcm4chee.archive.conf.ArchiveHL7ApplicationExtension;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
 import org.dcm4chee.archive.conf.StoreDuplicate;
@@ -66,22 +73,17 @@ import org.dcm4chee.archive.conf.StoreDuplicate;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
-public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration {
-
-    public PreferencesArchiveConfiguration() {
-    }
-
-    public PreferencesArchiveConfiguration(Preferences rootPrefs) {
-        super(rootPrefs);
-    }
+public class PreferencesArchiveConfiguration
+    extends PreferencesDicomConfigurationExtension
+    implements PreferencesHL7ConfigurationExtension {
 
     @Override
     protected void storeTo(Device device, Preferences prefs) {
-        super.storeTo(device, prefs);
-        if (!(device instanceof ArchiveDevice))
+        ArchiveDeviceExtension arcDev =
+                device.getDeviceExtension(ArchiveDeviceExtension.class);
+        if (arcDev == null)
             return;
 
-        ArchiveDevice arcDev = (ArchiveDevice) device;
         prefs.putBoolean("dcmArchiveDevice", true);
         storeNotNull(prefs, "dcmIncorrectWorklistEntrySelectedCode",
                 arcDev.getIncorrectWorklistEntrySelectedCode());
@@ -101,11 +103,11 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
 
     @Override
     protected void storeChilds(Device device, Preferences deviceNode) {
-        super.storeChilds(device, deviceNode);
-        if (!(device instanceof ArchiveDevice))
+        ArchiveDeviceExtension arcDev =
+                device.getDeviceExtension(ArchiveDeviceExtension.class);
+        if (arcDev == null)
             return;
 
-        ArchiveDevice arcDev = (ArchiveDevice) device;
         Preferences afsNode = deviceNode.node("dcmAttributeFilter");
         for (Entity entity : Entity.values())
             storeTo(arcDev.getAttributeFilter(entity), afsNode.node(entity.name()));
@@ -113,11 +115,11 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
 
     @Override
     protected void storeChilds(ApplicationEntity ae, Preferences aeNode) {
-        super.storeChilds(ae, aeNode);
-        if (!(ae instanceof ArchiveApplicationEntity))
+        ArchiveAEExtension arcAE = ae.getAEExtension(ArchiveAEExtension.class);
+        if (arcAE == null)
             return;
-        ArchiveApplicationEntity arcAE = (ArchiveApplicationEntity) ae;
-        store(arcAE.getAttributeCoercions(), aeNode);
+
+        config.store(arcAE.getAttributeCoercions(), aeNode);
         storeStoreDuplicates(arcAE.getStoreDuplicates(), aeNode);
     }
 
@@ -150,13 +152,11 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
     }
 
     @Override
-    protected void storeTo(ApplicationEntity ae, Preferences prefs,
-            List<Connection> devConns) {
-        super.storeTo(ae, prefs, devConns);
-        if (!(ae instanceof ArchiveApplicationEntity))
+    protected void storeTo(ApplicationEntity ae, Preferences prefs) {
+        ArchiveAEExtension arcAE = ae.getAEExtension(ArchiveAEExtension.class);
+        if (arcAE == null)
             return;
 
-        ArchiveApplicationEntity arcAE = (ArchiveApplicationEntity) ae;
         prefs.putBoolean("dcmArchiveNetworkAE", true);
         storeNotNull(prefs, "dcmFileSystemGroupID", arcAE.getFileSystemGroupID());
         storeNotNull(prefs, "dcmInitFileSystemURI", arcAE.getInitFileSystemURI());
@@ -178,15 +178,15 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         storeNotDef(prefs, "dcmStgCmtDelay", arcAE.getStorageCommitmentDelay(), 0);
         storeNotDef(prefs, "dcmStgCmtMaxRetries", arcAE.getStorageCommitmentMaxRetries(), 0);
         storeNotDef(prefs, "dcmStgCmtRetryInterval", arcAE.getStorageCommitmentRetryInterval(),
-                    ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
+                    ArchiveAEExtension.DEF_RETRY_INTERVAL);
         storeNotEmpty(prefs, "dcmFwdMppsDestination", arcAE.getForwardMPPSDestinations());
         storeNotDef(prefs, "dcmFwdMppsMaxRetries", arcAE.getForwardMPPSMaxRetries(), 0);
         storeNotDef(prefs, "dcmFwdMppsRetryInterval", arcAE.getForwardMPPSRetryInterval(),
-                    ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
+                    ArchiveAEExtension.DEF_RETRY_INTERVAL);
         storeNotEmpty(prefs, "dcmIanDestination", arcAE.getIANDestinations());
         storeNotDef(prefs, "dcmIanMaxRetries", arcAE.getIANMaxRetries(), 0);
         storeNotDef(prefs, "dcmIanRetryInterval", arcAE.getIANRetryInterval(),
-                    ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
+                    ArchiveAEExtension.DEF_RETRY_INTERVAL);
         storeNotDef(prefs, "dcmReturnOtherPatientIDs", arcAE.isReturnOtherPatientIDs(), false);
         storeNotDef(prefs, "dcmReturnOtherPatientNames", arcAE.isReturnOtherPatientNames(), false);
         storeNotDef(prefs, "dcmShowRejectedInstances", arcAE.isShowRejectedInstances(), false);
@@ -195,49 +195,49 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
     }
 
     @Override
-    protected void storeTo(HL7Application hl7App, Preferences prefs,
-            List<Connection> devConns) {
-        super.storeTo(hl7App, prefs, devConns);
-        if (!(hl7App instanceof ArchiveHL7Application))
+    public void storeTo(HL7Application hl7App, Preferences prefs) {
+        ArchiveHL7ApplicationExtension arcHL7App =
+                hl7App.getHL7ApplicationExtension(ArchiveHL7ApplicationExtension.class);
+        if (arcHL7App == null)
             return;
 
-        ArchiveHL7Application arcHL7App = (ArchiveHL7Application) hl7App;
         prefs.putBoolean("dcmArchiveHL7Application", true);
         storeNotEmpty(prefs, "labeledURI", arcHL7App.getTemplatesURIs());
     }
 
-    @Override
-    protected Device newDevice(Preferences deviceNode) {
-        if (!deviceNode.getBoolean("dcmArchiveDevice", false))
-            return super.newDevice(deviceNode);
-
-        return new ArchiveDevice(deviceNode.name());
-    }
-
-    @Override
-    protected ApplicationEntity newApplicationEntity(Preferences aeNode) {
-        if (!aeNode.getBoolean("dcmArchiveNetworkAE", false))
-            return super.newApplicationEntity(aeNode);
-
-        return new ArchiveApplicationEntity(aeNode.name());
-    }
-
-    @Override
-    protected HL7Application newHL7Application(Preferences hl7AppNode) {
-        if (!hl7AppNode.getBoolean("dcmArchiveHL7Application", false))
-            return super.newHL7Application(hl7AppNode);
-
-        return new ArchiveHL7Application(hl7AppNode.name());
-    }
+//    @Override
+//    protected Device newDevice(Preferences deviceNode) {
+//        if (!deviceNode.getBoolean("dcmArchiveDevice", false))
+//            return super.newDevice(deviceNode);
+//
+//        return new ArchiveDeviceExtension(deviceNode.name());
+//    }
+//
+//    @Override
+//    protected ApplicationEntity newApplicationEntity(Preferences aeNode) {
+//        if (!aeNode.getBoolean("dcmArchiveNetworkAE", false))
+//            return super.newApplicationEntity(aeNode);
+//
+//        return new ArchiveAEExtension(aeNode.name());
+//    }
+//
+//    @Override
+//    protected HL7Application newHL7Application(Preferences hl7AppNode) {
+//        if (!hl7AppNode.getBoolean("dcmArchiveHL7Application", false))
+//            return super.newHL7Application(hl7AppNode);
+//
+//        return new ArchiveHL7ApplicationExtension(hl7AppNode.name());
+//    }
 
     @Override
     protected void loadFrom(Device device, Preferences prefs)
             throws CertificateException, BackingStoreException {
-        super.loadFrom(device, prefs);
-        if (!(device instanceof ArchiveDevice))
+        if (!prefs.getBoolean("dcmArchiveDevice", false))
             return;
 
-        ArchiveDevice arcdev = (ArchiveDevice) device;
+        ArchiveDeviceExtension arcdev = new ArchiveDeviceExtension();
+        device.addDeviceExtension(arcdev);
+
         arcdev.setIncorrectWorklistEntrySelectedCode(new Code(
                 prefs.get("dcmIncorrectWorklistEntrySelectedCode", null)));
         arcdev.setRejectedForQualityReasonsCode(new Code(
@@ -256,19 +256,21 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
     @Override
     protected void loadChilds(Device device, Preferences deviceNode)
             throws BackingStoreException, ConfigurationException {
-        super.loadChilds(device, deviceNode);
-        if (!(device instanceof ArchiveDevice))
+        ArchiveDeviceExtension arcdev =
+                device.getDeviceExtension(ArchiveDeviceExtension.class);
+        if (arcdev == null)
             return;
-        ArchiveDevice arcdev = (ArchiveDevice) device;
+
         loadAttributeFilters(arcdev, deviceNode);
     }
 
     @Override
     protected void loadFrom(ApplicationEntity ae, Preferences prefs) {
-        super.loadFrom(ae, prefs);
-        if (!(ae instanceof ArchiveApplicationEntity))
+        if (!prefs.getBoolean("dcmArchiveNetworkAE", false))
             return;
-        ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) ae;
+
+        ArchiveAEExtension arcae = new ArchiveAEExtension();
+        ae.addAEExtension(arcae);
         arcae.setFileSystemGroupID(prefs.get("dcmFileSystemGroupID", null));
         arcae.setInitFileSystemURI(prefs.get("dcmInitFileSystemURI", null));
         arcae.setSpoolFilePathFormat(
@@ -293,15 +295,15 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         arcae.setStorageCommitmentDelay(prefs.getInt("dcmStgCmtDelay", 0));
         arcae.setStorageCommitmentMaxRetries(prefs.getInt("dcmStgCmtMaxRetries", 0));
         arcae.setStorageCommitmentRetryInterval(prefs.getInt("dcmStgCmtRetryInterval",
-                ArchiveApplicationEntity.DEF_RETRY_INTERVAL));
+                ArchiveAEExtension.DEF_RETRY_INTERVAL));
         arcae.setForwardMPPSDestinations(stringArray(prefs, "dcmFwdMppsDestination"));
         arcae.setForwardMPPSMaxRetries(prefs.getInt("dcmFwdMppsMaxRetries", 0));
         arcae.setForwardMPPSRetryInterval(prefs.getInt("dcmFwdMppsRetryInterval",
-                ArchiveApplicationEntity.DEF_RETRY_INTERVAL));
+                ArchiveAEExtension.DEF_RETRY_INTERVAL));
         arcae.setIANDestinations(stringArray(prefs, "dcmIanDestination"));
         arcae.setIANMaxRetries(prefs.getInt("dcmIanMaxRetries", 0));
         arcae.setIANRetryInterval(prefs.getInt("dcmIanRetryInterval",
-                ArchiveApplicationEntity.DEF_RETRY_INTERVAL));
+                ArchiveAEExtension.DEF_RETRY_INTERVAL));
         arcae.setReturnOtherPatientIDs(
                 prefs.getBoolean("dcmReturnOtherPatientIDs", false));
         arcae.setReturnOtherPatientNames(
@@ -315,11 +317,11 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
     @Override
     protected void loadChilds(ApplicationEntity ae, Preferences aeNode)
             throws BackingStoreException {
-        super.loadChilds(ae, aeNode);
-        if (!(ae instanceof ArchiveApplicationEntity))
+        ArchiveAEExtension arcae = ae.getAEExtension(ArchiveAEExtension.class);
+        if (arcae == null)
             return;
-        ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) ae;
-        load(arcae.getAttributeCoercions(), aeNode);
+
+        config.load(arcae.getAttributeCoercions(), aeNode);
         loadStoreDuplicates(arcae.getStoreDuplicates(), aeNode);
     }
 
@@ -337,15 +339,17 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
     }
 
     @Override
-    protected void loadFrom(HL7Application hl7App, Preferences prefs) {
-        super.loadFrom(hl7App, prefs);
-        if (!(hl7App instanceof ArchiveHL7Application))
+    public void loadFrom(HL7Application hl7App, Preferences prefs) {
+        if (!prefs.getBoolean("dcmArchiveHL7Application", false))
             return;
-        ArchiveHL7Application arcHL7App = (ArchiveHL7Application) hl7App;
+
+        ArchiveHL7ApplicationExtension arcHL7App =
+                new ArchiveHL7ApplicationExtension();
+        hl7App.addHL7ApplicationExtension(arcHL7App);
         arcHL7App.setTemplatesURIs(stringArray(prefs, "labeledURI"));
     }
 
-    private static void loadAttributeFilters(ArchiveDevice device, Preferences deviceNode)
+    private static void loadAttributeFilters(ArchiveDeviceExtension device, Preferences deviceNode)
             throws BackingStoreException {
         Preferences afsNode = deviceNode.node("dcmAttributeFilter");
         for (String entity : afsNode.childrenNames()) {
@@ -371,13 +375,12 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
     }
 
     @Override
-    protected void storeDiffs(Preferences prefs, Device a, Device b) {
-        super.storeDiffs(prefs, a, b);
-        if (!(a instanceof ArchiveDevice && b instanceof ArchiveDevice))
+    protected void storeDiffs(Device a, Device b, Preferences prefs) {
+        ArchiveDeviceExtension aa = a.getDeviceExtension(ArchiveDeviceExtension.class);
+        ArchiveDeviceExtension bb = b.getDeviceExtension(ArchiveDeviceExtension.class);
+        if (aa == null || bb == null)
             return;
-
-        ArchiveDevice aa = (ArchiveDevice) a;
-        ArchiveDevice bb = (ArchiveDevice) b;
+        
         storeDiff(prefs, "dcmIncorrectWorklistEntrySelectedCode",
                 aa.getIncorrectWorklistEntrySelectedCode(),
                 bb.getIncorrectWorklistEntrySelectedCode());
@@ -403,15 +406,13 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
     }
 
     @Override
-    protected void storeDiffs(Preferences prefs, ApplicationEntity a,
-            ApplicationEntity b) {
-        super.storeDiffs(prefs, a, b);
-        if (!(a instanceof ArchiveApplicationEntity 
-           && b instanceof ArchiveApplicationEntity))
-                 return;
+    protected void storeDiffs(ApplicationEntity a, ApplicationEntity b,
+            Preferences prefs) {
+         ArchiveAEExtension aa = a.getAEExtension(ArchiveAEExtension.class);
+         ArchiveAEExtension bb = b.getAEExtension(ArchiveAEExtension.class);
+         if (aa == null || bb == null)
+             return;
 
-         ArchiveApplicationEntity aa = (ArchiveApplicationEntity) a;
-         ArchiveApplicationEntity bb = (ArchiveApplicationEntity) b;
          storeDiff(prefs, "dcmFileSystemGroupID",
                  aa.getFileSystemGroupID(),
                  bb.getFileSystemGroupID());
@@ -471,7 +472,7 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
          storeDiff(prefs, "dcmStgCmtRetryInterval",
                  aa.getStorageCommitmentRetryInterval(),
                  bb.getStorageCommitmentRetryInterval(),
-                 ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
+                 ArchiveAEExtension.DEF_RETRY_INTERVAL);
          storeDiff(prefs, "dcmFwdMppsDestination",
                  aa.getForwardMPPSDestinations(),
                  bb.getForwardMPPSDestinations());
@@ -482,7 +483,7 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
          storeDiff(prefs, "dcmFwdMppsRetryInterval",
                  aa.getForwardMPPSRetryInterval(),
                  bb.getForwardMPPSRetryInterval(),
-                 ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
+                 ArchiveAEExtension.DEF_RETRY_INTERVAL);
          storeDiff(prefs, "dcmIanDestination",
                  aa.getIANDestinations(),
                  bb.getIANDestinations());
@@ -493,7 +494,7 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
          storeDiff(prefs, "dcmIanRetryInterval",
                  aa.getIANRetryInterval(),
                  bb.getIANRetryInterval(),
-                 ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
+                 ArchiveAEExtension.DEF_RETRY_INTERVAL);
          storeDiff(prefs, "dcmReturnOtherPatientIDs",
                  aa.isReturnOtherPatientIDs(),
                  bb.isReturnOtherPatientIDs(),
@@ -517,12 +518,13 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
     @Override
     protected void mergeChilds(Device prev, Device device,
             Preferences deviceNode) throws BackingStoreException {
-        super.mergeChilds(prev, device, deviceNode);
-        if (!(prev instanceof ArchiveDevice && device instanceof ArchiveDevice))
+        ArchiveDeviceExtension aa =
+                prev.getDeviceExtension(ArchiveDeviceExtension.class);
+        ArchiveDeviceExtension bb =
+                device.getDeviceExtension(ArchiveDeviceExtension.class);
+        if (aa == null || bb == null)
             return;
-        
-        ArchiveDevice aa = (ArchiveDevice) prev;
-        ArchiveDevice bb = (ArchiveDevice) device;
+
         Preferences afsNode = deviceNode.node("dcmAttributeFilter");
         for (Entity entity : Entity.values())
             storeDiffs(afsNode.node(entity.name()), aa.getAttributeFilter(entity),
@@ -530,15 +532,14 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
     }
 
     @Override
-    protected void storeDiffs(Preferences prefs, HL7Application a,
-            HL7Application b) {
-        super.storeDiffs(prefs, a, b);
-        if (!(a instanceof ArchiveHL7Application 
-           && b instanceof ArchiveHL7Application))
-                 return;
+    public void storeDiffs(HL7Application a, HL7Application b, Preferences prefs) {
+         ArchiveHL7ApplicationExtension aa =
+                 a.getHL7ApplicationExtension(ArchiveHL7ApplicationExtension.class);
+         ArchiveHL7ApplicationExtension bb =
+                 b.getHL7ApplicationExtension(ArchiveHL7ApplicationExtension.class);
+         if (aa == null || bb == null)
+             return;
 
-         ArchiveHL7Application aa = (ArchiveHL7Application) a;
-         ArchiveHL7Application bb = (ArchiveHL7Application) b;
          storeDiff(prefs, "labeledURI",
                  aa.getTemplatesURIs(),
                  bb.getTemplatesURIs());
@@ -570,14 +571,12 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
     @Override
     protected void mergeChilds(ApplicationEntity prev, ApplicationEntity ae,
             Preferences aePrefs) throws BackingStoreException {
-        super.mergeChilds(prev, ae, aePrefs);
-        if (!(prev instanceof ApplicationEntity
-             && ae instanceof ApplicationEntity))
+        ArchiveAEExtension aa = prev.getAEExtension(ArchiveAEExtension.class);
+        ArchiveAEExtension bb = ae.getAEExtension(ArchiveAEExtension.class);
+        if (aa == null || bb == null)
             return;
-        
-        ArchiveApplicationEntity aa = (ArchiveApplicationEntity) prev;
-        ArchiveApplicationEntity bb = (ArchiveApplicationEntity) ae;
-        merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), aePrefs);
+
+        config.merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), aePrefs);
         mergeStoreDuplicates(aa.getStoreDuplicates(), bb.getStoreDuplicates(), aePrefs);
     }
 

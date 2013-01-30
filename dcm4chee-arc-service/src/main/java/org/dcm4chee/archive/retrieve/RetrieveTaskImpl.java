@@ -51,6 +51,7 @@ import org.dcm4che.data.VR;
 import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.io.SAXTransformer;
 import org.dcm4che.io.DicomInputStream.IncludeBulkData;
+import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.DataWriter;
 import org.dcm4che.net.DataWriterAdapter;
@@ -63,7 +64,7 @@ import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.common.IDWithIssuer;
-import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
+import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.retrieve.dao.RetrieveService;
 
@@ -125,9 +126,10 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
         attrs.addAll((Attributes) inst.getObject());
         adjustPatientID(attrs);
         adjustAccessionNumber(attrs);
-        ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+        ApplicationEntity ae = as.getApplicationEntity();
+        ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
         try {
-            Templates tpl = ae.getAttributeCoercionTemplates(
+            Templates tpl = aeExt.getAttributeCoercionTemplates(
                     inst.cuid, Dimse.C_STORE_RQ, Role.SCU, as.getRemoteAET());
             if (tpl != null)
                 attrs.update(SAXTransformer.transform(attrs, tpl, false, false), null);
@@ -143,8 +145,7 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
             return;
 
         if (pids.length == 0) {
-            pids = pixConsumer.pixQuery(
-                   (ArchiveApplicationEntity) as.getApplicationEntity(), pid);
+            pids = pixConsumer.pixQuery(as.getApplicationEntity(), pid);
         }
 
         IDWithIssuer issuer = pidWithMatchingIssuer(pids, requestedIssuerOfPatientID);

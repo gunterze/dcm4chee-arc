@@ -43,8 +43,7 @@ import javax.xml.transform.TransformerConfigurationException;
 
 import org.dcm4che.data.Code;
 import org.dcm4che.io.TemplatesCache;
-import org.dcm4che.net.Device;
-import org.dcm4che.net.hl7.HL7Device;
+import org.dcm4che.net.DeviceExtension;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.StringUtils;
 
@@ -52,7 +51,7 @@ import org.dcm4che.util.StringUtils;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class ArchiveDevice extends HL7Device {
+public class ArchiveDeviceExtension extends DeviceExtension {
 
     private static final long serialVersionUID = -3611223780276386740L;
 
@@ -68,10 +67,6 @@ public class ArchiveDevice extends HL7Device {
 
     private transient FuzzyStr fuzzyStr;
     private transient TemplatesCache templatesCache;
-
-    public ArchiveDevice(String name) {
-        super(name);
-    }
 
     public Code getIncorrectWorklistEntrySelectedCode() {
         return incorrectWorklistEntrySelectedCode;
@@ -174,9 +169,8 @@ public class ArchiveDevice extends HL7Device {
     }
 
     @Override
-    protected void setDeviceAttributes(Device from) {
-        super.setDeviceAttributes(from);
-        ArchiveDevice arcdev = (ArchiveDevice) from;
+    public void reconfigure(DeviceExtension from) {
+        ArchiveDeviceExtension arcdev = (ArchiveDeviceExtension) from;
         setIncorrectWorklistEntrySelectedCode(arcdev.incorrectWorklistEntrySelectedCode);
         setRejectedForQualityReasonsCode(arcdev.rejectedForQualityReasonsCode);
         setRejectedForPatientSafetyReasonsCode(arcdev.rejectedForPatientSafetyReasonsCode);

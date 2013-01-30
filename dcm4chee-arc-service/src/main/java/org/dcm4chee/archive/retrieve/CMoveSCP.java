@@ -62,7 +62,7 @@ import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.RetrieveTask;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
-import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
+import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.retrieve.dao.RetrieveService;
 
@@ -107,7 +107,8 @@ public class CMoveSCP extends BasicCMoveSCP {
                 throw new DicomServiceException(Status.MoveDestinationUnknown,
                         "Unknown Move Destination: " + destAE);
     
-            ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+            ApplicationEntity ae = as.getApplicationEntity();
+            ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
             ApplicationEntity sourceAE = aeCache.get(as.getRemoteAET());
             QueryParam queryParam = QueryParam.valueOf(ae, queryOpts, sourceAE,
                     accessControlIDs());
@@ -136,9 +137,9 @@ public class CMoveSCP extends BasicCMoveSCP {
     
             };
             retrieveTask.setDestinationDevice(destAE.getDevice());
-            retrieveTask.setSendPendingRSPInterval(ae.getSendPendingCMoveInterval());
-            retrieveTask.setReturnOtherPatientIDs(ae.isReturnOtherPatientIDs());
-            retrieveTask.setReturnOtherPatientNames(ae.isReturnOtherPatientNames());
+            retrieveTask.setSendPendingRSPInterval(aeExt.getSendPendingCMoveInterval());
+            retrieveTask.setReturnOtherPatientIDs(aeExt.isReturnOtherPatientIDs());
+            retrieveTask.setReturnOtherPatientNames(aeExt.isReturnOtherPatientNames());
             return retrieveTask;
         } catch (DicomServiceException e) {
             throw e;

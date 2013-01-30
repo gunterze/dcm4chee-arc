@@ -44,25 +44,19 @@ import java.util.Map;
 import javax.xml.transform.Templates;
 import javax.xml.transform.TransformerConfigurationException;
 
-import org.dcm4che.net.hl7.HL7Application;
+import org.dcm4che.io.TemplatesCache;
+import org.dcm4che.net.hl7.HL7ApplicationExtension;
+import org.dcm4che.util.StringUtils;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class ArchiveHL7Application extends HL7Application {
+public class ArchiveHL7ApplicationExtension extends HL7ApplicationExtension {
 
-    private static final long serialVersionUID = -8258532093950989486L;
+    private static final long serialVersionUID = 4640015816709554649L;
 
     private final LinkedHashMap<String, String> templatesURIs =
             new LinkedHashMap<String, String>();
-
-    public ArchiveHL7Application(String name) {
-        super(name);
-    }
-
-    public final ArchiveDevice getArchiveDevice() {
-        return ((ArchiveDevice) getDevice());
-    }
 
     public void addTemplatesURI(String key, String uri) {
         templatesURIs.put(key, uri);
@@ -96,18 +90,21 @@ public class ArchiveHL7Application extends HL7Application {
         }
     }
 
-    public Templates getTemplates(String key) throws TransformerConfigurationException {
+    public Templates getTemplates(String key)
+            throws TransformerConfigurationException {
         String uri = getTemplatesURI(key);
         if (uri == null)
             throw new TransformerConfigurationException(
                     "No templates for " + key + " configured");
-        return uri != null ? getArchiveDevice().getTemplates(uri) : null;
+        return TemplatesCache.getDefault().get(
+                        StringUtils.replaceSystemProperties(uri)
+                                   .replace('\\', '/'));
     }
 
     @Override
-    protected void setHL7ApplicationAttributes(HL7Application src) {
-        super.setHL7ApplicationAttributes(src);
-        ArchiveHL7Application arcapp = (ArchiveHL7Application) src;
+    public void reconfigure(HL7ApplicationExtension src) {
+        ArchiveHL7ApplicationExtension arcapp = 
+                (ArchiveHL7ApplicationExtension) src;
         templatesURIs.clear();
         templatesURIs.putAll(arcapp.templatesURIs);
     }

@@ -44,9 +44,11 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Code;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
+import org.dcm4che.net.ApplicationEntity;
+import org.dcm4che.net.Device;
 import org.dcm4che.soundex.FuzzyStr;
-import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
-import org.dcm4chee.archive.conf.ArchiveDevice;
+import org.dcm4chee.archive.conf.ArchiveAEExtension;
+import org.dcm4chee.archive.conf.ArchiveDeviceExtension;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.conf.Entity;
 import org.dcm4chee.archive.conf.StoreDuplicate;
@@ -219,30 +221,33 @@ public class StoreParam {
         return true;
     }
 
-    public static StoreParam valueOf(ArchiveDevice dev) {
+    public static StoreParam valueOf(Device dev) {
+        ArchiveDeviceExtension devExt =
+                dev.getDeviceExtension(ArchiveDeviceExtension.class);
         StoreParam storeParam = new StoreParam();
         storeParam.setIncorrectWorklistEntrySelectedCode(
-                (Code) dev.getIncorrectWorklistEntrySelectedCode());
+                (Code) devExt.getIncorrectWorklistEntrySelectedCode());
         storeParam.setRejectedForQualityReasonsCode(
-                (Code) dev.getRejectedForQualityReasonsCode());
+                (Code) devExt.getRejectedForQualityReasonsCode());
         storeParam.setRejectedForPatientSafetyReasonsCode(
-                (Code) dev.getRejectedForPatientSafetyReasonsCode());
+                (Code) devExt.getRejectedForPatientSafetyReasonsCode());
         storeParam.setIncorrectModalityWorklistEntryCode(
-                (Code) dev.getIncorrectModalityWorklistEntryCode());
+                (Code) devExt.getIncorrectModalityWorklistEntryCode());
         storeParam.setDataRetentionPeriodExpiredCode(
-                (Code) dev.getDataRetentionPeriodExpiredCode());
-        storeParam.setFuzzyStr(dev.getFuzzyStr());
-        storeParam.setAttributeFilters(dev.getAttributeFilters());
+                (Code) devExt.getDataRetentionPeriodExpiredCode());
+        storeParam.setFuzzyStr(devExt.getFuzzyStr());
+        storeParam.setAttributeFilters(devExt.getAttributeFilters());
         return storeParam;
     }
 
-    public static StoreParam valueOf(ArchiveApplicationEntity ae) {
-        StoreParam storeParam = StoreParam.valueOf(ae.getArchiveDevice());
-        storeParam.setStoreOriginalAttributes(ae.isStoreOriginalAttributes());
-        storeParam.setModifyingSystem(ae.getEffectiveModifyingSystem());
-        storeParam.setRetrieveAETs(ae.getRetrieveAETs());
-        storeParam.setExternalRetrieveAET(ae.getExternalRetrieveAET());
-        storeParam.setStoreDuplicates(ae.getStoreDuplicates());
+    public static StoreParam valueOf(ApplicationEntity ae) {
+        StoreParam storeParam = StoreParam.valueOf(ae.getDevice());
+        ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
+        storeParam.setStoreOriginalAttributes(aeExt.isStoreOriginalAttributes());
+        storeParam.setModifyingSystem(aeExt.getEffectiveModifyingSystem());
+        storeParam.setRetrieveAETs(aeExt.getRetrieveAETs());
+        storeParam.setExternalRetrieveAET(aeExt.getExternalRetrieveAET());
+        storeParam.setStoreDuplicates(aeExt.getStoreDuplicates());
         return storeParam;
     }
 }

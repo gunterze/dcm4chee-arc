@@ -45,8 +45,8 @@ import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.soundex.FuzzyStr;
-import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
-import org.dcm4chee.archive.conf.ArchiveDevice;
+import org.dcm4chee.archive.conf.ArchiveAEExtension;
+import org.dcm4chee.archive.conf.ArchiveDeviceExtension;
 import org.dcm4chee.archive.conf.AttributeFilter;
 
 /**
@@ -155,22 +155,24 @@ public class QueryParam {
         this.defaultIssuerOfAccessionNumber = issuer;
     }
 
-    public static QueryParam valueOf(ArchiveApplicationEntity ae,
+    public static QueryParam valueOf(ApplicationEntity ae,
             EnumSet<QueryOption> queryOpts, ApplicationEntity sourceAE,
             String[] accessControlIDs) throws Exception {
-        ArchiveDevice dev = ae.getArchiveDevice();
+        ArchiveDeviceExtension devExt = ae.getDevice()
+                .getDeviceExtension(ArchiveDeviceExtension.class);
+        ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
         QueryParam queryParam = new QueryParam();
-        queryParam.setFuzzyStr(dev.getFuzzyStr());
-        queryParam.setAttributeFilters(dev.getAttributeFilters());
+        queryParam.setFuzzyStr(devExt.getFuzzyStr());
+        queryParam.setAttributeFilters(devExt.getAttributeFilters());
         queryParam.setCombinedDatetimeMatching(queryOpts
                 .contains(QueryOption.DATETIME));
         queryParam.setFuzzySemanticMatching(queryOpts
                 .contains(QueryOption.FUZZY));
-        queryParam.setMatchUnknown(ae.isMatchUnknown());
+        queryParam.setMatchUnknown(aeExt.isMatchUnknown());
         queryParam.setAccessControlIDs(accessControlIDs);
-        queryParam.setShowRejectedInstances(ae.isShowRejectedInstances());
-        queryParam.setReturnOtherPatientIDs(ae.isReturnOtherPatientIDs());
-        queryParam.setReturnOtherPatientNames(ae.isReturnOtherPatientNames());
+        queryParam.setShowRejectedInstances(aeExt.isShowRejectedInstances());
+        queryParam.setReturnOtherPatientIDs(aeExt.isReturnOtherPatientIDs());
+        queryParam.setReturnOtherPatientNames(aeExt.isReturnOtherPatientNames());
 
         if (sourceAE != null) {
             Device sourceDevice = sourceAE.getDevice();

@@ -50,11 +50,15 @@ import java.util.EnumSet;
 import org.dcm4che.conf.api.AttributeCoercion;
 import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.conf.api.ConfigurationNotFoundException;
-import org.dcm4che.conf.api.hl7.HL7Configuration;
+import org.dcm4che.conf.api.DicomConfiguration;
+import org.dcm4che.conf.ldap.ExtendedLdapDicomConfiguration;
 import org.dcm4che.conf.ldap.audit.LdapAuditLoggerConfiguration;
 import org.dcm4che.conf.ldap.audit.LdapAuditRecordRepositoryConfiguration;
+import org.dcm4che.conf.ldap.hl7.LdapHL7Configuration;
+import org.dcm4che.conf.prefs.PreferencesDicomConfiguration;
 import org.dcm4che.conf.prefs.audit.PreferencesAuditLoggerConfiguration;
 import org.dcm4che.conf.prefs.audit.PreferencesAuditRecordRepositoryConfiguration;
+import org.dcm4che.conf.prefs.hl7.PreferencesHL7Configuration;
 import org.dcm4che.data.Code;
 import org.dcm4che.data.Issuer;
 import org.dcm4che.data.Tag;
@@ -70,7 +74,7 @@ import org.dcm4che.net.TransferCapability;
 import org.dcm4che.net.audit.AuditLogger;
 import org.dcm4che.net.audit.AuditRecordRepository;
 import org.dcm4che.net.hl7.HL7Application;
-import org.dcm4che.net.hl7.HL7Device;
+import org.dcm4che.net.hl7.HL7DeviceExtension;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.StringUtils;
@@ -592,7 +596,7 @@ public class ArchiveDeviceTest {
     };
 
     private KeyStore keystore;
-    private HL7Configuration config;
+    private DicomConfiguration config;
 
     @Before
     public void setUp() throws Exception {
@@ -604,8 +608,14 @@ public class ArchiveDeviceTest {
         cleanUp();
     }
 
-    private HL7Configuration newLdapArchiveConfiguration() throws ConfigurationException {
-        LdapArchiveConfiguration config = new LdapArchiveConfiguration();
+    private DicomConfiguration newLdapArchiveConfiguration()
+            throws ConfigurationException {
+        ExtendedLdapDicomConfiguration config = new ExtendedLdapDicomConfiguration();
+        LdapHL7Configuration hl7Config = new LdapHL7Configuration();
+        config.addDicomConfigurationExtension(hl7Config);
+        LdapArchiveConfiguration arcConfig = new LdapArchiveConfiguration();
+        config.addDicomConfigurationExtension(arcConfig);
+        hl7Config.addHL7ConfigurationExtension(arcConfig);
         config.addDicomConfigurationExtension(
                 new LdapAuditLoggerConfiguration());
         config.addDicomConfigurationExtension(
@@ -613,9 +623,13 @@ public class ArchiveDeviceTest {
         return config;
     }
 
-    private HL7Configuration newPreferencesArchiveConfiguration() {
-        PreferencesArchiveConfiguration config =
-                new PreferencesArchiveConfiguration();
+    private DicomConfiguration newPreferencesArchiveConfiguration() {
+        PreferencesDicomConfiguration config = new PreferencesDicomConfiguration();
+        PreferencesHL7Configuration hl7Config = new PreferencesHL7Configuration();
+        config.addDicomConfigurationExtension(hl7Config);
+        PreferencesArchiveConfiguration arcConfig = new PreferencesArchiveConfiguration();
+        config.addDicomConfigurationExtension(arcConfig);
+        hl7Config.addHL7ConfigurationExtension(arcConfig);
         config.addDicomConfigurationExtension(
                 new PreferencesAuditLoggerConfiguration());
         config.addDicomConfigurationExtension(
@@ -648,7 +662,7 @@ public class ArchiveDeviceTest {
         config.registerAETitle("DCM4CHEE_ADMIN");
         config.persist(createArchiveDevice("dcm4chee-arc", arrDevice ));
         config.findApplicationEntity("DCM4CHEE");
-        if (config instanceof PreferencesArchiveConfiguration)
+        if (config instanceof PreferencesDicomConfiguration)
             export(System.getProperty("export"));
     }
 
@@ -690,7 +704,7 @@ public class ArchiveDeviceTest {
 
         OutputStream os = new FileOutputStream(name);
         try {
-            ((PreferencesArchiveConfiguration) config)
+            ((PreferencesDicomConfiguration) config)
                     .getDicomConfigurationRoot().exportSubtree(os);
         } finally {
             SafeClose.close(os);
@@ -734,13 +748,15 @@ public class ArchiveDeviceTest {
          return device;
     }
 
-    private HL7Device createHL7Device(String name,
+    private Device createHL7Device(String name,
             Issuer issuer, Code institutionCode, String appName,
             String host, int port, int tlsPort) throws Exception {
-         HL7Device device = new HL7Device(name);
+         Device device = new Device(name);
+         HL7DeviceExtension hl7Device = new HL7DeviceExtension();
+         device.addDeviceExtension(hl7Device);
          init(device, issuer, institutionCode);
          HL7Application hl7app = new HL7Application(appName);
-         device.addHL7Application(hl7app);
+         hl7Device.addHL7Application(hl7app);
          Connection hl7 = new Connection("hl7", host, port);
          hl7.setProtocol(Connection.Protocol.HL7);
          device.addConnection(hl7);
@@ -756,15 +772,19 @@ public class ArchiveDeviceTest {
      }
 
     private Device createArchiveDevice(String name, Device arrDevice) throws Exception {
-        ArchiveDevice device = new ArchiveDevice(name);
-        device.setIncorrectWorklistEntrySelectedCode(INCORRECT_WORKLIST_ENTRY_SELECTED);
-        device.setRejectedForQualityReasonsCode(REJECTED_FOR_QUALITY_REASONS);
-        device.setRejectedForPatientSafetyReasonsCode(REJECT_FOR_PATIENT_SAFETY_REASONS);
-        device.setIncorrectModalityWorklistEntryCode(INCORRECT_MODALITY_WORKLIST_ENTRY);
-        device.setDataRetentionPeriodExpiredCode(DATA_RETENTION_PERIOD_EXPIRED);
-        device.setFuzzyAlgorithmClass("org.dcm4che.soundex.ESoundex");
-        device.setConfigurationStaleTimeout(CONFIGURATION_STALE_TIMEOUT);
-        setAttributeFilters(device);
+        Device device = new Device(name);
+        HL7DeviceExtension hl7DevExt = new HL7DeviceExtension();
+        ArchiveDeviceExtension arcDevExt = new ArchiveDeviceExtension();
+        device.addDeviceExtension(hl7DevExt);
+        device.addDeviceExtension(arcDevExt);
+        arcDevExt.setIncorrectWorklistEntrySelectedCode(INCORRECT_WORKLIST_ENTRY_SELECTED);
+        arcDevExt.setRejectedForQualityReasonsCode(REJECTED_FOR_QUALITY_REASONS);
+        arcDevExt.setRejectedForPatientSafetyReasonsCode(REJECT_FOR_PATIENT_SAFETY_REASONS);
+        arcDevExt.setIncorrectModalityWorklistEntryCode(INCORRECT_MODALITY_WORKLIST_ENTRY);
+        arcDevExt.setDataRetentionPeriodExpiredCode(DATA_RETENTION_PERIOD_EXPIRED);
+        arcDevExt.setFuzzyAlgorithmClass("org.dcm4che.soundex.ESoundex");
+        arcDevExt.setConfigurationStaleTimeout(CONFIGURATION_STALE_TIMEOUT);
+        setAttributeFilters(arcDevExt);
         device.setKeyStoreURL("file:${jboss.server.config.dir}/dcm4chee-arc/key.jks");
         device.setKeyStoreType("JKS");
         device.setKeyStorePin("secret");
@@ -784,22 +804,24 @@ public class ArchiveDeviceTest {
                 Connection.TLS_RSA_WITH_AES_128_CBC_SHA, 
                 Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
         device.addConnection(dicomTLS);
-        ArchiveApplicationEntity ae = createAE("DCM4CHEE",
+        ApplicationEntity ae = createAE("DCM4CHEE",
                 IMAGE_TSUIDS, VIDEO_TSUIDS, OTHER_TSUIDS, null, PIX_MANAGER);
         device.addApplicationEntity(ae);
         ae.addConnection(dicom);
         ae.addConnection(dicomTLS);
-        ArchiveApplicationEntity adminAE = createAdminAE("DCM4CHEE_ADMIN",
+        ApplicationEntity adminAE = createAdminAE("DCM4CHEE_ADMIN",
                 IMAGE_TSUIDS, VIDEO_TSUIDS, OTHER_TSUIDS, null, PIX_MANAGER);
         device.addApplicationEntity(adminAE);
         adminAE.addConnection(dicom);
         adminAE.addConnection(dicomTLS);
-        ArchiveHL7Application hl7App = new ArchiveHL7Application("*");
+        HL7Application hl7App = new HL7Application("*");
+        ArchiveHL7ApplicationExtension hl7AppExt = new ArchiveHL7ApplicationExtension();
+        hl7App.addHL7ApplicationExtension(hl7AppExt);
         hl7App.setAcceptedMessageTypes(HL7_MESSAGE_TYPES);
         hl7App.setHL7DefaultCharacterSet("8859/1");
-        hl7App.addTemplatesURI("adt2dcm",
+        hl7AppExt.addTemplatesURI("adt2dcm",
                 "file:${jboss.server.config.dir}/dcm4chee-arc/hl7-adt2dcm.xsl");
-        device.addHL7Application(hl7App);
+        hl7DevExt.addHL7Application(hl7App);
         Connection hl7 = new Connection("hl7", "localhost", 2575);
         hl7.setProtocol(Protocol.HL7);
         device.addConnection(hl7);
@@ -822,7 +844,7 @@ public class ArchiveDeviceTest {
         return device ;
     }
 
-    private void setAttributeFilters(ArchiveDevice device) {
+    private void setAttributeFilters(ArchiveDeviceExtension device) {
         device.setAttributeFilter(Entity.Patient,
                 new AttributeFilter(PATIENT_ATTRS));
         device.setAttributeFilter(Entity.Study,
@@ -851,44 +873,46 @@ public class ArchiveDeviceTest {
     }
 
 
-    private ArchiveApplicationEntity createAE(String aet,
+    private ApplicationEntity createAE(String aet,
             String[] image_tsuids, String[] video_tsuids, String[] other_tsuids,
             String pixConsumer, String pixManager) {
-        ArchiveApplicationEntity ae = new ArchiveApplicationEntity(aet);
+        ApplicationEntity ae = new ApplicationEntity(aet);
+        ArchiveAEExtension aeExt = new ArchiveAEExtension();
+        ae.addAEExtension(aeExt);
         ae.setAssociationAcceptor(true);
         ae.setAssociationInitiator(true);
-        ae.setFileSystemGroupID("DEFAULT");
-        ae.setInitFileSystemURI("file:${jboss.server.data.dir}");
-        ae.setSpoolFilePathFormat(new AttributesFormat(
+        aeExt.setFileSystemGroupID("DEFAULT");
+        aeExt.setInitFileSystemURI("file:${jboss.server.data.dir}");
+        aeExt.setSpoolFilePathFormat(new AttributesFormat(
                 "archive/spool/{00020016,urlencoded}/{00020002}/{00020003}") );
-        ae.setStorageFilePathFormat(new AttributesFormat(
+        aeExt.setStorageFilePathFormat(new AttributesFormat(
                 "archive/{now,date,yyyy/MM/dd}/{0020000D,hash}/{0020000E,hash}/{00080018,hash}") );
-        ae.setDigestAlgorithm("MD5");
-        ae.setRetrieveAETs(aet);
-        ae.setStoreOriginalAttributes(true);
-        ae.setPreserveSpoolFileOnFailure(true);
-        ae.setSuppressWarningCoercionOfDataElements(false);
-        ae.setMatchUnknown(true);
-        ae.setSendPendingCGet(true);
-        ae.setSendPendingCMoveInterval(5000);
-        ae.addStoreDuplicate(
+        aeExt.setDigestAlgorithm("MD5");
+        aeExt.setRetrieveAETs(aet);
+        aeExt.setStoreOriginalAttributes(true);
+        aeExt.setPreserveSpoolFileOnFailure(true);
+        aeExt.setSuppressWarningCoercionOfDataElements(false);
+        aeExt.setMatchUnknown(true);
+        aeExt.setSendPendingCGet(true);
+        aeExt.setSendPendingCMoveInterval(5000);
+        aeExt.addStoreDuplicate(
                 new StoreDuplicate(
                         StoreDuplicate.Condition.NO_FILE,
                         StoreDuplicate.Action.STORE));
-        ae.addStoreDuplicate(
+        aeExt.addStoreDuplicate(
                 new StoreDuplicate(
                         StoreDuplicate.Condition.EQ_CHECKSUM,
                         StoreDuplicate.Action.IGNORE));
-        ae.addStoreDuplicate(
+        aeExt.addStoreDuplicate(
                 new StoreDuplicate(
                         StoreDuplicate.Condition.NE_CHECKSUM,
                         StoreDuplicate.Action.REPLACE));
-        ae.addAttributeCoercion(new AttributeCoercion(null, 
+        aeExt.addAttributeCoercion(new AttributeCoercion(null, 
                 Dimse.C_STORE_RQ, 
                 SCP,
                 "ENSURE_PID",
                 "file:${jboss.server.config.dir}/dcm4chee-arc/ensure-pid.xsl"));
-        ae.addAttributeCoercion(new AttributeCoercion(null, 
+        aeExt.addAttributeCoercion(new AttributeCoercion(null, 
                 Dimse.C_STORE_RQ, 
                 SCU,
                 "WITHOUT_PN",
@@ -908,23 +932,25 @@ public class ArchiveDeviceTest {
         addTC(ae, null, SCU, UID.InstanceAvailabilityNotificationSOPClass, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCP, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCU, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
-        ae.setReturnOtherPatientIDs(true);
-        ae.setReturnOtherPatientNames(true);
-        ae.setLocalPIXConsumerApplication(pixConsumer);
-        ae.setRemotePIXManagerApplication(pixManager);
+        aeExt.setReturnOtherPatientIDs(true);
+        aeExt.setReturnOtherPatientNames(true);
+        aeExt.setLocalPIXConsumerApplication(pixConsumer);
+        aeExt.setRemotePIXManagerApplication(pixManager);
         return ae;
     }
 
-    private ArchiveApplicationEntity createAdminAE(String aet,
+    private ApplicationEntity createAdminAE(String aet,
             String[] image_tsuids, String[] video_tsuids, String[] other_tsuids,
             String pixConsumer, String pixManager) {
-        ArchiveApplicationEntity ae = new ArchiveApplicationEntity(aet);
-        ae .setAssociationAcceptor(true);
+        ApplicationEntity ae = new ApplicationEntity(aet);
+        ArchiveAEExtension aeExt = new ArchiveAEExtension();
+        ae.addAEExtension(aeExt);
+        ae.setAssociationAcceptor(true);
         ae.setAssociationInitiator(true);
-        ae.setMatchUnknown(true);
-        ae.setSendPendingCGet(true);
-        ae.setSendPendingCMoveInterval(PENDING_CMOVE_INTERVAL);
-        ae.setShowRejectedInstances(true);
+        aeExt.setMatchUnknown(true);
+        aeExt.setSendPendingCGet(true);
+        aeExt.setSendPendingCMoveInterval(PENDING_CMOVE_INTERVAL);
+        aeExt.setShowRejectedInstances(true);
         addTCs(ae, null, SCU, IMAGE_CUIDS, image_tsuids);
         addTCs(ae, null, SCU, VIDEO_CUIDS, video_tsuids);
         addTCs(ae, null, SCU, OTHER_CUIDS, other_tsuids);
@@ -933,20 +959,20 @@ public class ArchiveDeviceTest {
         addTC(ae, null, SCP, UID.CompositeInstanceRetrieveWithoutBulkDataGET, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCP, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCU, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
-        ae.setReturnOtherPatientIDs(true);
-        ae.setReturnOtherPatientNames(true);
-        ae.setLocalPIXConsumerApplication(pixConsumer);
-        ae.setRemotePIXManagerApplication(pixManager);
+        aeExt.setReturnOtherPatientIDs(true);
+        aeExt.setReturnOtherPatientNames(true);
+        aeExt.setLocalPIXConsumerApplication(pixConsumer);
+        aeExt.setRemotePIXManagerApplication(pixManager);
         return ae;
     }
 
-    private void addTCs(ArchiveApplicationEntity ae, EnumSet<QueryOption> queryOpts,
+    private void addTCs(ApplicationEntity ae, EnumSet<QueryOption> queryOpts,
             TransferCapability.Role role, String[] cuids, String... tss) {
         for (String cuid : cuids)
             addTC(ae, queryOpts, role, cuid, tss);
     }
 
-    private void addTC(ArchiveApplicationEntity ae, EnumSet<QueryOption> queryOpts,
+    private void addTC(ApplicationEntity ae, EnumSet<QueryOption> queryOpts,
             TransferCapability.Role role, String cuid, String... tss) {
         String name = UID.nameOf(cuid).replace('/', ' ');
         TransferCapability tc = new TransferCapability(name + ' ' + role, cuid, role, tss);

@@ -48,7 +48,7 @@ import org.dcm4che.net.Connection;
 import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.net.hl7.service.HL7Service;
 import org.dcm4chee.archive.common.StoreParam;
-import org.dcm4chee.archive.conf.ArchiveHL7Application;
+import org.dcm4chee.archive.conf.ArchiveHL7ApplicationExtension;
 import org.dcm4chee.archive.dao.PatientService;
 
 /**
@@ -69,12 +69,13 @@ public class PatientUpdateService extends HL7Service {
             Socket s, HL7Segment msh, byte[] msg, int off, int len, int mshlen)
                     throws HL7Exception {
         try {
-            ArchiveHL7Application arcHL7App = (ArchiveHL7Application) hl7App;
-            String hl7cs = msh.getField(17, arcHL7App.getHL7DefaultCharacterSet());
+            ArchiveHL7ApplicationExtension arcHL7App =
+                    hl7App.getHL7ApplicationExtension(ArchiveHL7ApplicationExtension.class);
+            String hl7cs = msh.getField(17, hl7App.getHL7DefaultCharacterSet());
             Attributes attrs = HL7toDicom.transform(
                     arcHL7App.getTemplates("adt2dcm"), msg, off, len, hl7cs);
             Attributes mrg = attrs.getNestedDataset(Tag.ModifiedAttributesSequence);
-            StoreParam storeParam = StoreParam.valueOf(arcHL7App.getArchiveDevice());
+            StoreParam storeParam = StoreParam.valueOf(hl7App.getDevice());
             if (mrg == null) {
                 patientService.updateOrCreatePatient(attrs, storeParam);
             } else {

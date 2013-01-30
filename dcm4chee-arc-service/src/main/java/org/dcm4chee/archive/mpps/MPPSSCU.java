@@ -53,14 +53,14 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
+import org.dcm4che.net.Device;
 import org.dcm4che.net.DimseRSP;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.TransferCapability;
 import org.dcm4che.net.pdu.AAssociateRQ;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.DicomServiceException;
-import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
-import org.dcm4chee.archive.conf.ArchiveDevice;
+import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.jms.JMSService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +75,7 @@ public class MPPSSCU implements MessageListener {
     private final ApplicationEntityCache aeCache;
     private final JMSService jmsService;
     private final Queue queue;
-    private ArchiveDevice device;
+    private Device device;
 
     public MPPSSCU(ApplicationEntityCache aeCache,
             JMSService jmsService, Queue queue) {
@@ -84,7 +84,7 @@ public class MPPSSCU implements MessageListener {
         this.queue = queue;
     }
 
-    public void start(ArchiveDevice device) throws JMSException {
+    public void start(Device device) throws JMSException {
         this.device = device;
         jmsService.addMessageListener(queue, this);
     }
@@ -136,8 +136,7 @@ public class MPPSSCU implements MessageListener {
         boolean ncreate = msg.getBooleanProperty("N_CREATE_RQ");
         int retries = msg.getIntProperty("Retries");
         Attributes rqAttrs = (Attributes) msg.getObject();
-        ArchiveApplicationEntity localAE =
-                (ArchiveApplicationEntity) device.getApplicationEntity(localAET);
+        ApplicationEntity localAE = device.getApplicationEntity(localAET);
         if (localAE == null) {
             LOG.warn("Failed to forward MPPS to {} - no such local AE: {}",
                     remoteAET, localAET);
@@ -172,8 +171,9 @@ public class MPPSSCU implements MessageListener {
                 throw new DicomServiceException(Status.NoSuchObjectInstance);
             }
         } catch (Exception e) {
-            if (retries < localAE.getForwardMPPSMaxRetries()) {
-                int delay = localAE.getForwardMPPSRetryInterval();
+            ArchiveAEExtension aeExt = localAE.getAEExtension(ArchiveAEExtension.class);
+            if (aeExt != null && retries < aeExt.getForwardMPPSMaxRetries()) {
+                int delay = aeExt.getForwardMPPSRetryInterval();
                 LOG.info("Failed to forward MPPS to "
                             + remoteAET + " - retry in "  + delay + "s", e);
                 scheduleForwardMPPS(localAET, remoteAET, iuid, rqAttrs, ncreate, retries + 1, delay);

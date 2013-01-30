@@ -52,16 +52,19 @@ import org.dcm4che.audit.AuditMessages.EventOutcomeIndicator;
 import org.dcm4che.audit.AuditMessages.EventTypeCode;
 import org.dcm4che.audit.AuditMessages.RoleIDCode;
 import org.dcm4che.conf.api.ApplicationEntityCache;
+import org.dcm4che.conf.api.DicomConfiguration;
 import org.dcm4che.conf.api.hl7.HL7ApplicationCache;
 import org.dcm4che.conf.api.hl7.HL7Configuration;
 import org.dcm4che.data.UID;
+import org.dcm4che.net.Device;
 import org.dcm4che.net.DeviceService;
 import org.dcm4che.net.audit.AuditLogger;
+import org.dcm4che.net.hl7.HL7DeviceExtension;
 import org.dcm4che.net.hl7.HL7MessageListener;
 import org.dcm4che.net.hl7.service.HL7ServiceRegistry;
 import org.dcm4che.net.service.BasicCEchoSCP;
 import org.dcm4che.net.service.DicomServiceRegistry;
-import org.dcm4chee.archive.conf.ArchiveDevice;
+import org.dcm4chee.archive.conf.ArchiveDeviceExtension;
 import org.dcm4chee.archive.dao.PatientService;
 import org.dcm4chee.archive.hl7.PatientUpdateService;
 import org.dcm4chee.archive.jms.JMSService;
@@ -84,14 +87,14 @@ import org.dcm4chee.archive.store.CStoreSCP;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBean {
+public class Archive extends DeviceService implements ArchiveMBean {
 
     static final String PATIENT = "PATIENT";
     static final String STUDY = "STUDY";
     static final String SERIES = "SERIES";
     static final String IMAGE = "IMAGE";
 
-    private final HL7Configuration dicomConfiguration;
+    private final DicomConfiguration dicomConfiguration;
     private final CStoreSCP storeSCP;
     private final StgCmtSCP stgCmtSCP;
     private final MPPSSCP mppsSCP;
@@ -113,7 +116,9 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
     private final MPPSSCU mppsSCU;
     private final IANSCU ianSCU;
 
-    public Archive(HL7Configuration dicomConfiguration, ArchiveDevice device,
+    public Archive(DicomConfiguration dicomConfiguration,
+            HL7Configuration hl7Configuration,
+            Device device,
             PatientService patientService,
             StgCmtService stgCmtService,
             MPPSService mppsService,
@@ -126,7 +131,7 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
         init(device);
         this.dicomConfiguration = dicomConfiguration;
         this.aeCache = new ApplicationEntityCache(dicomConfiguration);
-        this.hl7AppCache = new HL7ApplicationCache(dicomConfiguration);
+        this.hl7AppCache = new HL7ApplicationCache(hl7Configuration);
         this.pixConsumer = new PIXConsumer(hl7AppCache);
         this.jmsService = jmsService;
         this.mppsSCU = new MPPSSCU(aeCache, jmsService, mppsSCUQueue);
@@ -170,7 +175,8 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
                 UID.ModalityWorklistInformationModelFIND,
                 aeCache, pixConsumer);
         device.setDimseRQHandler(serviceRegistry());
-        device.setHL7MessageListener(hl7ServiceRegistry(patientService));
+        device.getDeviceExtension(HL7DeviceExtension.class)
+            .setHL7MessageListener(hl7ServiceRegistry(patientService));
         setConfigurationStaleTimeout();
     }
 
@@ -189,7 +195,8 @@ public class Archive extends DeviceService<ArchiveDevice> implements ArchiveMBea
     }
 
     private void setConfigurationStaleTimeout() {
-        int staleTimeout = device.getConfigurationStaleTimeout();
+        int staleTimeout = device.getDeviceExtension(ArchiveDeviceExtension.class)
+                .getConfigurationStaleTimeout();
         aeCache.setStaleTimeout(staleTimeout);
         hl7AppCache.setStaleTimeout(staleTimeout);
     }

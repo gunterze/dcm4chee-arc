@@ -59,7 +59,7 @@ import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.RetrieveTask;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
-import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
+import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.retrieve.dao.RetrieveService;
 
@@ -103,7 +103,8 @@ public class CGetSCP extends BasicCGetSCP {
         boolean relational = queryOpts.contains(QueryOption.RELATIONAL);
         level.validateRetrieveKeys(keys, rootLevel, relational);
 
-        ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+        ApplicationEntity ae = as.getApplicationEntity();
+        ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
         try {
             final ApplicationEntity sourceAE = aeCache.get(as.getRemoteAET());
             QueryParam queryParam = QueryParam.valueOf(ae, queryOpts, sourceAE,
@@ -118,9 +119,9 @@ public class CGetSCP extends BasicCGetSCP {
                     pixConsumer, retrieveService, withoutBulkData);
             if (sourceAE != null)
                 retrieveTask.setDestinationDevice(sourceAE.getDevice());
-            retrieveTask.setSendPendingRSP(ae.isSendPendingCGet());
-            retrieveTask.setReturnOtherPatientIDs(ae.isReturnOtherPatientIDs());
-            retrieveTask.setReturnOtherPatientNames(ae.isReturnOtherPatientNames());
+            retrieveTask.setSendPendingRSP(aeExt.isSendPendingCGet());
+            retrieveTask.setReturnOtherPatientIDs(aeExt.isReturnOtherPatientIDs());
+            retrieveTask.setReturnOtherPatientNames(aeExt.isReturnOtherPatientNames());
             return retrieveTask;
         } catch (DicomServiceException e) {
             throw e;

@@ -47,13 +47,15 @@ import org.dcm4che.conf.api.hl7.HL7ApplicationCache;
 import org.dcm4che.hl7.HL7Message;
 import org.dcm4che.hl7.HL7Segment;
 import org.dcm4che.hl7.MLLPConnection;
+import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.CompatibleConnection;
 import org.dcm4che.net.Connection;
+import org.dcm4che.net.Device;
 import org.dcm4che.net.IncompatibleConnectionException;
 import org.dcm4che.net.hl7.HL7Application;
+import org.dcm4che.net.hl7.HL7DeviceExtension;
 import org.dcm4chee.archive.common.IDWithIssuer;
-import org.dcm4chee.archive.conf.ArchiveApplicationEntity;
-import org.dcm4chee.archive.conf.ArchiveDevice;
+import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,12 +72,13 @@ public class PIXConsumer {
         this.hl7AppCache = hl7AppCache;
     }
 
-    public IDWithIssuer[] pixQuery(ArchiveApplicationEntity ae, IDWithIssuer pid) {
+    public IDWithIssuer[] pixQuery(ApplicationEntity ae, IDWithIssuer pid) {
         if (pid == null)
             return IDWithIssuer.EMPTY;
 
-        String pixConsumer = ae.getLocalPIXConsumerApplication();
-        String pixManager = ae.getRemotePIXManagerApplication();
+        ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
+        String pixConsumer = aeExt.getLocalPIXConsumerApplication();
+        String pixManager = aeExt.getRemotePIXManagerApplication();
         if (pixConsumer == null || pixManager == null
                 || containsWildcard(pid.id) || pid.issuer == null)
             return new IDWithIssuer[] { pid };
@@ -83,8 +86,9 @@ public class PIXConsumer {
         ArrayList<IDWithIssuer> pids = new ArrayList<IDWithIssuer>();
         pids.add(pid);
         try {
-            ArchiveDevice dev = ae.getArchiveDevice();
-            HL7Application pixConsumerApp = dev.getHL7Application(pixConsumer);
+            Device dev = ae.getDevice();
+            HL7DeviceExtension hl7 = dev.getDeviceExtension(HL7DeviceExtension.class);
+            HL7Application pixConsumerApp = hl7.getHL7Application(pixConsumer);
             if (pixConsumerApp == null)
                 throw new ConfigurationException(
                         "Unknown HL7 Application: " + pixConsumer);

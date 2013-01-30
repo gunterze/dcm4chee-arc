@@ -54,14 +54,18 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
+import org.dcm4che.conf.api.DicomConfiguration;
 import org.dcm4che.conf.api.hl7.HL7Configuration;
+import org.dcm4che.conf.ldap.ExtendedLdapDicomConfiguration;
 import org.dcm4che.conf.ldap.audit.LdapAuditLoggerConfiguration;
 import org.dcm4che.conf.ldap.audit.LdapAuditRecordRepositoryConfiguration;
+import org.dcm4che.conf.ldap.hl7.LdapHL7Configuration;
+import org.dcm4che.conf.prefs.PreferencesDicomConfiguration;
 import org.dcm4che.conf.prefs.audit.PreferencesAuditLoggerConfiguration;
 import org.dcm4che.conf.prefs.audit.PreferencesAuditRecordRepositoryConfiguration;
+import org.dcm4che.conf.prefs.hl7.PreferencesHL7Configuration;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.StringUtils;
-import org.dcm4chee.archive.conf.ArchiveDevice;
 import org.dcm4chee.archive.conf.ldap.LdapArchiveConfiguration;
 import org.dcm4chee.archive.conf.prefs.PreferencesArchiveConfiguration;
 import org.dcm4chee.archive.dao.PatientService;
@@ -82,7 +86,9 @@ public class ArchiveServlet extends HttpServlet {
 
     private Archive archive;
 
-    private HL7Configuration dicomConfig;
+    private DicomConfiguration dicomConfig;
+
+    private HL7Configuration hl7Config;
     
     @Resource(mappedName="java:/ConnectionFactory")
     private ConnectionFactory connFactory;
@@ -135,28 +141,39 @@ public class ArchiveServlet extends HttpServlet {
                     .openStream();
                 Properties p = new Properties();
                 p.load(ldapConf);
-                LdapArchiveConfiguration ldapConfig =
-                        new LdapArchiveConfiguration(p);
+                ExtendedLdapDicomConfiguration ldapConfig =
+                        new ExtendedLdapDicomConfiguration(p);
+                LdapHL7Configuration hl7Config = new LdapHL7Configuration();
+                ldapConfig.addDicomConfigurationExtension(hl7Config);
+                LdapArchiveConfiguration arcConfig = new LdapArchiveConfiguration();
+                ldapConfig.addDicomConfigurationExtension(arcConfig);
+                hl7Config.addHL7ConfigurationExtension(arcConfig);
                 ldapConfig.addDicomConfigurationExtension(
                         new LdapAuditLoggerConfiguration());
                 ldapConfig.addDicomConfigurationExtension(
                         new LdapAuditRecordRepositoryConfiguration());
                 dicomConfig = ldapConfig;
+                this.hl7Config = hl7Config;
             } catch(FileNotFoundException e) {
                 LOG.info("Could not find " + ldapPropertiesURL
                         + " - use Java Preferences as Configuration Backend");
-                PreferencesArchiveConfiguration prefsConfig =
-                        new PreferencesArchiveConfiguration();
+                PreferencesDicomConfiguration prefsConfig = new PreferencesDicomConfiguration();
+                PreferencesHL7Configuration hl7Config = new PreferencesHL7Configuration();
+                prefsConfig.addDicomConfigurationExtension(hl7Config);
+                PreferencesArchiveConfiguration arcConfig = new PreferencesArchiveConfiguration();
+                prefsConfig.addDicomConfigurationExtension(arcConfig);
+                hl7Config.addHL7ConfigurationExtension(arcConfig);
                 prefsConfig.addDicomConfigurationExtension(
                         new PreferencesAuditLoggerConfiguration());
                 prefsConfig.addDicomConfigurationExtension(
                         new PreferencesAuditRecordRepositoryConfiguration());
                 dicomConfig = prefsConfig;
+                this.hl7Config = hl7Config;
             } finally {
                 SafeClose.close(ldapConf);
             }
-            archive = new Archive(dicomConfig,
-                    (ArchiveDevice) dicomConfig.findDevice(deviceName),
+            archive = new Archive(dicomConfig, hl7Config,
+                    dicomConfig.findDevice(deviceName),
                     patientService,
                     stgCmtService,
                     mppsService,
