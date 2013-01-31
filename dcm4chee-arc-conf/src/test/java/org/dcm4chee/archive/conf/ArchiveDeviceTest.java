@@ -51,7 +51,7 @@ import org.dcm4che.conf.api.AttributeCoercion;
 import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.conf.api.ConfigurationNotFoundException;
 import org.dcm4che.conf.api.DicomConfiguration;
-import org.dcm4che.conf.ldap.ExtendedLdapDicomConfiguration;
+import org.dcm4che.conf.ldap.LdapDicomConfiguration;
 import org.dcm4che.conf.ldap.audit.LdapAuditLoggerConfiguration;
 import org.dcm4che.conf.ldap.audit.LdapAuditRecordRepositoryConfiguration;
 import org.dcm4che.conf.ldap.hl7.LdapHL7Configuration;
@@ -610,7 +610,7 @@ public class ArchiveDeviceTest {
 
     private DicomConfiguration newLdapArchiveConfiguration()
             throws ConfigurationException {
-        ExtendedLdapDicomConfiguration config = new ExtendedLdapDicomConfiguration();
+        LdapDicomConfiguration config = new LdapDicomConfiguration();
         LdapHL7Configuration hl7Config = new LdapHL7Configuration();
         config.addDicomConfigurationExtension(hl7Config);
         LdapArchiveConfiguration arcConfig = new LdapArchiveConfiguration();

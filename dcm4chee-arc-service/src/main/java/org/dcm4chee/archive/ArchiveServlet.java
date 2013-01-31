@@ -56,7 +56,7 @@ import javax.servlet.http.HttpServlet;
 
 import org.dcm4che.conf.api.DicomConfiguration;
 import org.dcm4che.conf.api.hl7.HL7Configuration;
-import org.dcm4che.conf.ldap.ExtendedLdapDicomConfiguration;
+import org.dcm4che.conf.ldap.LdapDicomConfiguration;
 import org.dcm4che.conf.ldap.audit.LdapAuditLoggerConfiguration;
 import org.dcm4che.conf.ldap.audit.LdapAuditRecordRepositoryConfiguration;
 import org.dcm4che.conf.ldap.hl7.LdapHL7Configuration;
@@ -141,8 +141,7 @@ public class ArchiveServlet extends HttpServlet {
                     .openStream();
                 Properties p = new Properties();
                 p.load(ldapConf);
-                ExtendedLdapDicomConfiguration ldapConfig =
-                        new ExtendedLdapDicomConfiguration(p);
+                LdapDicomConfiguration ldapConfig = new LdapDicomConfiguration(p);
                 LdapHL7Configuration hl7Config = new LdapHL7Configuration();
                 ldapConfig.addDicomConfigurationExtension(hl7Config);
                 LdapArchiveConfiguration arcConfig = new LdapArchiveConfiguration();
