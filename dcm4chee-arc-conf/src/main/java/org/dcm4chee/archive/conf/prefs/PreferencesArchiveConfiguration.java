@@ -38,13 +38,6 @@
 
 package org.dcm4chee.archive.conf.prefs;
 
-import static org.dcm4che.conf.prefs.PreferencesDicomConfiguration.removeKeys;
-import static org.dcm4che.conf.prefs.PreferencesDicomConfiguration.storeDiff;
-import static org.dcm4che.conf.prefs.PreferencesDicomConfiguration.storeNotDef;
-import static org.dcm4che.conf.prefs.PreferencesDicomConfiguration.storeNotEmpty;
-import static org.dcm4che.conf.prefs.PreferencesDicomConfiguration.storeNotNull;
-import static org.dcm4che.conf.prefs.PreferencesDicomConfiguration.stringArray;
-
 import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -54,6 +47,7 @@ import java.util.prefs.Preferences;
 
 import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.conf.prefs.PreferencesDicomConfigurationExtension;
+import org.dcm4che.conf.prefs.PreferencesUtils;
 import org.dcm4che.conf.prefs.hl7.PreferencesHL7ConfigurationExtension;
 import org.dcm4che.data.Code;
 import org.dcm4che.data.ValueSelector;
@@ -85,19 +79,19 @@ public class PreferencesArchiveConfiguration
             return;
 
         prefs.putBoolean("dcmArchiveDevice", true);
-        storeNotNull(prefs, "dcmIncorrectWorklistEntrySelectedCode",
+        PreferencesUtils.storeNotNull(prefs, "dcmIncorrectWorklistEntrySelectedCode",
                 arcDev.getIncorrectWorklistEntrySelectedCode());
-        storeNotNull(prefs, "dcmRejectedForQualityReasonsCode",
+        PreferencesUtils.storeNotNull(prefs, "dcmRejectedForQualityReasonsCode",
                 arcDev.getRejectedForQualityReasonsCode());
-        storeNotNull(prefs, "dcmRejectedForPatientSafetyReasonsCode",
+        PreferencesUtils.storeNotNull(prefs, "dcmRejectedForPatientSafetyReasonsCode",
                 arcDev.getRejectedForPatientSafetyReasonsCode());
-        storeNotNull(prefs, "dcmIncorrectModalityWorklistEntryCode",
+        PreferencesUtils.storeNotNull(prefs, "dcmIncorrectModalityWorklistEntryCode",
                 arcDev.getIncorrectModalityWorklistEntryCode());
-        storeNotNull(prefs, "dcmDataRetentionPeriodExpiredCode",
+        PreferencesUtils.storeNotNull(prefs, "dcmDataRetentionPeriodExpiredCode",
                 arcDev.getDataRetentionPeriodExpiredCode());
-        storeNotNull(prefs, "dcmFuzzyAlgorithmClass",
+        PreferencesUtils.storeNotNull(prefs, "dcmFuzzyAlgorithmClass",
                 arcDev.getFuzzyAlgorithmClass());
-        storeNotDef(prefs, "dcmConfigurationStaleTimeout",
+        PreferencesUtils.storeNotDef(prefs, "dcmConfigurationStaleTimeout",
                 arcDev.getConfigurationStaleTimeout(), 0);
     }
 
@@ -131,15 +125,15 @@ public class PreferencesArchiveConfiguration
     }
 
     private void storeTo(StoreDuplicate sd, Preferences prefs) {
-        storeNotNull(prefs, "dcmStoreDuplicateCondition", sd.getCondition());
-        storeNotNull(prefs, "dcmStoreDuplicateAction", sd.getAction());
+        PreferencesUtils.storeNotNull(prefs, "dcmStoreDuplicateCondition", sd.getCondition());
+        PreferencesUtils.storeNotNull(prefs, "dcmStoreDuplicateAction", sd.getAction());
     }
 
     private static void storeTo(AttributeFilter filter, Preferences prefs) {
         storeTags(prefs, "dcmTag", filter.getSelection());
-        storeNotNull(prefs, "dcmCustomAttribute1", filter.getCustomAttribute1());
-        storeNotNull(prefs, "dcmCustomAttribute2", filter.getCustomAttribute2());
-        storeNotNull(prefs, "dcmCustomAttribute3", filter.getCustomAttribute3());
+        PreferencesUtils.storeNotNull(prefs, "dcmCustomAttribute1", filter.getCustomAttribute1());
+        PreferencesUtils.storeNotNull(prefs, "dcmCustomAttribute2", filter.getCustomAttribute2());
+        PreferencesUtils.storeNotNull(prefs, "dcmCustomAttribute3", filter.getCustomAttribute3());
     }
 
     private static void storeTags(Preferences prefs, String key, int[] tags) {
@@ -158,40 +152,40 @@ public class PreferencesArchiveConfiguration
             return;
 
         prefs.putBoolean("dcmArchiveNetworkAE", true);
-        storeNotNull(prefs, "dcmFileSystemGroupID", arcAE.getFileSystemGroupID());
-        storeNotNull(prefs, "dcmInitFileSystemURI", arcAE.getInitFileSystemURI());
-        storeNotNull(prefs, "dcmSpoolFilePathFormat", arcAE.getSpoolFilePathFormat());
-        storeNotNull(prefs, "dcmStorageFilePathFormat", arcAE.getStorageFilePathFormat());
-        storeNotNull(prefs, "dcmDigestAlgorithm", arcAE.getDigestAlgorithm());
-        storeNotNull(prefs, "dcmExternalRetrieveAET", arcAE.getExternalRetrieveAET());
-        storeNotEmpty(prefs, "dcmRetrieveAET", arcAE.getRetrieveAETs());
-        storeNotDef(prefs, "dcmMatchUnknown", arcAE.isMatchUnknown(), false);
-        storeNotDef(prefs, "dcmSendPendingCGet", arcAE.isSendPendingCGet(), false);
-        storeNotDef(prefs, "dcmSendPendingCMoveInterval", arcAE.getSendPendingCMoveInterval(), 0);
-        storeNotDef(prefs, "dcmSuppressWarningCoercionOfDataElements",
+        PreferencesUtils.storeNotNull(prefs, "dcmFileSystemGroupID", arcAE.getFileSystemGroupID());
+        PreferencesUtils.storeNotNull(prefs, "dcmInitFileSystemURI", arcAE.getInitFileSystemURI());
+        PreferencesUtils.storeNotNull(prefs, "dcmSpoolFilePathFormat", arcAE.getSpoolFilePathFormat());
+        PreferencesUtils.storeNotNull(prefs, "dcmStorageFilePathFormat", arcAE.getStorageFilePathFormat());
+        PreferencesUtils.storeNotNull(prefs, "dcmDigestAlgorithm", arcAE.getDigestAlgorithm());
+        PreferencesUtils.storeNotNull(prefs, "dcmExternalRetrieveAET", arcAE.getExternalRetrieveAET());
+        PreferencesUtils.storeNotEmpty(prefs, "dcmRetrieveAET", arcAE.getRetrieveAETs());
+        PreferencesUtils.storeNotDef(prefs, "dcmMatchUnknown", arcAE.isMatchUnknown(), false);
+        PreferencesUtils.storeNotDef(prefs, "dcmSendPendingCGet", arcAE.isSendPendingCGet(), false);
+        PreferencesUtils.storeNotDef(prefs, "dcmSendPendingCMoveInterval", arcAE.getSendPendingCMoveInterval(), 0);
+        PreferencesUtils.storeNotDef(prefs, "dcmSuppressWarningCoercionOfDataElements",
                 arcAE.isSuppressWarningCoercionOfDataElements(), false);
-        storeNotDef(prefs, "dcmStoreOriginalAttributes",
+        PreferencesUtils.storeNotDef(prefs, "dcmStoreOriginalAttributes",
                 arcAE.isStoreOriginalAttributes(), false);
-        storeNotDef(prefs, "dcmPreserveSpoolFileOnFailure",
+        PreferencesUtils.storeNotDef(prefs, "dcmPreserveSpoolFileOnFailure",
                 arcAE.isPreserveSpoolFileOnFailure(), false);
-        storeNotNull(prefs, "dcmModifyingSystem", arcAE.getModifyingSystem());
-        storeNotDef(prefs, "dcmStgCmtDelay", arcAE.getStorageCommitmentDelay(), 0);
-        storeNotDef(prefs, "dcmStgCmtMaxRetries", arcAE.getStorageCommitmentMaxRetries(), 0);
-        storeNotDef(prefs, "dcmStgCmtRetryInterval", arcAE.getStorageCommitmentRetryInterval(),
+        PreferencesUtils.storeNotNull(prefs, "dcmModifyingSystem", arcAE.getModifyingSystem());
+        PreferencesUtils.storeNotDef(prefs, "dcmStgCmtDelay", arcAE.getStorageCommitmentDelay(), 0);
+        PreferencesUtils.storeNotDef(prefs, "dcmStgCmtMaxRetries", arcAE.getStorageCommitmentMaxRetries(), 0);
+        PreferencesUtils.storeNotDef(prefs, "dcmStgCmtRetryInterval", arcAE.getStorageCommitmentRetryInterval(),
                     ArchiveAEExtension.DEF_RETRY_INTERVAL);
-        storeNotEmpty(prefs, "dcmFwdMppsDestination", arcAE.getForwardMPPSDestinations());
-        storeNotDef(prefs, "dcmFwdMppsMaxRetries", arcAE.getForwardMPPSMaxRetries(), 0);
-        storeNotDef(prefs, "dcmFwdMppsRetryInterval", arcAE.getForwardMPPSRetryInterval(),
+        PreferencesUtils.storeNotEmpty(prefs, "dcmFwdMppsDestination", arcAE.getForwardMPPSDestinations());
+        PreferencesUtils.storeNotDef(prefs, "dcmFwdMppsMaxRetries", arcAE.getForwardMPPSMaxRetries(), 0);
+        PreferencesUtils.storeNotDef(prefs, "dcmFwdMppsRetryInterval", arcAE.getForwardMPPSRetryInterval(),
                     ArchiveAEExtension.DEF_RETRY_INTERVAL);
-        storeNotEmpty(prefs, "dcmIanDestination", arcAE.getIANDestinations());
-        storeNotDef(prefs, "dcmIanMaxRetries", arcAE.getIANMaxRetries(), 0);
-        storeNotDef(prefs, "dcmIanRetryInterval", arcAE.getIANRetryInterval(),
+        PreferencesUtils.storeNotEmpty(prefs, "dcmIanDestination", arcAE.getIANDestinations());
+        PreferencesUtils.storeNotDef(prefs, "dcmIanMaxRetries", arcAE.getIANMaxRetries(), 0);
+        PreferencesUtils.storeNotDef(prefs, "dcmIanRetryInterval", arcAE.getIANRetryInterval(),
                     ArchiveAEExtension.DEF_RETRY_INTERVAL);
-        storeNotDef(prefs, "dcmReturnOtherPatientIDs", arcAE.isReturnOtherPatientIDs(), false);
-        storeNotDef(prefs, "dcmReturnOtherPatientNames", arcAE.isReturnOtherPatientNames(), false);
-        storeNotDef(prefs, "dcmShowRejectedInstances", arcAE.isShowRejectedInstances(), false);
-        storeNotNull(prefs, "hl7PIXConsumerApplication", arcAE.getLocalPIXConsumerApplication());
-        storeNotNull(prefs, "hl7PIXManagerApplication", arcAE.getRemotePIXManagerApplication());
+        PreferencesUtils.storeNotDef(prefs, "dcmReturnOtherPatientIDs", arcAE.isReturnOtherPatientIDs(), false);
+        PreferencesUtils.storeNotDef(prefs, "dcmReturnOtherPatientNames", arcAE.isReturnOtherPatientNames(), false);
+        PreferencesUtils.storeNotDef(prefs, "dcmShowRejectedInstances", arcAE.isShowRejectedInstances(), false);
+        PreferencesUtils.storeNotNull(prefs, "hl7PIXConsumerApplication", arcAE.getLocalPIXConsumerApplication());
+        PreferencesUtils.storeNotNull(prefs, "hl7PIXManagerApplication", arcAE.getRemotePIXManagerApplication());
     }
 
     @Override
@@ -202,7 +196,7 @@ public class PreferencesArchiveConfiguration
             return;
 
         prefs.putBoolean("dcmArchiveHL7Application", true);
-        storeNotEmpty(prefs, "labeledURI", arcHL7App.getTemplatesURIs());
+        PreferencesUtils.storeNotEmpty(prefs, "labeledURI", arcHL7App.getTemplatesURIs());
     }
 
 //    @Override
@@ -281,7 +275,7 @@ public class PreferencesArchiveConfiguration
                         prefs.get("dcmStorageFilePathFormat", null)));
         arcae.setDigestAlgorithm(prefs.get("dcmDigestAlgorithm", null));
         arcae.setExternalRetrieveAET(prefs.get("dcmExternalRetrieveAET", null));
-        arcae.setRetrieveAETs(stringArray(prefs, "dcmRetrieveAET"));
+        arcae.setRetrieveAETs(PreferencesUtils.stringArray(prefs, "dcmRetrieveAET"));
         arcae.setMatchUnknown(prefs.getBoolean("dcmMatchUnknown", false));
         arcae.setSendPendingCGet(prefs.getBoolean("dcmSendPendingCGet", false));
         arcae.setSendPendingCMoveInterval(prefs.getInt("dcmSendPendingCMoveInterval", 0));
@@ -296,11 +290,11 @@ public class PreferencesArchiveConfiguration
         arcae.setStorageCommitmentMaxRetries(prefs.getInt("dcmStgCmtMaxRetries", 0));
         arcae.setStorageCommitmentRetryInterval(prefs.getInt("dcmStgCmtRetryInterval",
                 ArchiveAEExtension.DEF_RETRY_INTERVAL));
-        arcae.setForwardMPPSDestinations(stringArray(prefs, "dcmFwdMppsDestination"));
+        arcae.setForwardMPPSDestinations(PreferencesUtils.stringArray(prefs, "dcmFwdMppsDestination"));
         arcae.setForwardMPPSMaxRetries(prefs.getInt("dcmFwdMppsMaxRetries", 0));
         arcae.setForwardMPPSRetryInterval(prefs.getInt("dcmFwdMppsRetryInterval",
                 ArchiveAEExtension.DEF_RETRY_INTERVAL));
-        arcae.setIANDestinations(stringArray(prefs, "dcmIanDestination"));
+        arcae.setIANDestinations(PreferencesUtils.stringArray(prefs, "dcmIanDestination"));
         arcae.setIANMaxRetries(prefs.getInt("dcmIanMaxRetries", 0));
         arcae.setIANRetryInterval(prefs.getInt("dcmIanRetryInterval",
                 ArchiveAEExtension.DEF_RETRY_INTERVAL));
@@ -346,7 +340,7 @@ public class PreferencesArchiveConfiguration
         ArchiveHL7ApplicationExtension arcHL7App =
                 new ArchiveHL7ApplicationExtension();
         hl7App.addHL7ApplicationExtension(arcHL7App);
-        arcHL7App.setTemplatesURIs(stringArray(prefs, "labeledURI"));
+        arcHL7App.setTemplatesURIs(PreferencesUtils.stringArray(prefs, "labeledURI"));
     }
 
     private static void loadAttributeFilters(ArchiveDeviceExtension device, Preferences deviceNode)
@@ -381,25 +375,25 @@ public class PreferencesArchiveConfiguration
         if (aa == null || bb == null)
             return;
         
-        storeDiff(prefs, "dcmIncorrectWorklistEntrySelectedCode",
+        PreferencesUtils.storeDiff(prefs, "dcmIncorrectWorklistEntrySelectedCode",
                 aa.getIncorrectWorklistEntrySelectedCode(),
                 bb.getIncorrectWorklistEntrySelectedCode());
-        storeDiff(prefs, "dcmRejectedForQualityReasonsCode",
+        PreferencesUtils.storeDiff(prefs, "dcmRejectedForQualityReasonsCode",
                 aa.getRejectedForQualityReasonsCode(),
                 bb.getRejectedForQualityReasonsCode());
-        storeDiff(prefs, "dcmRejectedForPatientSafetyReasonsCode",
+        PreferencesUtils.storeDiff(prefs, "dcmRejectedForPatientSafetyReasonsCode",
                 aa.getRejectedForPatientSafetyReasonsCode(),
                 bb.getRejectedForPatientSafetyReasonsCode());
-        storeDiff(prefs, "dcmIncorrectModalityWorklistEntryCode",
+        PreferencesUtils.storeDiff(prefs, "dcmIncorrectModalityWorklistEntryCode",
                 aa.getIncorrectModalityWorklistEntryCode(),
                 bb.getIncorrectModalityWorklistEntryCode());
-        storeDiff(prefs, "dcmDataRetentionPeriodExpiredCode",
+        PreferencesUtils.storeDiff(prefs, "dcmDataRetentionPeriodExpiredCode",
                 aa.getDataRetentionPeriodExpiredCode(),
                 bb.getDataRetentionPeriodExpiredCode());
-        storeDiff(prefs, "dcmFuzzyAlgorithmClass",
+        PreferencesUtils.storeDiff(prefs, "dcmFuzzyAlgorithmClass",
                 aa.getFuzzyAlgorithmClass(),
                 bb.getFuzzyAlgorithmClass());
-        storeDiff(prefs, "dcmConfigurationStaleTimeout",
+        PreferencesUtils.storeDiff(prefs, "dcmConfigurationStaleTimeout",
                 aa.getConfigurationStaleTimeout(),
                 bb.getConfigurationStaleTimeout(),
                 0);
@@ -413,104 +407,104 @@ public class PreferencesArchiveConfiguration
          if (aa == null || bb == null)
              return;
 
-         storeDiff(prefs, "dcmFileSystemGroupID",
+         PreferencesUtils.storeDiff(prefs, "dcmFileSystemGroupID",
                  aa.getFileSystemGroupID(),
                  bb.getFileSystemGroupID());
-         storeDiff(prefs, "dcmInitFileSystemURI",
+         PreferencesUtils.storeDiff(prefs, "dcmInitFileSystemURI",
                  aa.getInitFileSystemURI(),
                  bb.getInitFileSystemURI());
-         storeDiff(prefs, "dcmSpoolFilePathFormat",
+         PreferencesUtils.storeDiff(prefs, "dcmSpoolFilePathFormat",
                  aa.getSpoolFilePathFormat(),
                  bb.getSpoolFilePathFormat());
-         storeDiff(prefs, "dcmStorageFilePathFormat",
+         PreferencesUtils.storeDiff(prefs, "dcmStorageFilePathFormat",
                  aa.getStorageFilePathFormat(),
                  bb.getStorageFilePathFormat());
-         storeDiff(prefs, "dcmDigestAlgorithm",
+         PreferencesUtils.storeDiff(prefs, "dcmDigestAlgorithm",
                  aa.getDigestAlgorithm(),
                  bb.getDigestAlgorithm());
-         storeDiff(prefs, "dcmExternalRetrieveAET",
+         PreferencesUtils.storeDiff(prefs, "dcmExternalRetrieveAET",
                  aa.getExternalRetrieveAET(),
                  bb.getExternalRetrieveAET());
-         storeDiff(prefs, "dcmRetrieveAET",
+         PreferencesUtils.storeDiff(prefs, "dcmRetrieveAET",
                  aa.getRetrieveAETs(),
                  bb.getRetrieveAETs());
-         storeDiff(prefs, "dcmMatchUnknown",
+         PreferencesUtils.storeDiff(prefs, "dcmMatchUnknown",
                  aa.isMatchUnknown(),
                  bb.isMatchUnknown(),
                  false);
-         storeDiff(prefs, "dcmSendPendingCGet",
+         PreferencesUtils.storeDiff(prefs, "dcmSendPendingCGet",
                  aa.isSendPendingCGet(),
                  bb.isSendPendingCGet(),
                  false);
-         storeDiff(prefs, "dcmSendPendingCMoveInterval",
+         PreferencesUtils.storeDiff(prefs, "dcmSendPendingCMoveInterval",
                  aa.getSendPendingCMoveInterval(),
                  bb.getSendPendingCMoveInterval(),
                  0);
-         storeDiff(prefs, "dcmSuppressWarningCoercionOfDataElements",
+         PreferencesUtils.storeDiff(prefs, "dcmSuppressWarningCoercionOfDataElements",
                  aa.isSuppressWarningCoercionOfDataElements(),
                  bb.isSuppressWarningCoercionOfDataElements(),
                  false);
-         storeDiff(prefs, "dcmStoreOriginalAttributes",
+         PreferencesUtils.storeDiff(prefs, "dcmStoreOriginalAttributes",
                  aa.isStoreOriginalAttributes(),
                  bb.isStoreOriginalAttributes(),
                  false);
-         storeDiff(prefs, "dcmPreserveSpoolFileOnFailure",
+         PreferencesUtils.storeDiff(prefs, "dcmPreserveSpoolFileOnFailure",
                  aa.isPreserveSpoolFileOnFailure(),
                  bb.isPreserveSpoolFileOnFailure(),
                  false);
-         storeDiff(prefs, "dcmModifyingSystem",
+         PreferencesUtils.storeDiff(prefs, "dcmModifyingSystem",
                  aa.getModifyingSystem(),
                  bb.getModifyingSystem());
-         storeDiff(prefs, "dcmStgCmtDelay",
+         PreferencesUtils.storeDiff(prefs, "dcmStgCmtDelay",
                  aa.getStorageCommitmentDelay(),
                  bb.getStorageCommitmentDelay(),
                  0);
-         storeDiff(prefs, "dcmStgCmtMaxRetries",
+         PreferencesUtils.storeDiff(prefs, "dcmStgCmtMaxRetries",
                  aa.getStorageCommitmentMaxRetries(),
                  bb.getStorageCommitmentMaxRetries(),
                  0);
-         storeDiff(prefs, "dcmStgCmtRetryInterval",
+         PreferencesUtils.storeDiff(prefs, "dcmStgCmtRetryInterval",
                  aa.getStorageCommitmentRetryInterval(),
                  bb.getStorageCommitmentRetryInterval(),
                  ArchiveAEExtension.DEF_RETRY_INTERVAL);
-         storeDiff(prefs, "dcmFwdMppsDestination",
+         PreferencesUtils.storeDiff(prefs, "dcmFwdMppsDestination",
                  aa.getForwardMPPSDestinations(),
                  bb.getForwardMPPSDestinations());
-         storeDiff(prefs, "dcmFwdMppsMaxRetries",
+         PreferencesUtils.storeDiff(prefs, "dcmFwdMppsMaxRetries",
                  aa.getForwardMPPSMaxRetries(),
                  bb.getForwardMPPSMaxRetries(),
                  0);
-         storeDiff(prefs, "dcmFwdMppsRetryInterval",
+         PreferencesUtils.storeDiff(prefs, "dcmFwdMppsRetryInterval",
                  aa.getForwardMPPSRetryInterval(),
                  bb.getForwardMPPSRetryInterval(),
                  ArchiveAEExtension.DEF_RETRY_INTERVAL);
-         storeDiff(prefs, "dcmIanDestination",
+         PreferencesUtils.storeDiff(prefs, "dcmIanDestination",
                  aa.getIANDestinations(),
                  bb.getIANDestinations());
-         storeDiff(prefs, "dcmIanMaxRetries",
+         PreferencesUtils.storeDiff(prefs, "dcmIanMaxRetries",
                  aa.getIANMaxRetries(),
                  bb.getIANMaxRetries(),
                  0);
-         storeDiff(prefs, "dcmIanRetryInterval",
+         PreferencesUtils.storeDiff(prefs, "dcmIanRetryInterval",
                  aa.getIANRetryInterval(),
                  bb.getIANRetryInterval(),
                  ArchiveAEExtension.DEF_RETRY_INTERVAL);
-         storeDiff(prefs, "dcmReturnOtherPatientIDs",
+         PreferencesUtils.storeDiff(prefs, "dcmReturnOtherPatientIDs",
                  aa.isReturnOtherPatientIDs(),
                  bb.isReturnOtherPatientIDs(),
                  false);
-         storeDiff(prefs, "dcmReturnOtherPatientNames",
+         PreferencesUtils.storeDiff(prefs, "dcmReturnOtherPatientNames",
                  aa.isReturnOtherPatientNames(),
                  bb.isReturnOtherPatientNames(),
                  false);
-         storeDiff(prefs, "dcmShowRejectedInstances",
+         PreferencesUtils.storeDiff(prefs, "dcmShowRejectedInstances",
                  aa.isShowRejectedInstances(),
                  bb.isShowRejectedInstances(),
                  false);
-         storeDiff(prefs, "hl7PIXConsumerApplication",
+         PreferencesUtils.storeDiff(prefs, "hl7PIXConsumerApplication",
                  aa.getLocalPIXConsumerApplication(),
                  bb.getLocalPIXConsumerApplication());
-         storeDiff(prefs, "hl7PIXManagerApplication",
+         PreferencesUtils.storeDiff(prefs, "hl7PIXManagerApplication",
                  aa.getRemotePIXManagerApplication(),
                  bb.getRemotePIXManagerApplication());
     }
@@ -540,7 +534,7 @@ public class PreferencesArchiveConfiguration
          if (aa == null || bb == null)
              return;
 
-         storeDiff(prefs, "labeledURI",
+         PreferencesUtils.storeDiff(prefs, "labeledURI",
                  aa.getTemplatesURIs(),
                  bb.getTemplatesURIs());
     }
@@ -550,20 +544,20 @@ public class PreferencesArchiveConfiguration
         storeDiffTags(prefs, "dcmTag", 
                 prev.getSelection(),
                 filter.getSelection());
-        storeDiff(prefs, "dcmCustomAttribute1",
+        PreferencesUtils.storeDiff(prefs, "dcmCustomAttribute1",
                 prev.getCustomAttribute1(),
                 filter.getCustomAttribute1());
-        storeDiff(prefs, "dcmCustomAttribute2",
+        PreferencesUtils.storeDiff(prefs, "dcmCustomAttribute2",
                 prev.getCustomAttribute2(),
                 filter.getCustomAttribute2());
-        storeDiff(prefs, "dcmCustomAttribute3",
+        PreferencesUtils.storeDiff(prefs, "dcmCustomAttribute3",
                 prev.getCustomAttribute3(),
                 filter.getCustomAttribute3());
     }
 
     private void storeDiffTags(Preferences prefs, String key, int[] prevs, int[] vals) {
         if (!Arrays.equals(prevs, vals)) {
-            removeKeys(prefs, key, vals.length, prevs.length);
+            PreferencesUtils.removeKeys(prefs, key, vals.length, prevs.length);
             storeTags(prefs, key, vals);
         }
     }
@@ -599,8 +593,10 @@ public class PreferencesArchiveConfiguration
     }
 
     private void storeDiffs(Preferences prefs, StoreDuplicate a, StoreDuplicate b) {
-        storeDiff(prefs, "dcmStoreDuplicateCondition", a.getCondition(), b.getCondition());
-        storeDiff(prefs, "dcmStoreDuplicateAction", a.getAction(), b.getAction());
+        PreferencesUtils.storeDiff(prefs, "dcmStoreDuplicateCondition",
+                a.getCondition(), b.getCondition());
+        PreferencesUtils.storeDiff(prefs, "dcmStoreDuplicateAction",
+                a.getAction(), b.getAction());
     }
 
 }
