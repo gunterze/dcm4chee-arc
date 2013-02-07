@@ -51,6 +51,7 @@ import org.dcm4che.conf.api.AttributeCoercion;
 import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.conf.api.ConfigurationNotFoundException;
 import org.dcm4che.conf.api.DicomConfiguration;
+import org.dcm4che.conf.api.hl7.HL7Configuration;
 import org.dcm4che.conf.ldap.LdapDicomConfiguration;
 import org.dcm4che.conf.ldap.audit.LdapAuditLoggerConfiguration;
 import org.dcm4che.conf.ldap.audit.LdapAuditRecordRepositoryConfiguration;
@@ -597,6 +598,7 @@ public class ArchiveDeviceTest {
 
     private KeyStore keystore;
     private DicomConfiguration config;
+    private HL7Configuration hl7Config;
 
     @Before
     public void setUp() throws Exception {
@@ -620,6 +622,7 @@ public class ArchiveDeviceTest {
                 new LdapAuditLoggerConfiguration());
         config.addDicomConfigurationExtension(
                 new LdapAuditRecordRepositoryConfiguration());
+        this.hl7Config = hl7Config;
         return config;
     }
 
@@ -634,6 +637,7 @@ public class ArchiveDeviceTest {
                 new PreferencesAuditLoggerConfiguration());
         config.addDicomConfigurationExtension(
                 new PreferencesAuditRecordRepositoryConfiguration());
+        this.hl7Config = hl7Config;
         return config;
     }
 
@@ -652,6 +656,7 @@ public class ArchiveDeviceTest {
             config.persist(createDevice(OTHER_DEVICES[i], OTHER_ISSUER[i], OTHER_INST_CODES[i],
                     aet, "localhost", OTHER_PORTS[i<<1], OTHER_PORTS[(i<<1)+1]));
         }
+        hl7Config.registerHL7Application(PIX_MANAGER);
         for (int i = OTHER_AES.length; i < OTHER_DEVICES.length; i++)
             config.persist(createDevice(OTHER_DEVICES[i]));
         config.persist(createHL7Device("hl7rcv", SITE_A, INST_A, PIX_MANAGER,
@@ -682,7 +687,7 @@ public class ArchiveDeviceTest {
         config.unregisterAETitle("DCM4CHEE_ADMIN");
         for (String aet : OTHER_AES)
             config.unregisterAETitle(aet);
-
+        hl7Config.unregisterHL7Application(PIX_MANAGER);
         try {
             config.removeDevice("dcm4chee-arc");
         } catch (ConfigurationNotFoundException e) {}

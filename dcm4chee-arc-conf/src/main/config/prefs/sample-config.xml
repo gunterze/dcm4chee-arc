@@ -6417,9 +6417,6 @@
               </map>
             </node>
           </node>
-          <node name="hl7Application">
-            <map/>
-          </node>
         </node>
       </node>
       <node name="dicomUniqueAETitlesRegistryRoot">
@@ -6455,6 +6452,12 @@
           <map/>
         </node>
         <node name="STORESCU">
+          <map/>
+        </node>
+      </node>
+      <node name="hl7UniqueApplicationNamesRegistryRoot">
+        <map/>
+        <node name="HL7RCV^DCM4CHEE">
           <map/>
         </node>
       </node>
