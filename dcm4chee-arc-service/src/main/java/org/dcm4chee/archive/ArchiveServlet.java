@@ -39,6 +39,7 @@
 package org.dcm4chee.archive;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.management.ManagementFactory;
 import java.net.URL;
@@ -53,6 +54,8 @@ import javax.management.ObjectName;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.dcm4che.conf.api.DicomConfiguration;
 import org.dcm4che.conf.api.hl7.HL7Configuration;
@@ -208,4 +211,39 @@ public class ArchiveServlet extends HttpServlet {
             jmsService.close();
     }
 
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        String uri = req.getRequestURI();
+        if (uri.endsWith("/status"))
+            resp.getWriter().println(archive.isRunning() ? "STARTED" : "STOPPED");
+        else if (uri.endsWith("/start"))
+            if (archive.isRunning())
+                resp.sendError(HttpServletResponse.SC_CONFLICT, "Already STARTED!");
+            else
+                try {
+                    archive.start();
+                    resp.getWriter().println("STARTED");
+                } catch (Exception e) {
+                    resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                            e.getMessage());
+                }
+        else if (uri.endsWith("/stop"))
+            if (!archive.isRunning())
+                resp.sendError(HttpServletResponse.SC_CONFLICT, "Not STARTED!");
+            else {
+                archive.stop();
+                resp.getWriter().println("STOPPED");
+            }
+        else if (uri.endsWith("/reload"))
+            try {
+                archive.reloadConfiguration();
+                resp.getWriter().println("RELOAD");
+            } catch (Exception e) {
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                        e.getMessage());
+            }
+        else
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, uri);
+    }
 }
