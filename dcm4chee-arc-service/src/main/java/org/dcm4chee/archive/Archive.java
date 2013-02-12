@@ -188,7 +188,7 @@ public class Archive extends DeviceService implements ArchiveMBean {
     }
 
     @Override
-    public void reloadConfiguration() throws Exception {
+    public void reload() throws Exception {
         device.reconfigure(dicomConfiguration.findDevice(device.getDeviceName()));
         setConfigurationStaleTimeout();
         device.rebindConnections();
