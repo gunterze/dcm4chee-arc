@@ -3,221 +3,221 @@ dn: cn=schema
 objectClass: top
 objectClass: ldapSubentry
 objectClass: subschema
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.0 NAME 'dcmInitFileSystemURI'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.1 NAME 'dcmInitFileSystemURI'
   DESC 'URI of directory path of initial Storage File System.'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.1 NAME 'dcmFileSystemGroupID'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.2 NAME 'dcmFileSystemGroupID'
   DESC 'ID of File System Group where received objects are stored'
   EQUALITY caseIgnoreMatch
   SUBSTR caseIgnoreSubstringsMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.2 NAME 'dcmStorageFilePathFormat'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.3 NAME 'dcmStorageFilePathFormat'
   DESC 'File Path of stored object'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.3 NAME 'dcmDigestAlgorithm'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.4 NAME 'dcmDigestAlgorithm'
   DESC 'Algorithm for generation of check sums: "MD5" or "SHA-1"'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.4 NAME 'dcmRetrieveAET'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.5 NAME 'dcmRetrieveAET'
   DESC 'AE Title associated with received objects'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.5 NAME 'dcmExternalRetrieveAET'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.6 NAME 'dcmExternalRetrieveAET'
   DESC 'External AE Title associated with received objects'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.6 NAME 'dcmMatchUnknown'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.7 NAME 'dcmMatchUnknown'
   DESC 'Indicates if missing Attributes or zero-length Attribute values in stored entities shall considered unknown and all matching against it shall be considered a successful match; disabled if absent'
   EQUALITY booleanMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.7 NAME 'dcmSendPendingCGet'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.8 NAME 'dcmSendPendingCGet'
   DESC 'Enables pending C-GET responses; disabled if absent'
   EQUALITY booleanMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.8 NAME 'dcmSendPendingCMoveInterval'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.9 NAME 'dcmSendPendingCMoveInterval'
   DESC 'Interval of pending C-MOVE responses in s. 0 (=disabled) if absent'
   EQUALITY integerMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.9 NAME 'dcmSuppressWarningCoercionOfDataElements'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.10 NAME 'dcmSuppressWarningCoercionOfDataElements'
   DESC 'Specifies if no Coercion of Data Elements warning shall be returned in C-STORE responses; disabled if absent'
   EQUALITY booleanMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.10 NAME 'dcmStoreOriginalAttributes'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.11 NAME 'dcmStoreOriginalAttributes'
   DESC 'Specifies if in the case of Coercion of Data Elements of received objects, original values shall be preserved in the Modified Attributes Sequence (0400,0550); disabled if absent'
   EQUALITY booleanMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.11 NAME 'dcmModifyingSystem'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.12 NAME 'dcmModifyingSystem'
   DESC 'Specifies value of Modifying System (0400,0563) in added Modified Attributes Sequence (0400,0550) items; use Device  NAME if absent.'
   EQUALITY caseIgnoreMatch
   SUBSTR caseIgnoreSubstringsMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.12 NAME 'dcmFuzzyAlgorithmClass'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.13 NAME 'dcmFuzzyAlgorithmClass'
   DESC 'Specifies Fuzzy Algorithm Implementation Class: "org.dcm4che.soundex.Soundex", "org.dcm4che.soundex.ESoundex", "org.dcm4che.soundex.ESoundex9", "org.dcm4che.soundex.Metaphone", "org.dcm4che.soundex.KPhonetik", "org.dcm4che.soundex.Phonem"'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.13 NAME 'dcmTag'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.14 NAME 'dcmTag'
   DESC 'DICOM Tag as hex string'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.14.1 NAME 'dcmCustomAttribute1'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.15 NAME 'dcmCustomAttribute1'
   DESC 'Custom Attribute 1'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.14.2 NAME 'dcmCustomAttribute2'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.16 NAME 'dcmCustomAttribute2'
   DESC 'Custom Attribute 2'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.14.3 NAME 'dcmCustomAttribute3'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.17 NAME 'dcmCustomAttribute3'
   DESC 'Custom Attribute 3'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.15 NAME 'dcmStgCmtDelay'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.18 NAME 'dcmStgCmtDelay'
   DESC 'Delay of return of Storage Commitment Result in s. 0 if absent'
   EQUALITY integerMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.16 NAME 'dcmStgCmtMaxRetries'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.19 NAME 'dcmStgCmtMaxRetries'
   DESC 'Maximum number of retries to return Storage Commitment Result. 0 if absent'
   EQUALITY integerMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.17 NAME 'dcmStgCmtRetryInterval'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.20 NAME 'dcmStgCmtRetryInterval'
   DESC 'Interval between retries to return Storage Commitment Result in s. 60 if absent'
   EQUALITY integerMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.18 NAME 'dcmFwdMppsDestination'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.21 NAME 'dcmFwdMppsDestination'
   DESC 'Destination to forward MPPS N-CREATE RQ and N-SET RQ'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.19 NAME 'dcmFwdMppsMaxRetries'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.22 NAME 'dcmFwdMppsMaxRetries'
   DESC 'Maximum number of retries to forward MPPS N-CREATE RQ and N-SET RQ. 0 if absent'
   EQUALITY integerMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.20 NAME 'dcmFwdMppsRetryInterval'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.23 NAME 'dcmFwdMppsRetryInterval'
   DESC 'Interval between retries to forward MPPS N-CREATE RQ and N-SET RQ in s. 60 if absent'
   EQUALITY integerMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.21 NAME 'dcmEntity'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.24 NAME 'dcmEntity'
   DESC 'Entity of the Attribute Filter ("Patient", "Study", "Series", "Instance", "Visit", "ServiceRequest", "RequestedProcedure", "ScheduledProcedureStep", "PerformedProcedureStep").'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.22 NAME 'dcmIanDestination'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.25 NAME 'dcmIanDestination'
   DESC 'Destination to send IAN N-CREATE RQ'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.23 NAME 'dcmIanMaxRetries'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.26 NAME 'dcmIanMaxRetries'
   DESC 'Maximum number of retries to send IAN N-CREATE RQ. 0 if absent'
   EQUALITY integerMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.24 NAME 'dcmIanRetryInterval'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.27 NAME 'dcmIanRetryInterval'
   DESC 'Interval between retries to send IAN N-CREATE RQ in s. 60 if absent'
   EQUALITY integerMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.25 NAME 'dcmStoreDuplicateCondition'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.28 NAME 'dcmStoreDuplicateCondition'
   DESC 'Specifies condition for behavior on receive of objects with existing SOP Instance UID: "NO_FILE", "EQ_CHECKSUM", "NE_CHECKSUM", "EQ_FSGROUP", "NE_FSGROUP", "EQ_CHECKSUM_AND_EQ_FSGROUP", "EQ_CHECKSUM_AND_NE_FSGROUP", "NE_CHECKSUM_AND_EQ_FSGROUP", "NE_CHECKSUM_AND_NE_FSGROUP"'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.26 NAME 'dcmStoreDuplicateAction'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.29 NAME 'dcmStoreDuplicateAction'
   DESC 'Specifies behavior on receive of objects with existing SOP Instance UID: "IGNORE", "STORE" or "REPLACE"'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.27 NAME 'dcmConfigurationStaleTimeout'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.30 NAME 'dcmConfigurationStaleTimeout'
   DESC 'Stale timeout of cached configuration in s. 0 (=never invalidate cached configuration) if absent'
   EQUALITY integerMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.28 NAME 'hl7PIXManagerApplication'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.31 NAME 'hl7PIXManagerApplication'
   DESC 'Application^Facility name of remote PIX Manager Application'
   EQUALITY caseExactMatch
   SUBSTR caseExactSubstringsMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.29 NAME 'hl7PIXConsumerApplication'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.32 NAME 'hl7PIXConsumerApplication'
   DESC 'Application^Facility name of local PIX Consumer Application'
   EQUALITY caseExactMatch
   SUBSTR caseExactSubstringsMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.30 NAME 'dcmReturnOtherPatientIDs'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.33 NAME 'dcmReturnOtherPatientIDs'
   DESC 'Specifies to return all known Patient IDs in the Other Patient IDs Sequence; disable if absent'
   EQUALITY booleanMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.31 NAME 'dcmReturnOtherPatientNames'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.34 NAME 'dcmReturnOtherPatientNames'
   DESC 'Specifies to return all known patient names known in Other Patient Names; disable if absent'
   EQUALITY booleanMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.32 NAME 'dcmSpoolFilePathFormat'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.35 NAME 'dcmSpoolFilePathFormat'
   DESC 'Specifies File Path of spool file for received objects'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.33 NAME 'dcmPreserveSpoolFileOnFailure'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.36 NAME 'dcmPreserveSpoolFileOnFailure'
   DESC 'Specifies to preserve spool file with received composite object if the storage failed; disable if absent'
   EQUALITY booleanMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.34 NAME 'dcmIncorrectWorklistEntrySelectedCode'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.37 NAME 'dcmIncorrectWorklistEntrySelectedCode'
   DESC 'Procedure Discontinuation Reason code used by the IHE Acquisition Modality Actor to convey that the wrong SPS has been selected: (110514, DCM, "Incorrect worklist entry select")'
   EQUALITY caseExactMatch
   SUBSTR caseExactSubstringsMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.35 NAME 'dcmRejectedForQualityReasonsCode'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.38 NAME 'dcmRejectedForQualityReasonsCode'
   DESC 'Key Object Selection Document Title code used by the IHE Change Requester Actor to mark instances as rejected for quality reasons: (113001, DCM, “Rejected for Quality Reasons”)'
   EQUALITY caseExactMatch
   SUBSTR caseExactSubstringsMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.36 NAME 'dcmRejectedForPatientSafetyReasonsCode'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.39 NAME 'dcmRejectedForPatientSafetyReasonsCode'
   DESC 'Key Object Selection Document Title code used by the IHE Change Requester Actor to mark instances as rejected for patient safety reasons: (113037, DCM, “Rejected for Patient Safety Reasons”)'
   EQUALITY caseExactMatch
   SUBSTR caseExactSubstringsMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.37 NAME 'dcmIncorrectModalityWorklistEntryCode'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.40 NAME 'dcmIncorrectModalityWorklistEntryCode'
   DESC 'Key Object Selection Document Title code used by the IHE Change Requester Actor to mark instances as associated with an incorrect modality worklist entry: (XXXXXX11, 99IHEIOCM, “Incorrect Modality Worklist Entry”)'
   EQUALITY caseExactMatch
   SUBSTR caseExactSubstringsMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.38 NAME 'dcmDataRetentionPeriodExpiredCode'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.41 NAME 'dcmDataRetentionPeriodExpiredCode'
   DESC 'Key Object Selection Document Title code used by the IHE Change Requester Actor to mark instances as expired for data retention policy: (XXXXXX22, 99IHEIOCM, “Data Retention Period Expired”)'
   EQUALITY caseExactMatch
   SUBSTR caseExactSubstringsMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 
   SINGLE-VALUE )
-attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.39 NAME 'dcmShowRejectedInstances'
+attributeTypes: ( 1.2.40.0.13.1.15.10.3.42 NAME 'dcmShowRejectedInstances'
   DESC 'Specifies to show instances rejected for quality reasons; disable if absent'
   EQUALITY booleanMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 
   SINGLE-VALUE )
-objectClasses: ( 1.2.40.0.13.1.1.15.0.4.4 NAME 'dcmArchiveDevice'
+objectClasses: ( 1.2.40.0.13.1.15.10.4.4 NAME 'dcmArchiveDevice'
   DESC 'DICOM Archive Device related information'
   SUP top AUXILIARY
   MUST (
@@ -228,7 +228,7 @@ objectClasses: ( 1.2.40.0.13.1.1.15.0.4.4 NAME 'dcmArchiveDevice'
     dcmDataRetentionPeriodExpiredCode $
     dcmFuzzyAlgorithmClass )
   MAY dcmConfigurationStaleTimeout )
-objectClasses: ( 1.2.40.0.13.1.1.15.0.4.5 NAME 'dcmArchiveNetworkAE'
+objectClasses: ( 1.2.40.0.13.1.15.10.4.5 NAME 'dcmArchiveNetworkAE'
   DESC 'DICOM Archive Network AE related information'
   SUP top AUXILIARY
   MAY (
@@ -260,7 +260,7 @@ objectClasses: ( 1.2.40.0.13.1.1.15.0.4.5 NAME 'dcmArchiveNetworkAE'
     dcmShowRejectedInstances $
     hl7PIXManagerApplication $
     hl7PIXConsumerApplication ) )
-objectClasses: ( 1.2.40.0.13.1.1.15.0.4.10 NAME 'dcmAttributeFilter'
+objectClasses: ( 1.2.40.0.13.1.15.10.4.10 NAME 'dcmAttributeFilter'
   DESC 'Attributes stored in the database'
   SUP top STRUCTURAL
   MUST (
@@ -270,12 +270,12 @@ objectClasses: ( 1.2.40.0.13.1.1.15.0.4.10 NAME 'dcmAttributeFilter'
     dcmCustomAttribute1 $
     dcmCustomAttribute2 $
     dcmCustomAttribute3 ) )
-objectClasses: ( 1.2.40.0.13.1.1.15.0.4.11 NAME 'dcmArchiveHL7Application'
+objectClasses: ( 1.2.40.0.13.1.15.10.4.11 NAME 'dcmArchiveHL7Application'
   DESC 'DICOM Archive HL7 Application related information'
   SUP top AUXILIARY
   MAY (
      labeledURI ) )
-objectClasses: ( 1.2.40.0.13.1.1.15.0.4.12 NAME 'dcmStoreDuplicate'
+objectClasses: ( 1.2.40.0.13.1.15.10.4.12 NAME 'dcmStoreDuplicate'
   DESC 'Specifies behavior on receive of objects with existing SOP Instance UID'
   SUP top STRUCTURAL
   MUST (
