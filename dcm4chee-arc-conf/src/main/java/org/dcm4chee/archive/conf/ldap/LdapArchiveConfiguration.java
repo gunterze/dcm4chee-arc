@@ -100,6 +100,8 @@ public class LdapArchiveConfiguration extends LdapDicomConfigurationExtension
                 arcDev.getFuzzyAlgorithmClass());
         LdapUtils.storeNotDef(attrs, "dcmConfigurationStaleTimeout",
                 arcDev.getConfigurationStaleTimeout(), 0);
+        LdapUtils.storeNotDef(attrs, "dcmWadoAttributesStaleTimeout",
+                arcDev.getWadoAttributesStaleTimeout(), 0);
     }
 
     @Override
@@ -232,6 +234,8 @@ public class LdapArchiveConfiguration extends LdapDicomConfigurationExtension
         arcdev.setFuzzyAlgorithmClass(LdapUtils.stringValue(attrs.get("dcmFuzzyAlgorithmClass"), null));
         arcdev.setConfigurationStaleTimeout(
                 LdapUtils.intValue(attrs.get("dcmConfigurationStaleTimeout"), 0));
+        arcdev.setWadoAttributesStaleTimeout(
+                LdapUtils.intValue(attrs.get("dcmWadoAttributesStaleTimeout"), 0));
     }
 
     @Override
@@ -396,6 +400,10 @@ public class LdapArchiveConfiguration extends LdapDicomConfigurationExtension
         LdapUtils.storeDiff(mods, "dcmConfigurationStaleTimeout",
                 aa.getConfigurationStaleTimeout(),
                 bb.getConfigurationStaleTimeout(),
+                0);
+        LdapUtils.storeDiff(mods, "dcmWadoAttributesStaleTimeout",
+                aa.getWadoAttributesStaleTimeout(),
+                bb.getWadoAttributesStaleTimeout(),
                 0);
     }
 

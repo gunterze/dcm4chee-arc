@@ -35,44 +35,40 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-package org.dcm4chee.archive;
+package org.dcm4chee.archive.wado.dao;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
-import org.dcm4chee.archive.wado.URIWado;
+import org.dcm4chee.archive.entity.Instance;
+import org.dcm4chee.archive.entity.InstanceFileRef;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-@ApplicationPath("/archive")
-public class ArchiveApplication extends Application {
+@Stateless
+public class WadoService {
 
-    private static Archive archive;
-    private final Set<Class<?>> classes = new HashSet<Class<?>>(4);
+    @PersistenceContext
+    private EntityManager em;
+    
+    public InstanceFileRef locate(String studyUID, String seriesUID,
+            String objectUID) {
+        @SuppressWarnings("unchecked")
+        List<InstanceFileRef> refs =
+                em.createNamedQuery(Instance.INSTANCE_FILE_REF)
+                  .setParameter(1, objectUID)
+                  .getResultList();
 
-    public ArchiveApplication() {
-        classes.add(URIWado.class);
-    }
-
-    static void setArchive(Archive archive) {
-        ArchiveApplication.archive = archive;
-    }
-
-    @Override
-    public Set<Object> getSingletons() {
-        return Collections.singleton((Object) archive);
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Override
-    public Set getClasses() {
-        return classes;
+        for (InstanceFileRef ref : refs) {
+            if (ref.instanceAvailability == ref.fileAvailability)
+                return ref;
+        }
+        return null;
     }
 
 }

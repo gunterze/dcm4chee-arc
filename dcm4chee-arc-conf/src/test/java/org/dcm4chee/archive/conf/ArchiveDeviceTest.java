@@ -90,6 +90,7 @@ public class ArchiveDeviceTest {
     private static final String PIX_MANAGER = "HL7RCV^DCM4CHEE";
     private static int PENDING_CMOVE_INTERVAL = 5000;
     private static final int CONFIGURATION_STALE_TIMEOUT = 60;
+    private static final int WADO_ATTRIBUTES_STALE_TIMEOUT = 60;
     private static final int[] PATIENT_ATTRS = {
         Tag.SpecificCharacterSet,
         Tag.PatientName,
@@ -789,6 +790,7 @@ public class ArchiveDeviceTest {
         arcDevExt.setDataRetentionPeriodExpiredCode(DATA_RETENTION_PERIOD_EXPIRED);
         arcDevExt.setFuzzyAlgorithmClass("org.dcm4che.soundex.ESoundex");
         arcDevExt.setConfigurationStaleTimeout(CONFIGURATION_STALE_TIMEOUT);
+        arcDevExt.setWadoAttributesStaleTimeout(WADO_ATTRIBUTES_STALE_TIMEOUT);
         setAttributeFilters(arcDevExt);
         device.setKeyStoreURL("file:${jboss.server.config.dir}/dcm4chee-arc/key.jks");
         device.setKeyStoreType("JKS");

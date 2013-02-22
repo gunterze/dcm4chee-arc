@@ -461,6 +461,7 @@ dicomAETitle: DCM4CHEE_ADMIN
 dn: dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmDataRetentionPeriodExpiredCode: (XXXXXX22 ,99IHEIOCM ,"Data Retention Period Expired")
 dicomInstalled: TRUE
+dcmWadoAttributesStaleTimeout: 60
 dicomDeviceName: dcm4chee-arc
 dcmKeyStorePin: secret
 dcmKeyStoreType: JKS

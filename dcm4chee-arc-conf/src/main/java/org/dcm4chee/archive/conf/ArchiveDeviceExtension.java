@@ -64,6 +64,7 @@ public class ArchiveDeviceExtension extends DeviceExtension {
     private final AttributeFilter[] attributeFilters =
             new AttributeFilter[Entity.values().length];
     private int configurationStaleTimeout;
+    private int wadoAttributesStaleTimeout;
 
     private transient FuzzyStr fuzzyStr;
     private transient TemplatesCache templatesCache;
@@ -141,6 +142,14 @@ public class ArchiveDeviceExtension extends DeviceExtension {
 
     public void setConfigurationStaleTimeout(int configurationStaleTimeout) {
         this.configurationStaleTimeout = configurationStaleTimeout;
+    }
+
+    public int getWadoAttributesStaleTimeout() {
+        return wadoAttributesStaleTimeout;
+    }
+
+    public void setWadoAttributesStaleTimeout(int wadoAttributesStaleTimeout) {
+        this.wadoAttributesStaleTimeout = wadoAttributesStaleTimeout;
     }
 
     public void clearTemplatesCache() {

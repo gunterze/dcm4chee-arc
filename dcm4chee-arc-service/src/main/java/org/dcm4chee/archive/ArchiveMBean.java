@@ -45,7 +45,7 @@ import javax.ws.rs.Path;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-@Path("")
+@Path("/")
 public interface ArchiveMBean {
 
     @GET

@@ -216,6 +216,11 @@ olcAttributeTypes: ( 1.2.40.0.13.1.15.10.3.42 NAME 'dcmShowRejectedInstances'
   EQUALITY booleanMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 
   SINGLE-VALUE )
+olcAttributeTypes: ( 1.2.40.0.13.1.15.10.3.43 NAME 'dcmWadoAttributesStaleTimeout'
+  DESC 'Stale timeout of cached Patient, Study and Series Attributes by WADO Service s. 0 (=no caching) if absent'
+  EQUALITY integerMatch
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+  SINGLE-VALUE )
 olcObjectClasses: ( 1.2.40.0.13.1.15.10.4.4 NAME 'dcmArchiveDevice'
   DESC 'DICOM Archive Device related information'
   SUP top AUXILIARY
@@ -226,7 +231,9 @@ olcObjectClasses: ( 1.2.40.0.13.1.15.10.4.4 NAME 'dcmArchiveDevice'
     dcmIncorrectModalityWorklistEntryCode $
     dcmDataRetentionPeriodExpiredCode $
     dcmFuzzyAlgorithmClass )
-  MAY dcmConfigurationStaleTimeout )
+  MAY (
+    dcmConfigurationStaleTimeout $
+    dcmWadoAttributesStaleTimeout ) )
 olcObjectClasses: ( 1.2.40.0.13.1.15.10.4.5 NAME 'dcmArchiveNetworkAE'
   DESC 'DICOM Archive Network AE related information'
   SUP top AUXILIARY

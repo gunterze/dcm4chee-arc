@@ -20,6 +20,7 @@
             <entry key="dcmKeyStoreURL" value="file:${jboss.server.config.dir}/dcm4chee-arc/key.jks"/>
             <entry key="dcmRejectedForPatientSafetyReasonsCode" value="(113037 ,DCM ,&quot;Rejected for Patient Safety Reasons&quot;)"/>
             <entry key="dcmRejectedForQualityReasonsCode" value="(113001 ,DCM ,&quot;Rejected for Quality Reasons&quot;)"/>
+            <entry key="dcmWadoAttributesStaleTimeout" value="60"/>
             <entry key="dicomAuthorizedNodeCertificateReference.#" value="11"/>
             <entry key="dicomAuthorizedNodeCertificateReference.1" value="dicomConfigurationRoot/dicomDevicesRoot/dcmqrscp"/>
             <entry key="dicomAuthorizedNodeCertificateReference.10" value="dicomConfigurationRoot/dicomDevicesRoot/movescu"/>

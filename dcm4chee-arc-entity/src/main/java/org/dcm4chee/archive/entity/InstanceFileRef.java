@@ -35,44 +35,46 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-package org.dcm4chee.archive;
+package org.dcm4chee.archive.entity;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
-
-import org.dcm4chee.archive.wado.URIWado;
+import org.dcm4che.data.Attributes;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-@ApplicationPath("/archive")
-public class ArchiveApplication extends Application {
+public class InstanceFileRef {
+    public final Long seriesPk;
+    public final String sopClassUID;
+    public final String sopInstanceUID;
+    public final Availability instanceAvailability;
+    public final String retrieveAETs;
+    public final String externalRetrieveAET;
+    public final String uri;
+    public final String transferSyntaxUID;
+    public final Availability fileAvailability;
+    private final byte[] instAttrs;
 
-    private static Archive archive;
-    private final Set<Class<?>> classes = new HashSet<Class<?>>(4);
-
-    public ArchiveApplication() {
-        classes.add(URIWado.class);
+    public InstanceFileRef(Long seriesPk, String sopClassUID,
+            String sopInstanceUID, Availability instanceAvailability,
+            String retrieveAETs, String externalRetrieveAET,
+            String fsuri, String filePath, String transferSyntaxUID,
+            Availability fileAvailability, byte[] instAttrs) {
+        this.seriesPk = seriesPk;
+        this.sopClassUID = sopClassUID;
+        this.sopInstanceUID = sopInstanceUID;
+        this.instanceAvailability = instanceAvailability;
+        this.retrieveAETs = retrieveAETs;
+        this.externalRetrieveAET = externalRetrieveAET;
+        this.uri = fsuri != null ? fsuri + filePath : null;
+        this.transferSyntaxUID = transferSyntaxUID;
+        this.fileAvailability = fileAvailability;
+        this.instAttrs = instAttrs;
     }
 
-    static void setArchive(Archive archive) {
-        ArchiveApplication.archive = archive;
+    public Attributes getAttributes(Attributes seriesAttrs) {
+        Attributes attrs = new Attributes(seriesAttrs);
+        Utils.decodeAttributes(attrs, instAttrs);
+        return attrs;
     }
-
-    @Override
-    public Set<Object> getSingletons() {
-        return Collections.singleton((Object) archive);
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Override
-    public Set getClasses() {
-        return classes;
-    }
-
 }

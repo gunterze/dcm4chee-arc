@@ -82,6 +82,8 @@ import org.dcm4chee.archive.retrieve.dao.RetrieveService;
 import org.dcm4chee.archive.stgcmt.StgCmtSCP;
 import org.dcm4chee.archive.stgcmt.dao.StgCmtService;
 import org.dcm4chee.archive.store.CStoreSCP;
+import org.dcm4chee.archive.wado.WadoAttributesCache;
+import org.dcm4chee.archive.wado.dao.WadoService;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -195,10 +197,11 @@ public class Archive extends DeviceService implements ArchiveMBean {
     }
 
     private void setConfigurationStaleTimeout() {
-        int staleTimeout = device.getDeviceExtension(ArchiveDeviceExtension.class)
-                .getConfigurationStaleTimeout();
+        ArchiveDeviceExtension ext = device.getDeviceExtension(ArchiveDeviceExtension.class);
+        int staleTimeout = ext.getConfigurationStaleTimeout();
         aeCache.setStaleTimeout(staleTimeout);
         hl7AppCache.setStaleTimeout(staleTimeout);
+        WadoAttributesCache.INSTANCE.setStaleTimeout(ext.getWadoAttributesStaleTimeout());
     }
 
     private DicomServiceRegistry serviceRegistry() {

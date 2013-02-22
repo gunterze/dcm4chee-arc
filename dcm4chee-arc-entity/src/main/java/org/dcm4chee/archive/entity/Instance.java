@@ -97,19 +97,22 @@ import org.dcm4chee.archive.conf.AttributeFilter;
             + "FROM Instance i "
             + "WHERE i.series.seriesInstanceUID = ?1 AND i.replaced = FALSE"),
 @NamedQuery(
-    name="Instance.sopInstanceReferenceByStudyInstanceUID",
-    query="SELECT NEW org.dcm4chee.archive.entity.SOPInstanceReference("
-            + "i.series.study.studyInstanceUID, "
-            + "i.series.performedProcedureStepClassUID, "
-            + "i.series.performedProcedureStepInstanceUID, "
-            + "i.series.seriesInstanceUID, "
+    name="Instance.instanceFileRef",
+    query="SELECT NEW org.dcm4chee.archive.entity.InstanceFileRef("
+            + "i.series.pk, "
             + "i.sopClassUID, "
             + "i.sopInstanceUID, "
-            + "i.availability,"
-            + "i.retrieveAETs,"
-            + "i.externalRetrieveAET) "
+            + "i.availability, "
+            + "i.retrieveAETs, "
+            + "i.externalRetrieveAET, "
+            + "f.fileSystem.uri, "
+            + "f.filePath, "
+            + "f.transferSyntaxUID, "
+            + "f.fileSystem.availability, "
+            + "i.encodedAttributes) "
             + "FROM Instance i "
-            + "WHERE i.series.study.studyInstanceUID = ?1 AND i.replaced = FALSE"),
+            + "LEFT JOIN i.fileRefs f "
+            + "WHERE i.sopInstanceUID = ?1 AND i.replaced = FALSE"),
 @NamedQuery(
     name="Instance.numberOfStudyRelatedInstances",
     query="SELECT COUNT(i) FROM Instance i "
@@ -134,6 +137,8 @@ public class Instance implements Serializable {
             "Instance.sopInstanceReferenceBySeriesInstanceUID";
     public static final String SOP_INSTANCE_REFERENCE_BY_STUDY_INSTANCE_UID =
             "Instance.sopInstanceReferenceByStudyInstanceUID";
+    public static final String INSTANCE_FILE_REF =
+            "Instance.instanceFileRef";
     public static final String NUMBER_OF_STUDY_RELATED_INSTANCES =
             "Instance.numberOfStudyRelatedInstances";
     public static final String NUMBER_OF_SERIES_RELATED_INSTANCES =

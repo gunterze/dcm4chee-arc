@@ -93,6 +93,8 @@ public class PreferencesArchiveConfiguration
                 arcDev.getFuzzyAlgorithmClass());
         PreferencesUtils.storeNotDef(prefs, "dcmConfigurationStaleTimeout",
                 arcDev.getConfigurationStaleTimeout(), 0);
+        PreferencesUtils.storeNotDef(prefs, "dcmWadoAttributesStaleTimeout",
+                arcDev.getWadoAttributesStaleTimeout(), 0);
     }
 
     @Override
@@ -245,6 +247,8 @@ public class PreferencesArchiveConfiguration
         arcdev.setFuzzyAlgorithmClass(prefs.get("dcmFuzzyAlgorithmClass", null));
         arcdev.setConfigurationStaleTimeout(
                 prefs.getInt("dcmConfigurationStaleTimeout", 0));
+        arcdev.setWadoAttributesStaleTimeout(
+                prefs.getInt("dcmWadoAttributesStaleTimeout", 0));
     }
 
     @Override
@@ -396,6 +400,10 @@ public class PreferencesArchiveConfiguration
         PreferencesUtils.storeDiff(prefs, "dcmConfigurationStaleTimeout",
                 aa.getConfigurationStaleTimeout(),
                 bb.getConfigurationStaleTimeout(),
+                0);
+        PreferencesUtils.storeDiff(prefs, "dcmWadoAttributesStaleTimeout",
+                aa.getWadoAttributesStaleTimeout(),
+                bb.getWadoAttributesStaleTimeout(),
                 0);
     }
 
