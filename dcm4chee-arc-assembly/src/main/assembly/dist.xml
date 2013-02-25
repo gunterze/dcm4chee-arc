@@ -20,7 +20,19 @@
     <fileSet>
       <directory>../dcm4chee-arc-conf/src/main/config</directory>
       <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>configuration/dcm4chee-arc/ldap.properties</include>
+        <include>configuration/dcm4chee-arc/*.xsl</include>
+      </includes>
       <lineEnding>dos</lineEnding>
+    </fileSet>
+    <fileSet>
+      <directory>../dcm4chee-arc-conf/src/main/config</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>configuration/dcm4chee-arc/key.jks</include>
+      </includes>
+      <lineEnding>keep</lineEnding>
     </fileSet>
     <fileSet>
       <directory>../dcm4chee-arc-entity/src/main</directory>
