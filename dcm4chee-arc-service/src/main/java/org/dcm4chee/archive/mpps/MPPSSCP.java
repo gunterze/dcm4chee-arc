@@ -38,8 +38,10 @@
 
 package org.dcm4chee.archive.mpps;
 
-import org.dcm4che.conf.api.ApplicationEntityCache;
+import javax.ejb.EJB;
+
 import org.dcm4che.conf.api.ConfigurationException;
+import org.dcm4che.conf.api.ConfigurationNotFoundException;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Issuer;
 import org.dcm4che.data.Tag;
@@ -48,6 +50,7 @@ import org.dcm4che.net.Association;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.BasicMPPSSCP;
 import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4chee.archive.Archive;
 import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.mpps.dao.MPPSService;
@@ -59,18 +62,8 @@ import org.dcm4chee.archive.store.Supplements;
  */
 public class MPPSSCP extends BasicMPPSSCP {
 
-    private final ApplicationEntityCache aeCache;
-    private final MPPSSCU mppsSCU;
-    private final MPPSService mppsService;
-    private final IANSCU ianSCU;
-
-    public  MPPSSCP(ApplicationEntityCache aeCache, MPPSSCU mppsSCU,
-            IANSCU ianSCU, MPPSService mppsService) {
-       this.aeCache = aeCache;
-       this.mppsSCU = mppsSCU;
-       this.ianSCU = ianSCU;
-       this.mppsService = mppsService;
-    }
+    @EJB
+    private MPPSService mppsService;
 
     @Override
     protected Attributes create(Association as, Attributes rq,
@@ -81,9 +74,12 @@ public class MPPSSCP extends BasicMPPSSCP {
         ApplicationEntity ae = as.getApplicationEntity();
         ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
         try {
-            ApplicationEntity sourceAE = aeCache.get(sourceAET);
-            if (sourceAE != null)
+            try {
+                ApplicationEntity sourceAE = Archive.getInstance()
+                        .findApplicationEntity(sourceAET);
                 Supplements.supplementMPPS(rqAttrs, sourceAE.getDevice());
+            } catch (ConfigurationNotFoundException e) {
+            }
             mppsService.createPerformedProcedureStep(iuid , rqAttrs, StoreParam.valueOf(ae));
         } catch (DicomServiceException e) {
             throw e;
@@ -92,7 +88,8 @@ public class MPPSSCP extends BasicMPPSSCP {
         }
         for (String remoteAET : aeExt.getForwardMPPSDestinations())
             if (matchIssuerOfPatientID(remoteAET, rqAttrs))
-                mppsSCU.scheduleForwardMPPS(localAET, remoteAET, iuid, rqAttrs, true, 0, 0);
+                Archive.getInstance()
+                        .scheduleMPPSCreate(localAET, remoteAET, iuid, rqAttrs);
         return null;
     }
 
@@ -101,15 +98,13 @@ public class MPPSSCP extends BasicMPPSSCP {
         if (issuer == null)
             return true;
 
-        ApplicationEntity remoteAE = null;
         try {
-            remoteAE = aeCache.get(remoteAET);
+            ApplicationEntity remoteAE = Archive.getInstance()
+                    .findApplicationEntity(remoteAET);
+            return issuer.matches(remoteAE.getDevice().getIssuerOfPatientID());
         } catch (ConfigurationException e) {
-        }
-        if (remoteAE == null)
             return true;
-
-        return issuer.matches(remoteAE.getDevice().getIssuerOfPatientID());
+        }
     }
 
     @Override
@@ -130,10 +125,14 @@ public class MPPSSCP extends BasicMPPSSCP {
         }
         for (String remoteAET : aeExt.getForwardMPPSDestinations())
             if (matchIssuerOfPatientID(remoteAET, ppsWithIAN.pps.getPatient().getAttributes()))
-                mppsSCU.scheduleForwardMPPS(localAET, remoteAET, iuid, rqAttrs, false, 0, 0);
-        if (ppsWithIAN.ian != null)
-            for (String remoteAET : aeExt.getIANDestinations())
-                ianSCU.scheduleIAN(localAET, remoteAET, ppsWithIAN.ian, 0, 0);
+                Archive.getInstance()
+                        .scheduleMPPSSet(localAET, remoteAET, iuid, rqAttrs);
+        Attributes ian = ppsWithIAN.ian;
+        Archive r = Archive.getInstance();
+        if (ian != null)
+        for (String remoteAET1 : ae.getAEExtension(ArchiveAEExtension.class)
+                .getIANDestinations())
+            r.scheduleIAN(ae.getAETitle(), remoteAET1, ian);
         return null;
     }
 

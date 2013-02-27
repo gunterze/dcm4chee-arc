@@ -156,8 +156,8 @@ public class QueryParam {
     }
 
     public static QueryParam valueOf(ApplicationEntity ae,
-            EnumSet<QueryOption> queryOpts, ApplicationEntity sourceAE,
-            String[] accessControlIDs) throws Exception {
+            EnumSet<QueryOption> queryOpts, String[] accessControlIDs)
+                    throws Exception {
         ArchiveDeviceExtension devExt = ae.getDevice()
                 .getDeviceExtension(ArchiveDeviceExtension.class);
         ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
@@ -174,14 +174,13 @@ public class QueryParam {
         queryParam.setReturnOtherPatientIDs(aeExt.isReturnOtherPatientIDs());
         queryParam.setReturnOtherPatientNames(aeExt.isReturnOtherPatientNames());
 
-        if (sourceAE != null) {
-            Device sourceDevice = sourceAE.getDevice();
-            queryParam.setDefaultIssuerOfPatientID(sourceDevice
-                    .getIssuerOfPatientID());
-            queryParam.setDefaultIssuerOfAccessionNumber(sourceDevice
-                    .getIssuerOfAccessionNumber());
-        }
         return queryParam;
     }
 
+    public void setDefaultIssuer(Device sourceDevice) {
+        setDefaultIssuerOfPatientID(sourceDevice
+                .getIssuerOfPatientID());
+        setDefaultIssuerOfAccessionNumber(sourceDevice
+                .getIssuerOfAccessionNumber());
+     }
 }

@@ -41,9 +41,10 @@ package org.dcm4chee.archive.mwl;
 
 import java.util.EnumSet;
 
-import org.dcm4che.conf.api.ApplicationEntityCache;
+import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4che.data.UID;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.QueryOption;
@@ -53,23 +54,17 @@ import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicCFindSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.net.service.QueryTask;
+import org.dcm4chee.archive.Archive;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
-import org.dcm4chee.archive.pix.PIXConsumer;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 public class MWLCFindSCP extends BasicCFindSCP {
 
-    private final ApplicationEntityCache aeCache;
-    private final PIXConsumer pixConsumer;
-
-    public MWLCFindSCP(String sopClass, ApplicationEntityCache aeCache,
-            PIXConsumer pixConsumer) {
-        super(sopClass);
-        this.aeCache = aeCache;
-        this.pixConsumer = pixConsumer;
+    public MWLCFindSCP() {
+        super(UID.ModalityWorklistInformationModelFIND);
     }
 
     @Override
@@ -81,13 +76,18 @@ public class MWLCFindSCP extends BasicCFindSCP {
 
         ApplicationEntity ae = as.getApplicationEntity();
         try {
-            QueryParam queryParam = QueryParam.valueOf(ae, queryOpts,
-                    aeCache.get(as.getRemoteAET()), roles(as));
+            QueryParam queryParam = QueryParam.valueOf(ae, queryOpts, accessControlIDs(as));
+            try {
+                queryParam.setDefaultIssuer(
+                        Archive.getInstance().findApplicationEntity(as.getRemoteAET())
+                        .getDevice());
+            } catch (ConfigurationException e) {
+            }
             IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys,
                     queryParam.getDefaultIssuerOfPatientID());
             IDWithIssuer[] pids = pid == null 
                     ? IDWithIssuer.EMPTY
-                    : pixConsumer.pixQuery(ae, pid);
+                    : Archive.getInstance().pixQuery(ae, pid);
             return new MWLQueryTaskImpl(as, pc, rq, keys, pids, queryParam);
         } catch (DicomServiceException e) {
             throw e;
@@ -96,8 +96,9 @@ public class MWLCFindSCP extends BasicCFindSCP {
         }
     }
 
-    private String[] roles(Association as) {
+    private String[] accessControlIDs(Association as) {
         // TODO Auto-generated method stub
         return null;
     }
+
 }

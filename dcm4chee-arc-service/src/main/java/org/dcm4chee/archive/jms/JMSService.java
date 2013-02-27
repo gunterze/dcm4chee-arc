@@ -40,6 +40,7 @@ package org.dcm4chee.archive.jms;
 
 import java.util.IdentityHashMap;
 
+import javax.annotation.Resource;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
@@ -59,11 +60,15 @@ public class JMSService {
         Message createMessage(Session session) throws JMSException;
     }
 
-    private final Connection conn;
+    @Resource(mappedName="java:/ConnectionFactory")
+    private ConnectionFactory connFactory;
+
+    private Connection conn;
+
     private final IdentityHashMap<MessageListener, Session> sessions =
             new IdentityHashMap<MessageListener, Session>();
 
-    public JMSService(ConnectionFactory connFactory) throws JMSException {
+    public void init() throws JMSException {
         conn = connFactory.createConnection();
     }
 
@@ -81,13 +86,14 @@ public class JMSService {
     }
 
     public void close() {
-        try {
-            sessions.clear();
-            conn.close();
-        } catch (JMSException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        sessions.clear();
+        if (conn != null)
+            try {
+                conn.close();
+            } catch (JMSException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
     }
 
     public void sendMessage(Destination dest, MessageCreator creator, int delay)

@@ -43,7 +43,6 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 
 import org.dcm4che.conf.api.ConfigurationException;
-import org.dcm4che.conf.api.hl7.HL7ApplicationCache;
 import org.dcm4che.hl7.HL7Message;
 import org.dcm4che.hl7.HL7Segment;
 import org.dcm4che.hl7.MLLPConnection;
@@ -54,6 +53,7 @@ import org.dcm4che.net.Device;
 import org.dcm4che.net.IncompatibleConnectionException;
 import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.net.hl7.HL7DeviceExtension;
+import org.dcm4chee.archive.Archive;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.slf4j.Logger;
@@ -66,12 +66,6 @@ public class PIXConsumer {
 
     private static Logger LOG = LoggerFactory.getLogger(PIXConsumer.class);
     
-    private final HL7ApplicationCache hl7AppCache;
-
-    public PIXConsumer(HL7ApplicationCache hl7AppCache) {
-        this.hl7AppCache = hl7AppCache;
-    }
-
     public IDWithIssuer[] pixQuery(ApplicationEntity ae, IDWithIssuer pid) {
         if (pid == null)
             return IDWithIssuer.EMPTY;
@@ -93,7 +87,7 @@ public class PIXConsumer {
                 throw new ConfigurationException(
                         "Unknown HL7 Application: " + pixConsumer);
             HL7Application pixManagerApp = 
-                    hl7AppCache.findHL7Application(pixManager);
+                    Archive.getInstance().findHL7Application(pixManager);
             HL7Message qbp = HL7Message.makePixQuery(pid.toString());
             HL7Segment msh = qbp.get(0);
             msh.setSendingApplicationWithFacility(pixConsumer);

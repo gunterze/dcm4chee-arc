@@ -49,8 +49,8 @@ import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.io.DicomInputStream;
-import org.dcm4che.io.SAXTransformer;
 import org.dcm4che.io.DicomInputStream.IncludeBulkData;
+import org.dcm4che.io.SAXTransformer;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.DataWriter;
@@ -63,9 +63,9 @@ import org.dcm4che.net.service.BasicRetrieveTask;
 import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.StringUtils;
+import org.dcm4chee.archive.Archive;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.conf.ArchiveAEExtension;
-import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.retrieve.dao.RetrieveService;
 
 /**
@@ -73,7 +73,6 @@ import org.dcm4chee.archive.retrieve.dao.RetrieveService;
  */
 class RetrieveTaskImpl extends BasicRetrieveTask {
 
-    private final PIXConsumer pixConsumer;
     private final RetrieveService retrieveService;
     private final boolean withoutBulkData;
     private IDWithIssuer[] pids;
@@ -85,11 +84,10 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
 
     public RetrieveTaskImpl(BasicRetrieveTask.Service service, Association as,
             PresentationContext pc, Attributes rq, List<InstanceLocator> matches,
-            IDWithIssuer[] pids, PIXConsumer pixConsumer,
-            RetrieveService retrieveService, boolean withoutBulkData) {
+            IDWithIssuer[] pids, RetrieveService retrieveService,
+            boolean withoutBulkData) {
         super(service, as, pc, rq, matches);
         this.pids = pids;
-        this.pixConsumer = pixConsumer;
         this.retrieveService = retrieveService;
         this.withoutBulkData = withoutBulkData;
     }
@@ -145,7 +143,7 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
             return;
 
         if (pids.length == 0) {
-            pids = pixConsumer.pixQuery(as.getApplicationEntity(), pid);
+            pids = Archive.getInstance().pixQuery(as.getApplicationEntity(), pid);
         }
 
         IDWithIssuer issuer = pidWithMatchingIssuer(pids, requestedIssuerOfPatientID);

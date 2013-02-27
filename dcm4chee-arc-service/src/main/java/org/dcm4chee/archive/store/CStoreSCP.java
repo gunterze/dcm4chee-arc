@@ -43,9 +43,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
+import javax.ejb.EJB;
 import javax.xml.transform.Templates;
 
-import org.dcm4che.conf.api.ApplicationEntityCache;
+import org.dcm4che.conf.api.ConfigurationNotFoundException;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
@@ -59,11 +60,11 @@ import org.dcm4che.net.service.BasicCStoreSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
+import org.dcm4chee.archive.Archive;
 import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.entity.FileRef;
 import org.dcm4chee.archive.entity.FileSystem;
-import org.dcm4chee.archive.mpps.IANSCU;
 import org.dcm4chee.archive.mpps.dao.IANQueryService;
 import org.dcm4chee.archive.store.dao.StoreService;
 import org.dcm4chee.archive.util.BeanLocator;
@@ -76,16 +77,11 @@ public class CStoreSCP extends BasicCStoreSCP {
     private static final String STORE_SERVICE_PROPERTY =
             CStoreSCP.class.getName();
 
-    private final ApplicationEntityCache aeCache;
-    private final IANSCU ianSCU;
-    private final IANQueryService ianQueryService;
+    @EJB
+    private IANQueryService ianQueryService;
 
-    public CStoreSCP(ApplicationEntityCache aeCache, IANSCU ianSCU,
-            IANQueryService ianQueryService) {
+    public CStoreSCP() {
         super("*");
-        this.aeCache = aeCache;
-        this.ianSCU = ianSCU;
-        this.ianQueryService = ianQueryService;
     }
 
     private static class LazyInitialization {
@@ -175,9 +171,12 @@ public class CStoreSCP extends BasicCStoreSCP {
             if (tpl != null)
                 ds.update(SAXTransformer.transform(ds, tpl, false, false),
                         modified);
-            ApplicationEntity sourceAE = aeCache.get(sourceAET);
-            if (sourceAE != null)
+            try {
+                ApplicationEntity sourceAE = Archive.getInstance()
+                        .findApplicationEntity(sourceAET);
                 Supplements.supplementComposite(ds, sourceAE.getDevice());
+            } catch (ConfigurationNotFoundException e) {
+            }
             StoreService store = (StoreService) as.getProperty(
                             STORE_SERVICE_PROPERTY);
             FileRef fileRef = store.addFileRef(sourceAET, ds, modified, file, 
@@ -223,6 +222,14 @@ public class CStoreSCP extends BasicCStoreSCP {
         }
     }
 
+    private void scheduleIAN(ApplicationEntity ae, Attributes ian) {
+        Archive r = Archive.getInstance();
+        if (ian != null)
+        for (String remoteAET : ae.getAEExtension(ArchiveAEExtension.class)
+                .getIANDestinations())
+            r.scheduleIAN(ae.getAETitle(), remoteAET, ian);
+    }
+
     private String digest(MessageDigest digest) {
         return digest != null ? TagUtils.toHexString(digest.digest()) : null;
     }
@@ -260,13 +267,6 @@ public class CStoreSCP extends BasicCStoreSCP {
                 }
             store.close();
         }
-    }
-
-    private void scheduleIAN(ApplicationEntity ae, Attributes ian) {
-        if (ian != null)
-            for (String remoteAET : 
-                ae.getAEExtension(ArchiveAEExtension.class).getIANDestinations())
-                ianSCU.scheduleIAN(ae.getAETitle(), remoteAET, ian, 0, 0);
     }
 
     @Override

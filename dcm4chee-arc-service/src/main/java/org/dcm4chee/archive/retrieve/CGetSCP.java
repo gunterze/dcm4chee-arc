@@ -43,9 +43,12 @@ import static org.dcm4che.net.service.BasicRetrieveTask.Service.C_GET;
 import java.util.EnumSet;
 import java.util.List;
 
-import org.dcm4che.conf.api.ApplicationEntityCache;
+import javax.ejb.EJB;
+
+import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4che.data.UID;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.QueryOption;
@@ -57,10 +60,10 @@ import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.RetrieveTask;
+import org.dcm4chee.archive.Archive;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
 import org.dcm4chee.archive.conf.ArchiveAEExtension;
-import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.retrieve.dao.RetrieveService;
 
 /**
@@ -70,27 +73,17 @@ public class CGetSCP extends BasicCGetSCP {
 
     private final String[] qrLevels;
     private final QueryRetrieveLevel rootLevel;
-    private boolean withoutBulkData;
-    private final ApplicationEntityCache aeCache;
-    private final PIXConsumer pixConsumer;
-    private final RetrieveService retrieveService;
+    private final boolean withoutBulkData;
 
-    public CGetSCP(String sopClass,
-            ApplicationEntityCache aeCache,
-            PIXConsumer pixConsumer,
-            RetrieveService retrieveService,
-            String... qrLevels) {
+    @EJB
+    private RetrieveService retrieveService;
+
+    public CGetSCP(String sopClass, String... qrLevels) {
         super(sopClass);
         this.qrLevels = qrLevels;
         this.rootLevel = QueryRetrieveLevel.valueOf(qrLevels[0]);
-        this.aeCache = aeCache;
-        this.pixConsumer = pixConsumer;
-        this.retrieveService = retrieveService;
-    }
-
-    public CGetSCP withoutBulkData(boolean withoutBulkData) {
-        this.withoutBulkData = withoutBulkData;
-        return this;
+        this.withoutBulkData = sopClass.equals(
+                UID.CompositeInstanceRetrieveWithoutBulkDataGET);
     }
 
     @Override
@@ -106,17 +99,23 @@ public class CGetSCP extends BasicCGetSCP {
         ApplicationEntity ae = as.getApplicationEntity();
         ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
         try {
-            final ApplicationEntity sourceAE = aeCache.get(as.getRemoteAET());
-            QueryParam queryParam = QueryParam.valueOf(ae, queryOpts, sourceAE,
+            QueryParam queryParam = QueryParam.valueOf(ae, queryOpts,
                     accessControlIDs());
+            ApplicationEntity sourceAE = null;
+            try {
+                sourceAE = Archive.getInstance()
+                        .findApplicationEntity(as.getRemoteAET());
+                queryParam.setDefaultIssuer(sourceAE.getDevice());
+            } catch (ConfigurationException e) {
+            }
             IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys,
                     queryParam.getDefaultIssuerOfPatientID());
-            IDWithIssuer[] pids = pixConsumer.pixQuery(ae, pid);
+            IDWithIssuer[] pids = Archive.getInstance().pixQuery(ae, pid);
             List<InstanceLocator> matches = 
                     retrieveService.calculateMatches(pids, keys, queryParam);
             RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(
                     C_GET, as, pc, rq, matches, pids,
-                    pixConsumer, retrieveService, withoutBulkData);
+                    retrieveService, withoutBulkData);
             if (sourceAE != null)
                 retrieveTask.setDestinationDevice(sourceAE.getDevice());
             retrieveTask.setSendPendingRSP(aeExt.isSendPendingCGet());
@@ -133,6 +132,34 @@ public class CGetSCP extends BasicCGetSCP {
     private String[] accessControlIDs() {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    public static class PatientRoot extends CGetSCP {
+        public PatientRoot() {
+            super(UID.PatientRootQueryRetrieveInformationModelGET,
+                    "PATIENT", "STUDY", "SERIES", "IMAGE");
+        }
+    }
+
+    public static class StudyRoot extends CGetSCP {
+        public StudyRoot() {
+            super(UID.StudyRootQueryRetrieveInformationModelGET,
+                    "STUDY", "SERIES", "IMAGE");
+        }
+    }
+
+    public static class PatientStudyOnly extends CGetSCP {
+        public PatientStudyOnly() {
+            super(UID.PatientStudyOnlyQueryRetrieveInformationModelMOVERetired,
+                    "PATIENT", "STUDY");
+        }
+    }
+
+    public static class WithoutBulkData extends CGetSCP {
+        public WithoutBulkData() {
+            super(UID.CompositeInstanceRetrieveWithoutBulkDataGET,
+                    "IMAGE");
+        }
     }
 
 }

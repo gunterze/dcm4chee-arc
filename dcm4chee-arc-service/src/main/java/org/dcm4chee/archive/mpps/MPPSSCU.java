@@ -40,6 +40,7 @@ package org.dcm4chee.archive.mpps;
 
 import java.io.IOException;
 
+import javax.annotation.Resource;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
@@ -47,7 +48,6 @@ import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.Session;
 
-import org.dcm4che.conf.api.ApplicationEntityCache;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
@@ -60,6 +60,7 @@ import org.dcm4che.net.TransferCapability;
 import org.dcm4che.net.pdu.AAssociateRQ;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4chee.archive.Archive;
 import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.jms.JMSService;
 import org.slf4j.Logger;
@@ -72,26 +73,17 @@ public class MPPSSCU implements MessageListener {
 
     public static final Logger LOG = LoggerFactory.getLogger(MPPSSCU.class);
 
-    private final ApplicationEntityCache aeCache;
-    private final JMSService jmsService;
-    private final Queue queue;
-    private Device device;
+    @Resource(mappedName="java:/queue/mppsscu")
+    private Queue mppsSCUQueue;
 
-    public MPPSSCU(ApplicationEntityCache aeCache,
-            JMSService jmsService, Queue queue) {
-        this.aeCache = aeCache;
-        this.jmsService = jmsService;
-        this.queue = queue;
-    }
 
     public void start(Device device) throws JMSException {
-        this.device = device;
-        jmsService.addMessageListener(queue, this);
+        Archive.getInstance().addMessageListener(mppsSCUQueue, this);
     }
 
     public void stop() {
         try {
-            jmsService.removeMessageListener(this);
+            Archive.getInstance().removeMessageListener(this);
         } catch (JMSException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -102,7 +94,8 @@ public class MPPSSCU implements MessageListener {
             final String iuid, final Attributes rqAttrs, final boolean ncreate,
             final int retries, int delay) {
         try {
-            jmsService.sendMessage(queue, new JMSService.MessageCreator() {
+            Archive.getInstance()
+                .sendMessage(mppsSCUQueue, new JMSService.MessageCreator() {
 
                 @Override
                 public Message createMessage(Session session) throws JMSException {
@@ -136,7 +129,8 @@ public class MPPSSCU implements MessageListener {
         boolean ncreate = msg.getBooleanProperty("N_CREATE_RQ");
         int retries = msg.getIntProperty("Retries");
         Attributes rqAttrs = (Attributes) msg.getObject();
-        ApplicationEntity localAE = device.getApplicationEntity(localAET);
+        ApplicationEntity localAE = Archive.getInstance().getDevice()
+                .getApplicationEntity(localAET);
         if (localAE == null) {
             LOG.warn("Failed to forward MPPS to {} - no such local AE: {}",
                     remoteAET, localAET);
@@ -156,7 +150,8 @@ public class MPPSSCU implements MessageListener {
                                 UID.ModalityPerformedProcedureStepSOPClass,
                                 tc.getTransferSyntaxes()));
         try {
-            ApplicationEntity remoteAE = aeCache.findApplicationEntity(remoteAET);
+            ApplicationEntity remoteAE = Archive.getInstance()
+                    .findApplicationEntity(remoteAET);
             Association as = localAE.connect(remoteAE, aarq);
             DimseRSP rsp = ncreate 
                     ? as.ncreate(UID.ModalityPerformedProcedureStepSOPClass, iuid, rqAttrs, null)

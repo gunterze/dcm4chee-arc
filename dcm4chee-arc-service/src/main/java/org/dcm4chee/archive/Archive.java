@@ -38,10 +38,12 @@
 
 package org.dcm4chee.archive;
 
-import static org.dcm4che.audit.AuditMessages.createEventIdentification;
-
 import java.util.Calendar;
 
+import javax.enterprise.context.Dependent;
+import javax.inject.Inject;
+import javax.jms.JMSException;
+import javax.jms.MessageListener;
 import javax.jms.Queue;
 
 import org.dcm4che.audit.AuditMessage;
@@ -52,140 +54,133 @@ import org.dcm4che.audit.AuditMessages.EventOutcomeIndicator;
 import org.dcm4che.audit.AuditMessages.EventTypeCode;
 import org.dcm4che.audit.AuditMessages.RoleIDCode;
 import org.dcm4che.conf.api.ApplicationEntityCache;
+import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.conf.api.DicomConfiguration;
 import org.dcm4che.conf.api.hl7.HL7ApplicationCache;
 import org.dcm4che.conf.api.hl7.HL7Configuration;
-import org.dcm4che.data.UID;
+import org.dcm4che.data.Attributes;
+import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.DeviceService;
 import org.dcm4che.net.audit.AuditLogger;
+import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.net.hl7.HL7DeviceExtension;
 import org.dcm4che.net.hl7.HL7MessageListener;
 import org.dcm4che.net.hl7.service.HL7ServiceRegistry;
 import org.dcm4che.net.service.BasicCEchoSCP;
 import org.dcm4che.net.service.DicomServiceRegistry;
+import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.conf.ArchiveDeviceExtension;
-import org.dcm4chee.archive.dao.PatientService;
 import org.dcm4chee.archive.hl7.PatientUpdateService;
 import org.dcm4chee.archive.jms.JMSService;
+import org.dcm4chee.archive.jms.JMSService.MessageCreator;
 import org.dcm4chee.archive.mpps.IANSCU;
 import org.dcm4chee.archive.mpps.MPPSSCP;
 import org.dcm4chee.archive.mpps.MPPSSCU;
-import org.dcm4chee.archive.mpps.dao.IANQueryService;
-import org.dcm4chee.archive.mpps.dao.MPPSService;
 import org.dcm4chee.archive.mwl.MWLCFindSCP;
 import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.query.CFindSCP;
 import org.dcm4chee.archive.retrieve.CGetSCP;
 import org.dcm4chee.archive.retrieve.CMoveSCP;
-import org.dcm4chee.archive.retrieve.dao.RetrieveService;
 import org.dcm4chee.archive.stgcmt.StgCmtSCP;
-import org.dcm4chee.archive.stgcmt.dao.StgCmtService;
 import org.dcm4chee.archive.store.CStoreSCP;
 import org.dcm4chee.archive.wado.WadoAttributesCache;
-import org.dcm4chee.archive.wado.dao.WadoService;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
+@Dependent
 public class Archive extends DeviceService implements ArchiveMBean {
 
-    static final String PATIENT = "PATIENT";
-    static final String STUDY = "STUDY";
-    static final String SERIES = "SERIES";
-    static final String IMAGE = "IMAGE";
+    private static Archive instance;
 
-    private final DicomConfiguration dicomConfiguration;
-    private final CStoreSCP storeSCP;
-    private final StgCmtSCP stgCmtSCP;
-    private final MPPSSCP mppsSCP;
-    private final CFindSCP patientRootFindSCP;
-    private final CFindSCP studyRootFindSCP;
-    private final CFindSCP patientStudyOnlyFindSCP;
-    private final CMoveSCP patientRootMoveSCP;
-    private final CMoveSCP studyRootMoveSCP;
-    private final CMoveSCP patientStudyOnlyMoveSCP;
-    private final CGetSCP patientRootGetSCP;
-    private final CGetSCP studyRootGetSCP;
-    private final CGetSCP patientStudyOnlyGetSCP;
-    private final CGetSCP withoutBulkDataGetSCP;
-    private final MWLCFindSCP mwlFindSCP;
-    private final ApplicationEntityCache aeCache;
-    private final HL7ApplicationCache hl7AppCache;
-    private final PIXConsumer pixConsumer;
-    private final JMSService jmsService;
-    private final MPPSSCU mppsSCU;
-    private final IANSCU ianSCU;
+    @Inject
+    private JMSService jmsService;
 
-    public Archive(DicomConfiguration dicomConfiguration,
-            HL7Configuration hl7Configuration,
-            Device device,
-            PatientService patientService,
-            StgCmtService stgCmtService,
-            MPPSService mppsService,
-            IANQueryService ianQueryService,
-            RetrieveService retrieveService,
-            JMSService jmsService,
-            Queue mppsSCUQueue,
-            Queue ianSCUQueue,
-            Queue stgcmtSCPQueue) {
+    private DicomConfiguration dicomConfiguration;
+    private ApplicationEntityCache aeCache;
+    private HL7ApplicationCache hl7AppCache;
+
+    @Inject
+    private PIXConsumer pixConsumer;
+
+    @Inject
+    private CStoreSCP storeSCP;
+
+    @Inject
+    private StgCmtSCP stgCmtSCP;
+
+    @Inject
+    private MPPSSCP mppsSCP;
+
+    @Inject
+    private MPPSSCU mppsSCU;
+
+    @Inject
+    private IANSCU ianSCU;
+
+    @Inject
+    private CFindSCP.PatientRoot patientRootFindSCP;
+
+    @Inject
+    private CFindSCP.StudyRoot studyRootFindSCP;
+
+    @Inject
+    private CFindSCP.PatientStudyOnly patientStudyOnlyFindSCP;
+
+    @Inject
+    private CMoveSCP.PatientRoot patientRootMoveSCP;
+
+    @Inject
+    private CMoveSCP.StudyRoot studyRootMoveSCP;
+
+    @Inject
+    private CMoveSCP.PatientStudyOnly patientStudyOnlyMoveSCP;
+
+    @Inject
+    private CGetSCP.PatientRoot patientRootGetSCP;
+
+    @Inject
+    private CGetSCP.StudyRoot studyRootGetSCP;
+
+    @Inject
+    private CGetSCP.PatientStudyOnly patientStudyOnlyGetSCP;
+
+    @Inject
+    private CGetSCP.WithoutBulkData withoutBulkDataGetSCP;
+
+    @Inject
+    private MWLCFindSCP mwlFindSCP;
+
+    @Inject
+    private PatientUpdateService patientUpdateService;
+
+    public Archive() {
+        Archive.instance = this;
+    }
+
+    public void init(DicomConfiguration dicomConfiguration,
+            HL7Configuration hl7Configuration, Device device)
+                    throws JMSException {
         init(device);
         this.dicomConfiguration = dicomConfiguration;
         this.aeCache = new ApplicationEntityCache(dicomConfiguration);
         this.hl7AppCache = new HL7ApplicationCache(hl7Configuration);
-        this.pixConsumer = new PIXConsumer(hl7AppCache);
-        this.jmsService = jmsService;
-        this.mppsSCU = new MPPSSCU(aeCache, jmsService, mppsSCUQueue);
-        this.ianSCU = new IANSCU(aeCache, jmsService, ianSCUQueue);
-        this.storeSCP = new CStoreSCP(aeCache, ianSCU, ianQueryService);
-        this.stgCmtSCP = new StgCmtSCP(aeCache, stgCmtService,
-                jmsService, stgcmtSCPQueue);
-        this.mppsSCP = new MPPSSCP(aeCache, mppsSCU, ianSCU, mppsService);
-        this.patientRootFindSCP = new CFindSCP(
-                UID.PatientRootQueryRetrieveInformationModelFIND,
-                aeCache, pixConsumer, PATIENT, STUDY, SERIES, IMAGE);
-        this.studyRootFindSCP = new CFindSCP(
-                UID.StudyRootQueryRetrieveInformationModelFIND,
-                aeCache, pixConsumer, STUDY, SERIES, IMAGE);
-        this.patientStudyOnlyFindSCP = new CFindSCP(
-                UID.PatientStudyOnlyQueryRetrieveInformationModelFINDRetired,
-                aeCache, pixConsumer, PATIENT, STUDY);
-        this.patientRootMoveSCP = new CMoveSCP(
-                UID.PatientRootQueryRetrieveInformationModelMOVE,
-                aeCache, pixConsumer, retrieveService, PATIENT, STUDY, SERIES, IMAGE);
-        this.studyRootMoveSCP = new CMoveSCP(
-                UID.StudyRootQueryRetrieveInformationModelMOVE,
-                aeCache, pixConsumer, retrieveService, STUDY, SERIES, IMAGE);
-        this.patientStudyOnlyMoveSCP = new CMoveSCP(
-                UID.PatientStudyOnlyQueryRetrieveInformationModelMOVERetired,
-                aeCache, pixConsumer, retrieveService, PATIENT, STUDY);
-        this.patientRootGetSCP = new CGetSCP(
-                UID.PatientRootQueryRetrieveInformationModelGET,
-                aeCache, pixConsumer, retrieveService, PATIENT, STUDY, SERIES, IMAGE);
-        this.studyRootGetSCP = new CGetSCP(
-                UID.StudyRootQueryRetrieveInformationModelGET,
-                aeCache, pixConsumer, retrieveService, STUDY, SERIES, IMAGE);
-        this.patientStudyOnlyGetSCP = new CGetSCP(
-                UID.PatientStudyOnlyQueryRetrieveInformationModelGETRetired,
-                aeCache, pixConsumer, retrieveService, PATIENT, STUDY);
-        this.withoutBulkDataGetSCP = new CGetSCP(
-                UID.CompositeInstanceRetrieveWithoutBulkDataGET,
-                aeCache, pixConsumer, retrieveService, IMAGE)
-                .withoutBulkData(true);
-        this.mwlFindSCP = new MWLCFindSCP(
-                UID.ModalityWorklistInformationModelFIND,
-                aeCache, pixConsumer);
         device.setDimseRQHandler(serviceRegistry());
         device.getDeviceExtension(HL7DeviceExtension.class)
-            .setHL7MessageListener(hl7ServiceRegistry(patientService));
+            .setHL7MessageListener(hl7ServiceRegistry());
         setConfigurationStaleTimeout();
+        jmsService.init();
     }
 
-    private HL7MessageListener hl7ServiceRegistry(PatientService patientService) {
+    public static Archive getInstance() {
+        return Archive.instance;
+    }
+
+    private HL7MessageListener hl7ServiceRegistry() {
         HL7ServiceRegistry serviceRegistry = new HL7ServiceRegistry();
-        serviceRegistry.addHL7Service(new PatientUpdateService(patientService,
-                "ADT^A02", "ADT^A03", "ADT^A06", "ADT^A07", "ADT^A08", "ADT^A40"));
+        serviceRegistry.addHL7Service(patientUpdateService);
         return serviceRegistry ;
     }
 
@@ -244,7 +239,7 @@ public class Archive extends DeviceService implements ArchiveMBean {
         log(EventTypeCode.ApplicationStop);
     }
 
-    private void log(EventTypeCode eventType) {
+   private void log(EventTypeCode eventType) {
         AuditLogger logger = device.getDeviceExtension(AuditLogger.class);
         if (logger != null && logger.isInstalled()) {
             Calendar timeStamp = logger.timeStamp();
@@ -261,7 +256,7 @@ public class Archive extends DeviceService implements ArchiveMBean {
     private AuditMessage createApplicationActivityMessage(AuditLogger logger,
             Calendar timeStamp, EventTypeCode eventType) {
         AuditMessage msg = new AuditMessage();
-        msg.setEventIdentification(createEventIdentification(
+        msg.setEventIdentification(AuditMessages.createEventIdentification(
                 EventID.ApplicationActivity, 
                 EventActionCode.Execute,
                 timeStamp,
@@ -273,6 +268,59 @@ public class Archive extends DeviceService implements ArchiveMBean {
         msg.getActiveParticipant().add(
                 logger.createActiveParticipant(true, RoleIDCode.Application));
         return msg ;
+    }
+
+    public void close() {
+        if (isRunning())
+            stop();
+        if (dicomConfiguration != null)
+            dicomConfiguration.close();
+        jmsService.close();
+    }
+
+    public ApplicationEntity findApplicationEntity(String aet)
+            throws ConfigurationException {
+        return aeCache.findApplicationEntity(aet);
+    }
+
+    public HL7Application findHL7Application(String name)
+            throws ConfigurationException {
+        return hl7AppCache.findHL7Application(name);
+    }
+
+    public void addMessageListener(Queue queue, MessageListener listener)
+            throws JMSException {
+        jmsService.addMessageListener(queue, listener);
+    }
+
+    public void removeMessageListener(MessageListener listener)
+            throws JMSException {
+        jmsService.removeMessageListener(listener);
+    }
+
+    public void sendMessage(Queue queue, MessageCreator messageCreator,
+            int delay) throws JMSException {
+        jmsService.sendMessage(queue, messageCreator, delay);
+    }
+
+    public void scheduleIAN(String localAET, String remoteAET, Attributes ian) {
+        ianSCU.scheduleIAN(localAET, remoteAET, ian, 0, 0);
+    }
+
+    public void scheduleMPPSCreate(String localAET, String remoteAET,
+            String iuid, Attributes mpps) {
+        mppsSCU.scheduleForwardMPPS(localAET, remoteAET, iuid, mpps,
+                true, 0, 0);
+    }
+
+    public void scheduleMPPSSet(String localAET, String remoteAET,
+            String iuid, Attributes mpps) {
+        mppsSCU.scheduleForwardMPPS(localAET, remoteAET, iuid, mpps,
+                false, 0, 0);
+    }
+
+    public IDWithIssuer[] pixQuery(ApplicationEntity ae, IDWithIssuer pid) {
+        return pixConsumer.pixQuery(ae, pid);
     }
 
 }

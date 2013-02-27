@@ -40,6 +40,8 @@ package org.dcm4chee.archive.stgcmt;
 
 import java.io.IOException;
 
+import javax.annotation.Resource;
+import javax.ejb.EJB;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
@@ -47,7 +49,6 @@ import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.Session;
 
-import org.dcm4che.conf.api.ApplicationEntityCache;
 import org.dcm4che.conf.api.ConfigurationNotFoundException;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
@@ -67,6 +68,7 @@ import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.pdu.RoleSelection;
 import org.dcm4che.net.service.DicomService;
 import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4chee.archive.Archive;
 import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.jms.JMSService;
 import org.dcm4chee.archive.stgcmt.dao.StgCmtService;
@@ -76,29 +78,23 @@ import org.dcm4chee.archive.stgcmt.dao.StgCmtService;
  */
 public class StgCmtSCP extends DicomService implements MessageListener {
 
-    private final ApplicationEntityCache aeCache;
-    private final JMSService jmsService;
-    private final Queue queue;
-    private final StgCmtService stgCmtService;
-    private Device device;
+    @Resource(mappedName="java:/queue/stgcmtscp")
+    private Queue stgcmtSCPQueue;
 
-    public StgCmtSCP(ApplicationEntityCache aeCache, StgCmtService stgCmtService,
-            JMSService jmsService, Queue queue) {
+    @EJB
+    private StgCmtService stgCmtService;
+
+    public StgCmtSCP() {
         super(UID.StorageCommitmentPushModelSOPClass);
-        this.aeCache = aeCache;
-        this.jmsService = jmsService;
-        this.queue = queue;
-        this.stgCmtService = stgCmtService;
     }
 
     public void start(Device device) throws JMSException {
-       this.device = device;
-       jmsService.addMessageListener(queue, this);
+        Archive.getInstance().addMessageListener(stgcmtSCPQueue, this);
     }
 
     public void stop() {
         try {
-            jmsService.removeMessageListener(this);
+            Archive.getInstance().removeMessageListener(this);
         } catch (JMSException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -121,7 +117,8 @@ public class StgCmtSCP extends DicomService implements MessageListener {
         String remoteAET = as.getRemoteAET();
         try {
             ApplicationEntity ae = as.getApplicationEntity();
-            ApplicationEntity remoteAE = aeCache.findApplicationEntity(remoteAET);
+            ApplicationEntity remoteAE = Archive.getInstance()
+                    .findApplicationEntity(remoteAET);
             ae.findCompatibelConnection(remoteAE);
             Attributes eventInfo = stgCmtService.calculateResult(actionInfo);
             ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
@@ -157,7 +154,8 @@ public class StgCmtSCP extends DicomService implements MessageListener {
         String localAET = msg.getStringProperty("LocalAET");
         int retries = msg.getIntProperty("Retries");
         Attributes eventInfo = (Attributes) msg.getObject();
-        ApplicationEntity localAE = device.getApplicationEntity(localAET);
+        ApplicationEntity localAE = Archive.getInstance().getDevice()
+                .getApplicationEntity(localAET);
         if (localAE == null) {
             LOG.warn("Failed to return Storage Commitment Result to {} - no such local AE: {}",
                     remoteAET, localAET);
@@ -180,7 +178,8 @@ public class StgCmtSCP extends DicomService implements MessageListener {
         aarq.addRoleSelection(
                 new RoleSelection(UID.StorageCommitmentPushModelSOPClass, false, true));
         try {
-            ApplicationEntity remoteAE = aeCache.findApplicationEntity(remoteAET);
+            ApplicationEntity remoteAE = Archive.getInstance()
+                    .findApplicationEntity(remoteAET);
             Association as = localAE.connect(remoteAE, aarq);
             DimseRSP neventReport = as.neventReport(
                     UID.StorageCommitmentPushModelSOPClass,
@@ -212,7 +211,8 @@ public class StgCmtSCP extends DicomService implements MessageListener {
 
     private void scheduleNEventReport(final String localAET, final String remoteAET,
             final Attributes eventInfo, final int retries, int delay) throws JMSException {
-        jmsService.sendMessage(queue, new JMSService.MessageCreator() {
+        Archive.getInstance()
+                .sendMessage(stgcmtSCPQueue, new JMSService.MessageCreator() {
 
             @Override
             public Message createMessage(Session session) throws JMSException {

@@ -41,9 +41,10 @@ package org.dcm4chee.archive.query;
 
 import java.util.EnumSet;
 
-import org.dcm4che.conf.api.ApplicationEntityCache;
+import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4che.data.UID;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.QueryOption;
@@ -54,9 +55,9 @@ import org.dcm4che.net.service.BasicCFindSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.QueryTask;
+import org.dcm4chee.archive.Archive;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
-import org.dcm4chee.archive.pix.PIXConsumer;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -65,14 +66,9 @@ public class CFindSCP extends BasicCFindSCP {
 
     private final String[] qrLevels;
     private final QueryRetrieveLevel rootLevel;
-    private final ApplicationEntityCache aeCache;
-    private final PIXConsumer pixConsumer;
 
-    public CFindSCP(String sopClass, ApplicationEntityCache aeCache,
-            PIXConsumer pixConsumer, String... qrLevels) {
+    public CFindSCP(String sopClass, String... qrLevels) {
         super(sopClass);
-        this.aeCache = aeCache;
-        this.pixConsumer = pixConsumer;
         this.qrLevels = qrLevels;
         this.rootLevel = QueryRetrieveLevel.valueOf(qrLevels[0]);
     }
@@ -90,10 +86,17 @@ public class CFindSCP extends BasicCFindSCP {
         ApplicationEntity ae = as.getApplicationEntity();
         try {
             QueryParam queryParam = QueryParam.valueOf(ae, queryOpts,
-                    aeCache.get(as.getRemoteAET()), accessControlID(as));
+                    accessControlID(as));
+            try {
+                queryParam.setDefaultIssuer(
+                        Archive.getInstance()
+                                .findApplicationEntity(as.getRemoteAET())
+                        .getDevice());
+            } catch (ConfigurationException e) {
+            }
             IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys,
                     queryParam.getDefaultIssuerOfPatientID());
-            IDWithIssuer[] pids = pixConsumer.pixQuery(ae, pid);
+            IDWithIssuer[] pids = Archive.getInstance().pixQuery(ae, pid);
             return new QueryTaskImpl(as, pc, rq, keys, level, pids, queryParam,
                     rootLevel == QueryRetrieveLevel.PATIENT);
         } catch (DicomServiceException e) {
@@ -107,4 +110,26 @@ public class CFindSCP extends BasicCFindSCP {
         // TODO Auto-generated method stub
         return null;
     }
+
+    public static class PatientRoot extends CFindSCP {
+        public PatientRoot() {
+            super(UID.PatientRootQueryRetrieveInformationModelFIND,
+                    "PATIENT", "STUDY", "SERIES", "IMAGE");
+        }
+    }
+
+    public static class StudyRoot extends CFindSCP {
+        public StudyRoot() {
+            super(UID.StudyRootQueryRetrieveInformationModelFIND,
+                    "STUDY", "SERIES", "IMAGE");
+        }
+    }
+
+    public static class PatientStudyOnly extends CFindSCP {
+        public PatientStudyOnly() {
+            super(UID.PatientStudyOnlyQueryRetrieveInformationModelFINDRetired,
+                    "PATIENT", "STUDY");
+        }
+    }
+
 }

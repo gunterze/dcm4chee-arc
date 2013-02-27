@@ -45,9 +45,13 @@ import java.security.GeneralSecurityException;
 import java.util.EnumSet;
 import java.util.List;
 
-import org.dcm4che.conf.api.ApplicationEntityCache;
+import javax.ejb.EJB;
+
+import org.dcm4che.conf.api.ConfigurationException;
+import org.dcm4che.conf.api.ConfigurationNotFoundException;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4che.data.UID;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.IncompatibleConnectionException;
@@ -60,10 +64,10 @@ import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.RetrieveTask;
+import org.dcm4chee.archive.Archive;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
 import org.dcm4chee.archive.conf.ArchiveAEExtension;
-import org.dcm4chee.archive.pix.PIXConsumer;
 import org.dcm4chee.archive.retrieve.dao.RetrieveService;
 
 /**
@@ -73,21 +77,14 @@ public class CMoveSCP extends BasicCMoveSCP {
 
     private final String[] qrLevels;
     private final QueryRetrieveLevel rootLevel;
-    private final ApplicationEntityCache aeCache;
-    private final PIXConsumer pixConsumer;
-    private final RetrieveService retrieveService;
 
-    public CMoveSCP(String sopClass,
-            ApplicationEntityCache aeCache,
-            PIXConsumer pixConsumer,
-            RetrieveService retrieveService,
-            String... qrLevels) {
+    @EJB
+    private RetrieveService retrieveService;
+
+    public CMoveSCP(String sopClass, String... qrLevels) {
         super(sopClass);
         this.qrLevels = qrLevels;
         this.rootLevel = QueryRetrieveLevel.valueOf(qrLevels[0]);
-        this.aeCache = aeCache;
-        this.pixConsumer = pixConsumer;
-        this.retrieveService = retrieveService;
     }
 
     @Override
@@ -99,26 +96,26 @@ public class CMoveSCP extends BasicCMoveSCP {
         EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
         boolean relational = queryOpts.contains(QueryOption.RELATIONAL);
         level.validateRetrieveKeys(keys, rootLevel, relational);
-
+        String dest = rq.getString(Tag.MoveDestination);
         try {
-            String dest = rq.getString(Tag.MoveDestination);
-            final ApplicationEntity destAE = aeCache.get(dest);
-            if (destAE == null)
-                throw new DicomServiceException(Status.MoveDestinationUnknown,
-                        "Unknown Move Destination: " + destAE);
-    
+            final ApplicationEntity destAE = Archive.getInstance()
+                    .findApplicationEntity(dest);
             ApplicationEntity ae = as.getApplicationEntity();
             ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
-            ApplicationEntity sourceAE = aeCache.get(as.getRemoteAET());
-            QueryParam queryParam = QueryParam.valueOf(ae, queryOpts, sourceAE,
-                    accessControlIDs());
+            QueryParam queryParam = QueryParam.valueOf(ae, queryOpts, accessControlIDs());
+            try {
+                queryParam.setDefaultIssuer(
+                        Archive.getInstance().findApplicationEntity(as.getRemoteAET())
+                            .getDevice());
+            } catch (ConfigurationException e) {
+            }
             IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys,
                     queryParam.getDefaultIssuerOfPatientID());
-            IDWithIssuer[] pids = pixConsumer.pixQuery(ae, pid);
+            IDWithIssuer[] pids = Archive.getInstance().pixQuery(ae, pid);
             List<InstanceLocator> matches =
                     retrieveService.calculateMatches(pids, keys, queryParam);
             RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(C_MOVE, as,
-                    pc, rq, matches, pids, pixConsumer, retrieveService, false) {
+                    pc, rq, matches, pids, retrieveService, false) {
     
                 @Override
                 protected Association getStoreAssociation() throws DicomServiceException {
@@ -141,6 +138,9 @@ public class CMoveSCP extends BasicCMoveSCP {
             retrieveTask.setReturnOtherPatientIDs(aeExt.isReturnOtherPatientIDs());
             retrieveTask.setReturnOtherPatientNames(aeExt.isReturnOtherPatientNames());
             return retrieveTask;
+        } catch (ConfigurationNotFoundException e) {
+            throw new DicomServiceException(Status.MoveDestinationUnknown,
+                    "Unknown Move Destination: " + dest);
         } catch (DicomServiceException e) {
             throw e;
         } catch (Exception e) {
@@ -153,4 +153,24 @@ public class CMoveSCP extends BasicCMoveSCP {
         return null;
     }
 
+    public static class PatientRoot extends CMoveSCP {
+        public PatientRoot() {
+            super(UID.PatientRootQueryRetrieveInformationModelMOVE,
+                    "PATIENT", "STUDY", "SERIES", "IMAGE");
+        }
+    }
+
+    public static class StudyRoot extends CMoveSCP {
+        public StudyRoot() {
+            super(UID.StudyRootQueryRetrieveInformationModelMOVE,
+                    "STUDY", "SERIES", "IMAGE");
+        }
+    }
+
+    public static class PatientStudyOnly extends CMoveSCP {
+        public PatientStudyOnly() {
+            super(UID.PatientStudyOnlyQueryRetrieveInformationModelMOVERetired,
+                    "PATIENT", "STUDY");
+        }
+    }
 }

@@ -40,6 +40,8 @@ package org.dcm4chee.archive.hl7;
 
 import java.net.Socket;
 
+import javax.ejb.EJB;
+
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.hl7.HL7Exception;
@@ -56,12 +58,11 @@ import org.dcm4chee.archive.dao.PatientService;
  */
 public class PatientUpdateService extends HL7Service {
 
-    private final PatientService patientService;
+    @EJB
+    private PatientService patientService;
 
-    public PatientUpdateService(PatientService patientService,
-            String... messageTypes) {
-        super(messageTypes);
-        this.patientService = patientService;
+    public PatientUpdateService() {
+        super("ADT^A02", "ADT^A03", "ADT^A06", "ADT^A07", "ADT^A08", "ADT^A40");
     }
 
     @Override

@@ -53,20 +53,15 @@ import org.dcm4chee.archive.wado.URIWado;
 @ApplicationPath("/archive")
 public class ArchiveApplication extends Application {
 
-    private static Archive archive;
     private final Set<Class<?>> classes = new HashSet<Class<?>>(4);
 
     public ArchiveApplication() {
         classes.add(URIWado.class);
     }
 
-    static void setArchive(Archive archive) {
-        ArchiveApplication.archive = archive;
-    }
-
     @Override
     public Set<Object> getSingletons() {
-        return Collections.singleton((Object) archive);
+        return Collections.singleton((Object) Archive.getInstance());
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
