@@ -37,14 +37,23 @@
  * ***** END LICENSE BLOCK ***** */
 package org.dcm4chee.archive.wado;
 
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.ejb.EJB;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageInputStream;
+import javax.imageio.stream.ImageOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -59,6 +68,10 @@ import javax.ws.rs.core.StreamingOutput;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.UID;
+import org.dcm4che.image.PaletteColorModel;
+import org.dcm4che.imageio.plugins.dcm.DicomImageReadParam;
+import org.dcm4che.imageio.plugins.dcm.DicomMetaData;
+import org.dcm4che.imageio.stream.OutputStreamAdapter;
 import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.io.DicomInputStream.IncludeBulkData;
 import org.dcm4che.io.DicomOutputStream;
@@ -171,10 +184,10 @@ public class URIWado {
     private Region region;
 
     @QueryParam("windowCenter")
-    private double windowCenter;
+    private float windowCenter;
 
     @QueryParam("windowWidth")
-    private double windowWidth;
+    private float windowWidth;
 
     @QueryParam("frameNumber")
     private int frameNumber;
@@ -208,9 +221,14 @@ public class URIWado {
         if (!isAccepted(mediaType))
             throw new WebApplicationException(Status.NOT_ACCEPTABLE);
 
-        return (mediaType == MediaTypes.APPLICATION_DICOM_TYPE)
-                ? retrieveNativeDicomObject(ref.uri, attrs)
-                : retrieveRenderedDicomObject(ref.uri, attrs, mediaType);
+        if (mediaType == MediaTypes.APPLICATION_DICOM_TYPE)
+            return retrieveNativeDicomObject(ref.uri, attrs);
+
+        if (mediaType == MediaTypes.IMAGE_JPEG_TYPE)
+            return retrieveJPEG(ref.uri, attrs);
+
+        throw new WebApplicationException(501);
+
     }
 
     private void checkRequest()
@@ -234,6 +252,7 @@ public class URIWado {
                     || frameNumber != 0 || imageQuality != 0
                     || presentationUID != null || presentationSeriesUID != null)
                 : (anonymize != null || transferSyntax != null 
+                    || imageQuality < 0 || imageQuality > 100
                     || presentationUID != null && presentationSeriesUID == null))
             throw new WebApplicationException(Status.BAD_REQUEST);
     }
@@ -260,13 +279,7 @@ public class URIWado {
             @Override
             public void write(OutputStream out) throws IOException,
                     WebApplicationException {
-                DicomInputStream dis;
-                try {
-                    dis = new DicomInputStream(
-                            new File(new URI(uri)));
-                } catch (URISyntaxException e) {
-                    throw new WebApplicationException(e);
-                }
+                DicomInputStream dis = new DicomInputStream(fileOf(uri));
                 try {
                     dis.setIncludeBulkData(IncludeBulkData.LOCATOR);
                     Attributes dataset = dis.readDataset(-1, -1);
@@ -284,10 +297,73 @@ public class URIWado {
         }, MediaTypes.APPLICATION_DICOM_TYPE).build();
     }
 
-    private Response retrieveRenderedDicomObject(final String uri,
-            final Attributes attrs, MediaType mediaType) {
-        throw new WebApplicationException(501);
+    private Response retrieveJPEG(final String uri, final Attributes attrs) {
+        return Response.ok(new StreamingOutput() {
+            
+            @Override
+            public void write(OutputStream out) throws IOException,
+                    WebApplicationException {
+                ImageInputStream iis = ImageIO.createImageInputStream(fileOf(uri));
+                BufferedImage bi;
+                try {
+                    bi = readImage(iis, attrs);
+                } finally {
+                    SafeClose.close(iis);
+                }
+                writeJPEG(bi, new OutputStreamAdapter(out));
+            }
+        }, MediaTypes.IMAGE_JPEG_TYPE).build();
     }
 
+    private File fileOf(final String uri) throws WebApplicationException {
+        try {
+            return new File(new URI(uri));
+        } catch (Exception e) {
+            throw new WebApplicationException(e);
+        }
+    }
+
+    private BufferedImage readImage(ImageInputStream iis, Attributes attrs)
+            throws IOException {
+        Iterator<ImageReader> readers = 
+                ImageIO.getImageReadersByFormatName("DICOM");
+        if (!readers.hasNext()) {
+            ImageIO.scanForPlugins();
+            readers = ImageIO.getImageReadersByFormatName("DICOM");
+        }
+        ImageReader reader = readers.next();
+        try {
+            reader.setInput(iis);
+            DicomMetaData metaData = (DicomMetaData) reader.getStreamMetadata();
+            metaData.getAttributes().addAll(attrs);
+            DicomImageReadParam param = (DicomImageReadParam)
+                    reader.getDefaultReadParam();
+            param.setWindowCenter(windowCenter);
+            param.setWindowWidth(windowWidth);
+            return reader.read(frameNumber > 0 ? frameNumber-1 : 0, param);
+        } finally {
+            reader.dispose();
+        }
+    }
+
+    private void writeJPEG(BufferedImage bi, ImageOutputStream ios)
+            throws IOException {
+        ColorModel cm = bi.getColorModel();
+        if (cm instanceof PaletteColorModel)
+            bi = ((PaletteColorModel) cm).convertToIntDiscrete(bi.getData());
+        ImageWriter imageWriter =
+                ImageIO.getImageWritersByFormatName("JPEG").next();
+        try {
+            ImageWriteParam imageWriteParam = imageWriter.getDefaultWriteParam();
+            if (imageQuality > 0) {
+                imageWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                imageWriteParam.setCompressionQuality(imageQuality / 100f);
+            }
+            imageWriter.setOutput(ios);
+            imageWriter.write(null, new IIOImage(bi, null, null), imageWriteParam);
+        } finally {
+            imageWriter.dispose();
+        }
+    }
 
 }

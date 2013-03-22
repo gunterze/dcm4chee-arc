@@ -79,8 +79,9 @@ public class MediaTypes {
             new MediaType("application", "pdf");
 
     public static boolean equalsIgnoreParams(MediaType type1, MediaType type2) {
-        return type1.getType().equalsIgnoreCase(type2.getType())
-            && type1.getSubtype().equalsIgnoreCase(type2.getSubtype());
+        return type1 == type2 
+                || type1.getType().equalsIgnoreCase(type2.getType())
+                && type1.getSubtype().equalsIgnoreCase(type2.getSubtype());
     }
 
     public static boolean isDicomApplicationType(MediaType mediaType) {

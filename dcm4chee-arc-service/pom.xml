@@ -62,6 +62,10 @@
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
+      <artifactId>dcm4che-imageio</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dcm4che</groupId>
       <artifactId>dcm4che-soundex</artifactId>
     </dependency>
     <dependency>
@@ -139,6 +143,11 @@
         <version>2.1.1</version>
         <configuration>
           <classifier>${db}</classifier>
+          <archive>
+            <manifestEntries>
+              <Dependencies>org.dcm4che.imageio services</Dependencies>
+            </manifestEntries>
+          </archive>
           <webResources>
             <resource>
               <directory>src/main/webapp</directory>
