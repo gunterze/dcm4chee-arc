@@ -171,6 +171,8 @@ public class Archive extends DeviceService implements ArchiveMBean {
         device.getDeviceExtension(HL7DeviceExtension.class)
             .setHL7MessageListener(hl7ServiceRegistry());
         setConfigurationStaleTimeout();
+        AuditLogger.setDefaultLogger(
+                device.getDeviceExtension(AuditLogger.class));
         jmsService.init();
     }
 
@@ -240,7 +242,7 @@ public class Archive extends DeviceService implements ArchiveMBean {
     }
 
    private void log(EventTypeCode eventType) {
-        AuditLogger logger = device.getDeviceExtension(AuditLogger.class);
+        AuditLogger logger = AuditLogger.getDefaultLogger();
         if (logger != null && logger.isInstalled()) {
             Calendar timeStamp = logger.timeStamp();
             try {
