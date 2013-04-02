@@ -37,6 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 package org.dcm4chee.archive.wado;
 
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.io.File;
@@ -69,6 +71,7 @@ import javax.ws.rs.core.StreamingOutput;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.UID;
 import org.dcm4che.image.PaletteColorModel;
+import org.dcm4che.image.PixelAspectRatio;
 import org.dcm4che.imageio.plugins.dcm.DicomImageReadParam;
 import org.dcm4che.imageio.plugins.dcm.DicomMetaData;
 import org.dcm4che.imageio.stream.OutputStreamAdapter;
@@ -252,6 +255,7 @@ public class URIWado {
                     || frameNumber != 0 || imageQuality != 0
                     || presentationUID != null || presentationSeriesUID != null)
                 : (anonymize != null || transferSyntax != null 
+                    || rows < 0 || columns < 0
                     || imageQuality < 0 || imageQuality > 100
                     || presentationUID != null && presentationSeriesUID == null))
             throw new WebApplicationException(Status.BAD_REQUEST);
@@ -339,10 +343,41 @@ public class URIWado {
             DicomImageReadParam param = (DicomImageReadParam)
                     reader.getDefaultReadParam();
             init(param);
-            return reader.read(frameNumber > 0 ? frameNumber-1 : 0, param);
+            return rescale(
+                    reader.read(frameNumber > 0 ? frameNumber-1 : 0, param),
+                    metaData.getAttributes(), param.getPresentationState());
         } finally {
             reader.dispose();
         }
+    }
+
+    private BufferedImage rescale(BufferedImage src, Attributes imgAttrs,
+            Attributes psAttrs) {
+        int r = rows;
+        int c = columns;
+        float sy = psAttrs != null 
+                ? PixelAspectRatio.forPresentationState(psAttrs)
+                : PixelAspectRatio.forImage(imgAttrs);
+        if (r == 0 && c == 0 && sy == 1f)
+            return src;
+
+        float sx = 1f;
+        if (r != 0 || c != 0) {
+            if (r != 0 && c != 0)
+                if (r * src.getWidth() > c * src.getHeight() * sy)
+                    r = 0;
+                else
+                    c = 0;
+            sx = r != 0 
+                    ? r / (src.getHeight() * sy)
+                    : c / src.getWidth();
+            sy *= sx;
+        }
+        AffineTransformOp op = new AffineTransformOp(
+                AffineTransform.getScaleInstance(sx, sy),
+                AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+        return op.filter(src,
+                op.createCompatibleDestImage(src, src.getColorModel()));
     }
 
     private void init(DicomImageReadParam param)
