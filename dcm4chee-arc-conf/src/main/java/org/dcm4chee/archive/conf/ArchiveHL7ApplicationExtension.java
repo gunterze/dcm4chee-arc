@@ -97,8 +97,7 @@ public class ArchiveHL7ApplicationExtension extends HL7ApplicationExtension {
             throw new TransformerConfigurationException(
                     "No templates for " + key + " configured");
         return TemplatesCache.getDefault().get(
-                        StringUtils.replaceSystemProperties(uri)
-                                   .replace('\\', '/'));
+                        StringUtils.replaceSystemProperties(uri));
     }
 
     @Override

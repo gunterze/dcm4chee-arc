@@ -162,7 +162,7 @@ public class ArchiveDeviceExtension extends DeviceExtension {
         TemplatesCache tmp = templatesCache;
         if (tmp == null)
             templatesCache = tmp = new TemplatesCache();
-        return tmp.get(StringUtils.replaceSystemProperties(uri).replace('\\', '/'));
+        return tmp.get(StringUtils.replaceSystemProperties(uri));
     }
 
     public void setAttributeFilter(Entity entity, AttributeFilter filter) {

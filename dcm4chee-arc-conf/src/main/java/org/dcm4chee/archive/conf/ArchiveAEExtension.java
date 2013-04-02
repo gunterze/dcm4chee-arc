@@ -210,8 +210,7 @@ public class ArchiveAEExtension extends AEExtension {
         AttributeCoercion ac = getAttributeCoercion(cuid, dimse, role, aet);
         return ac != null 
                 ? TemplatesCache.getDefault().get(
-                        StringUtils.replaceSystemProperties(ac.getURI())
-                                   .replace('\\', '/'))
+                        StringUtils.replaceSystemProperties(ac.getURI()))
                 : null;
     }
 

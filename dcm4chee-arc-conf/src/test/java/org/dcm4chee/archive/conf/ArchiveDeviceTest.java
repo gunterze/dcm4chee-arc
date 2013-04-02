@@ -792,7 +792,7 @@ public class ArchiveDeviceTest {
         arcDevExt.setConfigurationStaleTimeout(CONFIGURATION_STALE_TIMEOUT);
         arcDevExt.setWadoAttributesStaleTimeout(WADO_ATTRIBUTES_STALE_TIMEOUT);
         setAttributeFilters(arcDevExt);
-        device.setKeyStoreURL("file:${jboss.server.config.dir}/dcm4chee-arc/key.jks");
+        device.setKeyStoreURL("${jboss.server.config.url}/dcm4chee-arc/key.jks");
         device.setKeyStoreType("JKS");
         device.setKeyStorePin("secret");
         device.setThisNodeCertificates(config.deviceRef(name),
@@ -827,7 +827,7 @@ public class ArchiveDeviceTest {
         hl7App.setAcceptedMessageTypes(HL7_MESSAGE_TYPES);
         hl7App.setHL7DefaultCharacterSet("8859/1");
         hl7AppExt.addTemplatesURI("adt2dcm",
-                "file:${jboss.server.config.dir}/dcm4chee-arc/hl7-adt2dcm.xsl");
+                "${jboss.server.config.url}/dcm4chee-arc/hl7-adt2dcm.xsl");
         hl7DevExt.addHL7Application(hl7App);
         Connection hl7 = new Connection("hl7", "localhost", 2575);
         hl7.setProtocol(Protocol.HL7);
@@ -889,7 +889,7 @@ public class ArchiveDeviceTest {
         ae.setAssociationAcceptor(true);
         ae.setAssociationInitiator(true);
         aeExt.setFileSystemGroupID("DEFAULT");
-        aeExt.setInitFileSystemURI("file:${jboss.server.data.dir}");
+        aeExt.setInitFileSystemURI("${jboss.server.data.url}");
         aeExt.setSpoolFilePathFormat(new AttributesFormat(
                 "archive/spool/{00020016,urlencoded}/{00020002}/{00020003}") );
         aeExt.setStorageFilePathFormat(new AttributesFormat(
@@ -918,12 +918,12 @@ public class ArchiveDeviceTest {
                 Dimse.C_STORE_RQ, 
                 SCP,
                 "ENSURE_PID",
-                "file:${jboss.server.config.dir}/dcm4chee-arc/ensure-pid.xsl"));
+                "${jboss.server.config.url}/dcm4chee-arc/ensure-pid.xsl"));
         aeExt.addAttributeCoercion(new AttributeCoercion(null, 
                 Dimse.C_STORE_RQ, 
                 SCU,
                 "WITHOUT_PN",
-                "file:${jboss.server.config.dir}/dcm4chee-arc/nullify-pn.xsl"));
+                "${jboss.server.config.url}/dcm4chee-arc/nullify-pn.xsl"));
         addTCs(ae, null, SCP, IMAGE_CUIDS, image_tsuids);
         addTCs(ae, null, SCP, VIDEO_CUIDS, video_tsuids);
         addTCs(ae, null, SCP, OTHER_CUIDS, other_tsuids);

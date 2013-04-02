@@ -38,6 +38,7 @@
 
 package org.dcm4chee.archive;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.lang.management.ManagementFactory;
@@ -80,15 +81,34 @@ public class ArchiveServlet extends HttpServlet {
     @Inject
     private Archive archive;
 
+    private static String[] JBOSS_PROPERITIES = {
+        "jboss.home",
+        "jboss.modules",
+        "jboss.server.base",
+        "jboss.server.config",
+        "jboss.server.data",
+        "jboss.server.deploy",
+        "jboss.server.log",
+        "jboss.server.temp",
+    };
+
+    private static void addJBossDirURLSystemProperties() {
+        for (String key : JBOSS_PROPERITIES) {
+            String url = new File(System.getProperty(key + ".dir"))
+                .toURI().toString();
+            System.setProperty(key + ".url", url.substring(0, url.length()-1));
+        }
+    }
+
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
         try {
+            addJBossDirURLSystemProperties();
             String ldapPropertiesURL = StringUtils.replaceSystemProperties(
                     System.getProperty(
                         "org.dcm4chee.archive.ldapPropertiesURL",
-                        config.getInitParameter("ldapPropertiesURL")))
-                    .replace('\\', '/');
+                        config.getInitParameter("ldapPropertiesURL")));
             String deviceName = System.getProperty(
                     "org.dcm4chee.archive.deviceName",
                     config.getInitParameter("deviceName"));
