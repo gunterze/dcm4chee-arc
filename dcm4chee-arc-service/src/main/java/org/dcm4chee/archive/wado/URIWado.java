@@ -338,11 +338,29 @@ public class URIWado {
             metaData.getAttributes().addAll(attrs);
             DicomImageReadParam param = (DicomImageReadParam)
                     reader.getDefaultReadParam();
-            param.setWindowCenter(windowCenter);
-            param.setWindowWidth(windowWidth);
+            init(param);
             return reader.read(frameNumber > 0 ? frameNumber-1 : 0, param);
         } finally {
             reader.dispose();
+        }
+    }
+
+    private void init(DicomImageReadParam param)
+            throws WebApplicationException, IOException {
+        param.setWindowCenter(windowCenter);
+        param.setWindowWidth(windowWidth);
+        if (presentationUID != null) {
+            InstanceFileRef ref = instanceService.locate(
+                    studyUID, presentationSeriesUID, presentationUID);
+            if (ref == null)
+                throw new WebApplicationException(Status.NOT_FOUND);
+
+            DicomInputStream dis = new DicomInputStream(fileOf(ref.uri));
+            try {
+                param.setPresentationState(dis.readDataset(-1, -1));
+            } finally {
+                SafeClose.close(dis);
+            }
         }
     }
 
