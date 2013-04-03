@@ -242,7 +242,7 @@ public class Archive extends DeviceService implements ArchiveMBean {
     }
 
    private void log(EventTypeCode eventType) {
-        AuditLogger logger = AuditLogger.getDefaultLogger();
+        AuditLogger logger = device.getDeviceExtension(AuditLogger.class);
         if (logger != null && logger.isInstalled()) {
             Calendar timeStamp = logger.timeStamp();
             try {
