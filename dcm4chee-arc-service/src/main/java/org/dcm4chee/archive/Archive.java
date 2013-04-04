@@ -101,6 +101,7 @@ public class Archive extends DeviceService implements ArchiveMBean {
     private DicomConfiguration dicomConfiguration;
     private ApplicationEntityCache aeCache;
     private HL7ApplicationCache hl7AppCache;
+    private AuditLogger auditLogger;
 
     @Inject
     private PIXConsumer pixConsumer;
@@ -171,6 +172,7 @@ public class Archive extends DeviceService implements ArchiveMBean {
         device.getDeviceExtension(HL7DeviceExtension.class)
             .setHL7MessageListener(hl7ServiceRegistry());
         setConfigurationStaleTimeout();
+        initAuditLogger();
         AuditLogger.setDefaultLogger(
                 device.getDeviceExtension(AuditLogger.class));
         jmsService.init();
@@ -178,6 +180,10 @@ public class Archive extends DeviceService implements ArchiveMBean {
 
     public static Archive getInstance() {
         return Archive.instance;
+    }
+
+    public final AuditLogger getAuditLogger() {
+        return auditLogger;
     }
 
     private HL7MessageListener hl7ServiceRegistry() {
@@ -190,7 +196,12 @@ public class Archive extends DeviceService implements ArchiveMBean {
     public void reload() throws Exception {
         device.reconfigure(dicomConfiguration.findDevice(device.getDeviceName()));
         setConfigurationStaleTimeout();
+        initAuditLogger();
         device.rebindConnections();
+    }
+
+    private void initAuditLogger() {
+        auditLogger = device.getDeviceExtension(AuditLogger.class);
     }
 
     private void setConfigurationStaleTimeout() {
@@ -241,8 +252,8 @@ public class Archive extends DeviceService implements ArchiveMBean {
         log(EventTypeCode.ApplicationStop);
     }
 
-   private void log(EventTypeCode eventType) {
-        AuditLogger logger = device.getDeviceExtension(AuditLogger.class);
+    private void log(EventTypeCode eventType) {
+        AuditLogger logger = auditLogger;
         if (logger != null && logger.isInstalled()) {
             Calendar timeStamp = logger.timeStamp();
             try {
