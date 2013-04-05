@@ -45,6 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 
@@ -68,7 +69,17 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.dcm4che.audit.AuditMessage;
+import org.dcm4che.audit.AuditMessages;
+import org.dcm4che.audit.AuditMessages.EventActionCode;
+import org.dcm4che.audit.AuditMessages.EventID;
+import org.dcm4che.audit.AuditMessages.EventOutcomeIndicator;
+import org.dcm4che.audit.AuditMessages.RoleIDCode;
+import org.dcm4che.audit.Instance;
+import org.dcm4che.audit.ParticipantObjectDescription;
+import org.dcm4che.audit.SOPClass;
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
 import org.dcm4che.image.PaletteColorModel;
 import org.dcm4che.image.PixelAspectRatio;
@@ -78,18 +89,24 @@ import org.dcm4che.imageio.stream.OutputStreamAdapter;
 import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.io.DicomInputStream.IncludeBulkData;
 import org.dcm4che.io.DicomOutputStream;
+import org.dcm4che.net.audit.AuditLogger;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.StringUtils;
+import org.dcm4chee.archive.Archive;
 import org.dcm4chee.archive.dao.SeriesService;
 import org.dcm4chee.archive.entity.InstanceFileRef;
 import org.dcm4chee.archive.wado.dao.WadoService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
- *
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 @Path("/wado")
 public class URIWado {
+
+    protected static final Logger LOG = LoggerFactory.getLogger(URIWado.class);
 
     public enum Anonymize { yes }
 
@@ -224,6 +241,8 @@ public class URIWado {
         if (!isAccepted(mediaType))
             throw new WebApplicationException(Status.NOT_ACCEPTABLE);
 
+        logRetrieve(ref, attrs);
+
         if (mediaType == MediaTypes.APPLICATION_DICOM_TYPE)
             return retrieveNativeDicomObject(ref.uri, attrs);
 
@@ -232,6 +251,79 @@ public class URIWado {
 
         throw new WebApplicationException(501);
 
+    }
+
+    private void logRetrieve(InstanceFileRef ref, Attributes attrs) {
+        AuditLogger logger = Archive.getInstance().getAuditLogger();
+        if (logger == null || !logger.isInstalled())
+            return;
+
+        Calendar timeStamp = logger.timeStamp();
+        AuditMessage msg = createRetrieveLogMessage(ref, attrs, logger, timeStamp);
+        try {
+            if (LOG.isDebugEnabled())
+                LOG.debug("Send Audit Log message: {}", AuditMessages.toXML(msg));
+            logger.write(timeStamp, msg);
+        } catch (Exception e) {
+            LOG.error("Failed to write audit log message: {}", e.getMessage());
+            if (LOG.isDebugEnabled())
+                LOG.debug(e.getMessage(), e);
+        }
+    }
+
+    private AuditMessage createRetrieveLogMessage(InstanceFileRef ref, Attributes attrs, AuditLogger logger,
+            Calendar timeStamp) {
+        AuditMessage msg = new AuditMessage();
+        msg.setEventIdentification(AuditMessages.createEventIdentification(
+                EventID.DICOMInstancesTransferred, 
+                EventActionCode.Read, 
+                timeStamp, 
+                EventOutcomeIndicator.Success, 
+                null));
+        msg.getActiveParticipant().add(logger.createActiveParticipant(false, RoleIDCode.Source));
+        msg.getActiveParticipant().add(AuditMessages.createActiveParticipant(
+                (request.getRemoteUser() != null) ? request.getRemoteUser() : "ANONYMOUS", 
+                null, 
+                null, 
+                true, 
+                request.getRemoteHost(), 
+                AuditMessages.NetworkAccessPointTypeCode.MachineName, 
+                null, 
+                AuditMessages.RoleIDCode.Destination));
+        ParticipantObjectDescription pod = createRetrieveObjectPOD(ref);
+        msg.getParticipantObjectIdentification().add(AuditMessages.createParticipantObjectIdentification(
+                attrs.getString(Tag.StudyInstanceUID), 
+                AuditMessages.ParticipantObjectIDTypeCode.StudyInstanceUID, 
+                null, 
+                null, 
+                AuditMessages.ParticipantObjectTypeCode.SystemObject, 
+                AuditMessages.ParticipantObjectTypeCodeRole.Report, 
+                null, 
+                null, 
+                pod));
+        msg.getParticipantObjectIdentification().add(AuditMessages.createParticipantObjectIdentification(
+                attrs.getString(Tag.PatientID),
+                AuditMessages.ParticipantObjectIDTypeCode.PatientNumber,
+                null,
+                null,
+                AuditMessages.ParticipantObjectTypeCode.Person,
+                AuditMessages.ParticipantObjectTypeCodeRole.Patient,
+                null,
+                null,
+                null));
+        return msg;
+    }
+
+    private ParticipantObjectDescription createRetrieveObjectPOD(InstanceFileRef ref) {
+        ParticipantObjectDescription pod = new ParticipantObjectDescription();
+        SOPClass sc = new SOPClass();
+        sc.setUID(ref.sopClassUID);
+        sc.setNumberOfInstances(1);
+        Instance inst = new Instance();
+        inst.setUID(ref.sopInstanceUID);
+        sc.getInstance().add(inst);
+        pod.getSOPClass().add(sc);
+        return pod;
     }
 
     private void checkRequest()
