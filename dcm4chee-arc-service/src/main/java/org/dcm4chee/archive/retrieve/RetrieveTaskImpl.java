@@ -39,10 +39,21 @@
 package org.dcm4chee.archive.retrieve;
 
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.List;
 
 import javax.xml.transform.Templates;
 
+import org.dcm4che.audit.AuditMessage;
+import org.dcm4che.audit.AuditMessages;
+import org.dcm4che.audit.AuditMessages.EventActionCode;
+import org.dcm4che.audit.AuditMessages.EventID;
+import org.dcm4che.audit.AuditMessages.EventOutcomeIndicator;
+import org.dcm4che.audit.AuditMessages.RoleIDCode;
+import org.dcm4che.audit.Instance;
+import org.dcm4che.audit.ParticipantObjectDescription;
+import org.dcm4che.audit.ParticipantObjectIdentification;
+import org.dcm4che.audit.SOPClass;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Issuer;
 import org.dcm4che.data.Sequence;
@@ -58,6 +69,7 @@ import org.dcm4che.net.DataWriterAdapter;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.Dimse;
 import org.dcm4che.net.TransferCapability.Role;
+import org.dcm4che.net.audit.AuditLogger;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicRetrieveTask;
 import org.dcm4che.net.service.InstanceLocator;
@@ -70,6 +82,7 @@ import org.dcm4chee.archive.retrieve.dao.RetrieveService;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 class RetrieveTaskImpl extends BasicRetrieveTask {
 
@@ -207,6 +220,120 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
         if (!issuer.matches(destIssuer)) {
             attrs.setNull(Tag.AccessionNumber, VR.SH);
             attrs.remove(Tag.IssuerOfAccessionNumberSequence);
+        }
+    }
+
+    @Override
+    protected void close() {
+        super.close();
+        AuditLogger logger = Archive.getInstance().getAuditLogger();
+        if (logger == null || !logger.isInstalled())
+            return;
+
+        logRetrieve(logger, EventOutcomeIndicator.Success, true);
+        logRetrieve(logger, EventOutcomeIndicator.SeriousFailure, false);
+    }
+
+    private void logRetrieve(AuditLogger logger, String eventOutcomeIndicator, boolean logSuccess) {
+        if (logSuccess == true && failed.size() == insts.size())
+            return;
+
+        if (logSuccess == false && failed.size() == 0)
+            return;
+
+        Calendar timeStamp = logger.timeStamp();
+        AuditMessage msg = createRetrieveLogMessage(logger, timeStamp, eventOutcomeIndicator);
+        for (InstanceLocator inst : insts) {
+            if (logSuccess && failed.contains(inst.iuid))
+                continue;
+        
+            String studyUID = ((Attributes) inst.getObject()).getString(Tag.StudyInstanceUID);
+            ParticipantObjectIdentification poid = getOrCreatePOID(msg, inst, studyUID);
+            SOPClass sc = getOrCreateSOPClass(msg, inst, studyUID, poid);
+            Instance instance = new Instance();
+            instance.setUID(inst.iuid);
+            sc.getInstance().add(instance);
+            sc.setNumberOfInstances(sc.getInstance().size());
+        }
+        sendAuditLogMessage(logger, timeStamp, msg);
+    }
+
+    private AuditMessage createRetrieveLogMessage(AuditLogger logger, Calendar timeStamp, String eventOutcomeIndicator) {
+        AuditMessage msg = new AuditMessage();
+        msg.setEventIdentification(AuditMessages.createEventIdentification(
+                EventID.DICOMInstancesTransferred, 
+                EventActionCode.Read, 
+                timeStamp, 
+                eventOutcomeIndicator, 
+                null));
+        msg.getActiveParticipant().add(logger.createActiveParticipant(false, RoleIDCode.Source));
+        msg.getActiveParticipant().add(AuditMessages.createActiveParticipant(
+                as.getRemoteAET(), 
+                AuditMessages.alternativeUserIDForAETitle(as.getRemoteAET()), 
+                null, 
+                true, 
+                as.getSocket().getInetAddress().getCanonicalHostName(),
+                AuditMessages.NetworkAccessPointTypeCode.MachineName, 
+                null, 
+                AuditMessages.RoleIDCode.Destination));
+        msg.getParticipantObjectIdentification().add(AuditMessages.createParticipantObjectIdentification(
+                pids[0].toString(),
+                AuditMessages.ParticipantObjectIDTypeCode.PatientNumber,
+                null,
+                null,
+                AuditMessages.ParticipantObjectTypeCode.Person,
+                AuditMessages.ParticipantObjectTypeCodeRole.Patient,
+                null,
+                null,
+                null));
+        return msg;
+    }
+
+    private ParticipantObjectIdentification getOrCreatePOID(AuditMessage msg, InstanceLocator instLoc, String studyUID) {
+        for (ParticipantObjectIdentification poid : msg.getParticipantObjectIdentification())
+            if (poid.getParticipantObjectID().equals(studyUID))
+                return poid;
+
+        ParticipantObjectDescription pod = new ParticipantObjectDescription();
+        SOPClass sc = new SOPClass();
+        sc.setUID(instLoc.cuid);
+        pod.getSOPClass().add(sc);
+        ParticipantObjectIdentification poid = AuditMessages.createParticipantObjectIdentification(
+                studyUID, 
+                AuditMessages.ParticipantObjectIDTypeCode.StudyInstanceUID, 
+                null, 
+                null, 
+                AuditMessages.ParticipantObjectTypeCode.SystemObject, 
+                AuditMessages.ParticipantObjectTypeCodeRole.Report, 
+                null, 
+                null, 
+                pod);
+        msg.getParticipantObjectIdentification().add(poid);
+        return poid;
+    }
+
+    private SOPClass getOrCreateSOPClass(AuditMessage msg, InstanceLocator instLoc, String studyUID,
+            ParticipantObjectIdentification poid) {
+        ParticipantObjectDescription pod = poid.getParticipantObjectDescription();
+        List<SOPClass> scl = pod.getSOPClass();
+        for (SOPClass sc : scl)
+            if (sc.getUID().equals(instLoc.cuid))
+                return sc;
+
+        SOPClass sc = new SOPClass();
+        sc.setUID(instLoc.cuid);
+        poid.getParticipantObjectDescription().getSOPClass().add(sc);
+        return sc;
+    }
+
+    private void sendAuditLogMessage(AuditLogger logger, Calendar timeStamp, AuditMessage msg) {
+        try {
+            if (LOG.isDebugEnabled())
+                LOG.debug("Send Audit Log message: {}", AuditMessages.toXML(msg));
+            logger.write(timeStamp, msg);
+        } catch (Exception e) {
+            LOG.error("Failed to write audit log message: {}", e.getMessage());
+            LOG.debug(e.getMessage(), e);
         }
     }
 
