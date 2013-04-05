@@ -235,18 +235,15 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
     }
 
     private void logRetrieve(AuditLogger logger, String eventOutcomeIndicator, boolean logSuccess) {
-        if (logSuccess == true && failed.size() == insts.size())
-            return;
-
-        if (logSuccess == false && failed.size() == 0)
+        if (failed.size() == (logSuccess ? insts.size() : 0))
             return;
 
         Calendar timeStamp = logger.timeStamp();
         AuditMessage msg = createRetrieveLogMessage(logger, timeStamp, eventOutcomeIndicator);
         for (InstanceLocator inst : insts) {
-            if (logSuccess && failed.contains(inst.iuid))
+            if (failed.contains(inst.iuid) == logSuccess)
                 continue;
-        
+
             String studyUID = ((Attributes) inst.getObject()).getString(Tag.StudyInstanceUID);
             ParticipantObjectIdentification poid = getOrCreatePOID(msg, inst, studyUID);
             SOPClass sc = getOrCreateSOPClass(msg, inst, studyUID, poid);
