@@ -59,5 +59,11 @@
       <classifier>${db}</classifier>
       <type>zip</type>
     </dependency>
+    <dependency>
+      <groupId>org.dcm4che</groupId>
+      <artifactId>jai-imageio-jboss-modules</artifactId>
+      <version>1.2-pre-dr-b04</version>
+      <type>zip</type>
+    </dependency>
   </dependencies>
 </project>
