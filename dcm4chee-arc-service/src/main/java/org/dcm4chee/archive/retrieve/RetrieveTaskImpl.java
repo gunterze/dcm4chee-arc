@@ -230,11 +230,11 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
         if (logger == null || !logger.isInstalled())
             return;
 
-        logRetrieve(logger, EventOutcomeIndicator.Success, true);
-        logRetrieve(logger, EventOutcomeIndicator.SeriousFailure, false);
+        log(logger, EventOutcomeIndicator.Success, true);
+        log(logger, EventOutcomeIndicator.SeriousFailure, false);
     }
 
-    private void logRetrieve(AuditLogger logger, String eventOutcomeIndicator, boolean logSuccess) {
+    private void log(AuditLogger logger, String eventOutcomeIndicator, boolean logSuccess) {
         if (failed.size() == (logSuccess ? insts.size() : 0))
             return;
 

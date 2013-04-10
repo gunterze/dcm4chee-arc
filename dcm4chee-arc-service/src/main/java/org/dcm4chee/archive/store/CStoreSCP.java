@@ -175,6 +175,8 @@ public class CStoreSCP extends BasicCStoreSCP {
      protected void process(Association as, Attributes fmi, Attributes ds,
             File file, MessageDigest digest, Attributes rsp)
             throws DicomServiceException {
+        if (logger == null)
+            logger = Archive.getInstance().getAuditLogger();
         if (ds.bigEndian())
             ds = new Attributes(ds, false);
         String sourceAET = as.getRemoteAET();
@@ -231,8 +233,6 @@ public class CStoreSCP extends BasicCStoreSCP {
                     rsp.setInt(Tag.OffendingElement, VR.AT, modified.tags());
                 }
             }
-            if (logger == null)
-                logger = Archive.getInstance().getAuditLogger();
             log(as, ds, EventOutcomeIndicator.Success, true);
         } catch (DicomServiceException e) {
             throw e;
@@ -413,9 +413,11 @@ public class CStoreSCP extends BasicCStoreSCP {
     @Override
     public void onClose(Association as) {
         closeStoreService(as);
-        Calendar timeStamp = logger.timeStamp();
-        sendAuditLogMessage((AuditMessage) as.getProperty(AUDIT_MESSAGE_SUCCESS), timeStamp);
-        sendAuditLogMessage((AuditMessage) as.getProperty(AUDIT_MESSAGE_FAILURE), timeStamp);
+        if (logger != null && logger.isInstalled()) {
+            Calendar timeStamp = logger.timeStamp();
+            sendAuditLogMessage((AuditMessage) as.getProperty(AUDIT_MESSAGE_SUCCESS), timeStamp);
+            sendAuditLogMessage((AuditMessage) as.getProperty(AUDIT_MESSAGE_FAILURE), timeStamp);
+        }
     }
 
     @Override
