@@ -42,10 +42,22 @@ import java.io.File;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Calendar;
+import java.util.List;
 
 import javax.ejb.EJB;
 import javax.xml.transform.Templates;
 
+import org.dcm4che.audit.AuditMessage;
+import org.dcm4che.audit.AuditMessages;
+import org.dcm4che.audit.AuditMessages.EventActionCode;
+import org.dcm4che.audit.AuditMessages.EventID;
+import org.dcm4che.audit.AuditMessages.EventOutcomeIndicator;
+import org.dcm4che.audit.AuditMessages.RoleIDCode;
+import org.dcm4che.audit.Instance;
+import org.dcm4che.audit.ParticipantObjectDescription;
+import org.dcm4che.audit.ParticipantObjectIdentification;
+import org.dcm4che.audit.SOPClass;
 import org.dcm4che.conf.api.ConfigurationNotFoundException;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
@@ -56,6 +68,7 @@ import org.dcm4che.net.Association;
 import org.dcm4che.net.Dimse;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.TransferCapability;
+import org.dcm4che.net.audit.AuditLogger;
 import org.dcm4che.net.service.BasicCStoreSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.util.AttributesFormat;
@@ -71,11 +84,15 @@ import org.dcm4chee.archive.util.BeanLocator;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 public class CStoreSCP extends BasicCStoreSCP {
 
-    private static final String STORE_SERVICE_PROPERTY =
-            CStoreSCP.class.getName();
+    private static final String STORE_SERVICE_PROPERTY = CStoreSCP.class.getName();
+    private static final String AUDIT_MESSAGE_SUCCESS = "AuditMessageSuccess";
+    private static final String AUDIT_MESSAGE_FAILURE = "AuditMessageFailure";
+
+    private AuditLogger logger;
 
     @EJB
     private IANQueryService ianQueryService;
@@ -158,6 +175,8 @@ public class CStoreSCP extends BasicCStoreSCP {
      protected void process(Association as, Attributes fmi, Attributes ds,
             File file, MessageDigest digest, Attributes rsp)
             throws DicomServiceException {
+        if (logger == null)
+            logger = Archive.getInstance().getAuditLogger();
         if (ds.bigEndian())
             ds = new Attributes(ds, false);
         String sourceAET = as.getRemoteAET();
@@ -214,11 +233,134 @@ public class CStoreSCP extends BasicCStoreSCP {
                     rsp.setInt(Tag.OffendingElement, VR.AT, modified.tags());
                 }
             }
+            log(as, ds, EventOutcomeIndicator.Success, true);
         } catch (DicomServiceException e) {
             throw e;
         } catch (Exception e) {
+            log(as, ds, EventOutcomeIndicator.SeriousFailure, false);
             throw new DicomServiceException(Status.ProcessingFailure,
                     DicomServiceException.initialCauseOf(e));
+        }
+    }
+
+    private void log(Association as, Attributes ds, String eventOutcomeIndicator, boolean success) {
+        if (logger == null || !logger.isInstalled())
+            return;
+
+        Calendar timeStamp = logger.timeStamp();
+        AuditMessage msg = (AuditMessage) as.getProperty(success ? AUDIT_MESSAGE_SUCCESS : AUDIT_MESSAGE_FAILURE);
+        if (!(msg instanceof AuditMessage)) {
+            as.setProperty(success ? AUDIT_MESSAGE_SUCCESS : AUDIT_MESSAGE_FAILURE,
+                    createAuditMessage(as, ds, timeStamp, eventOutcomeIndicator));
+            return;
+        }
+        String studyUID = ds.getString(Tag.StudyInstanceUID);
+        ParticipantObjectIdentification poid = null;
+        for (ParticipantObjectIdentification p : msg.getParticipantObjectIdentification())
+            if (p.getParticipantObjectID().equals(studyUID))
+                poid = p;
+        if (poid == null) {
+            sendAuditLogMessage(msg, timeStamp);
+            msg = createAuditMessage(as, ds, timeStamp, eventOutcomeIndicator);
+            as.setProperty(success ? AUDIT_MESSAGE_SUCCESS : AUDIT_MESSAGE_FAILURE,
+                    createAuditMessage(as, ds, timeStamp, eventOutcomeIndicator));
+            return;
+        }
+        SOPClass sc = getOrCreateSOPClass(msg, ds.getString(Tag.SOPClassUID), studyUID, poid);
+        Instance instance = new Instance();
+        instance.setUID(ds.getString(Tag.SOPInstanceUID));
+        sc.getInstance().add(instance);
+        sc.setNumberOfInstances(sc.getInstance().size());
+        as.setProperty(success ? AUDIT_MESSAGE_SUCCESS : AUDIT_MESSAGE_FAILURE, msg);
+    }
+
+    private SOPClass getOrCreateSOPClass(AuditMessage msg, String cuid, String studyUID,
+            ParticipantObjectIdentification poid) {
+        ParticipantObjectDescription pod = poid.getParticipantObjectDescription();
+        List<SOPClass> scl = pod.getSOPClass();
+        for (SOPClass sc : scl)
+            if (sc.getUID().equals(cuid))
+                return sc;
+
+        SOPClass sc = new SOPClass();
+        sc.setUID(cuid);
+        poid.getParticipantObjectDescription().getSOPClass().add(sc);
+        return sc;
+    }
+
+    private AuditMessage createAuditMessage(Association as, Attributes ds, Calendar timeStamp,
+            String eventOutcomeIndicator) {
+        AuditMessage msg = new AuditMessage();
+        msg.setEventIdentification(AuditMessages.createEventIdentification(
+                EventID.DICOMInstancesTransferred, 
+                EventActionCode.Create, 
+                timeStamp, 
+                eventOutcomeIndicator, 
+                null));
+        msg.getActiveParticipant().add(logger.createActiveParticipant(false, RoleIDCode.Source));
+        msg.getActiveParticipant().add(AuditMessages.createActiveParticipant(
+                as.getRemoteAET(), 
+                AuditMessages.alternativeUserIDForAETitle(as.getRemoteAET()), 
+                null, 
+                true, 
+                as.getSocket().getInetAddress().getCanonicalHostName(),
+                AuditMessages.NetworkAccessPointTypeCode.MachineName, 
+                null, 
+                AuditMessages.RoleIDCode.Destination));
+        ParticipantObjectDescription pod = createObjectPOD(ds);
+        msg.getParticipantObjectIdentification().add(AuditMessages.createParticipantObjectIdentification(
+                ds.getString(Tag.StudyInstanceUID), 
+                AuditMessages.ParticipantObjectIDTypeCode.StudyInstanceUID, 
+                null, 
+                null, 
+                AuditMessages.ParticipantObjectTypeCode.SystemObject, 
+                AuditMessages.ParticipantObjectTypeCodeRole.Report, 
+                null, 
+                null, 
+                pod));
+        msg.getParticipantObjectIdentification().add(AuditMessages.createParticipantObjectIdentification(
+                getPatientIDString(ds),
+                AuditMessages.ParticipantObjectIDTypeCode.PatientNumber,
+                null,
+                null,
+                AuditMessages.ParticipantObjectTypeCode.Person,
+                AuditMessages.ParticipantObjectTypeCodeRole.Patient,
+                null,
+                null,
+                null));
+        msg.getAuditSourceIdentification().add(logger.createAuditSourceIdentification());
+        return msg;
+    }
+
+    private ParticipantObjectDescription createObjectPOD(Attributes ds) {
+        ParticipantObjectDescription pod = new ParticipantObjectDescription();
+        SOPClass sc = new SOPClass();
+        sc.setUID(ds.getString(Tag.SOPClassUID));
+        sc.setNumberOfInstances(1);
+        Instance inst = new Instance();
+        inst.setUID(ds.getString(Tag.SOPInstanceUID));
+        sc.getInstance().add(inst);
+        pod.getSOPClass().add(sc);
+        return pod;
+    }
+
+    private String getPatientIDString(Attributes ds) {
+        String id = ds.getString(Tag.PatientID);
+        String issuer = ds.getString(Tag.IssuerOfPatientID);
+        return issuer == null ? id : id + "^^^" + issuer;
+    }
+
+    private void sendAuditLogMessage(AuditMessage msg, Calendar timeStamp) {
+        if (!(msg instanceof AuditMessage))
+            return;
+    
+        try {
+            if (LOG.isDebugEnabled())
+                LOG.debug("Send Audit Log message: {}", AuditMessages.toXML(msg));
+            logger.write(timeStamp, msg);
+        } catch (Exception e) {
+            LOG.error("Failed to write audit log message: {}", e.getMessage());
+            LOG.debug(e.getMessage(), e);
         }
     }
 
@@ -272,6 +414,11 @@ public class CStoreSCP extends BasicCStoreSCP {
     @Override
     public void onClose(Association as) {
         closeStoreService(as);
+        if (logger != null && logger.isInstalled()) {
+            Calendar timeStamp = logger.timeStamp();
+            sendAuditLogMessage((AuditMessage) as.getProperty(AUDIT_MESSAGE_SUCCESS), timeStamp);
+            sendAuditLogMessage((AuditMessage) as.getProperty(AUDIT_MESSAGE_FAILURE), timeStamp);
+        }
     }
 
     @Override

@@ -311,6 +311,7 @@ public class URIWado {
                 null,
                 null,
                 null));
+        msg.getAuditSourceIdentification().add(logger.createAuditSourceIdentification());
         return msg;
     }
 
