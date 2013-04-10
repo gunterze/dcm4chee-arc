@@ -328,6 +328,7 @@ public class CStoreSCP extends BasicCStoreSCP {
                 null,
                 null,
                 null));
+        msg.getAuditSourceIdentification().add(logger.createAuditSourceIdentification());
         return msg;
     }
 

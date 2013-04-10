@@ -283,6 +283,7 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
                 null,
                 null,
                 null));
+        msg.getAuditSourceIdentification().add(logger.createAuditSourceIdentification());
         return msg;
     }
 
@@ -326,7 +327,7 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
     private void sendAuditLogMessage(AuditLogger logger, Calendar timeStamp, AuditMessage msg) {
         try {
             if (LOG.isDebugEnabled())
-                LOG.debug("Send Audit Log message: {}", AuditMessages.toXML(msg));
+                LOG.debug("Send DICOM Instance Transferred Audit Log message: {}", AuditMessages.toXML(msg));
             logger.write(timeStamp, msg);
         } catch (Exception e) {
             LOG.error("Failed to write audit log message: {}", e.getMessage());

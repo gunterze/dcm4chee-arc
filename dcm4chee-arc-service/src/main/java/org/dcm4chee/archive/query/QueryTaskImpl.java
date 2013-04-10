@@ -45,17 +45,21 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Status;
+import org.dcm4che.net.audit.AuditLogger;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicQueryTask;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.net.service.QueryRetrieveLevel;
+import org.dcm4chee.archive.Archive;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
 import org.dcm4chee.archive.query.dao.QueryService;
 import org.dcm4chee.archive.util.BeanLocator;
+import org.dcm4chee.archive.util.query.AuditQuery;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 class QueryTaskImpl extends BasicQueryTask {
 
@@ -176,6 +180,11 @@ class QueryTaskImpl extends BasicQueryTask {
     @Override
     protected void close() {
          query.close();
+         AuditLogger logger = Archive.getInstance().getAuditLogger();
+         if (logger == null || !logger.isInstalled())
+             return;
+
+         AuditQuery.log(logger, as, rq, keys);
     }
 
     @Override
