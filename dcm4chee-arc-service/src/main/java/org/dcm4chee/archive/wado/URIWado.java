@@ -83,6 +83,7 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
 import org.dcm4che.image.PaletteColorModel;
 import org.dcm4che.image.PixelAspectRatio;
+import org.dcm4che.imageio.codec.Decompressor;
 import org.dcm4che.imageio.plugins.dcm.DicomImageReadParam;
 import org.dcm4che.imageio.plugins.dcm.DicomMetaData;
 import org.dcm4che.imageio.stream.OutputStreamAdapter;
@@ -222,7 +223,7 @@ public class URIWado {
     private String presentationSeriesUID;
 
     @QueryParam("transferSyntax")
-    private String transferSyntax;
+    private List<String> transferSyntax;
 
     @GET
     public Response retrieve() throws WebApplicationException {
@@ -378,14 +379,19 @@ public class URIWado {
                     WebApplicationException {
                 DicomInputStream dis = new DicomInputStream(fileOf(uri));
                 try {
+                    String tsuid = dis.getFileMetaInformation()
+                            .getString(Tag.TransferSyntaxUID);
                     dis.setIncludeBulkData(IncludeBulkData.LOCATOR);
                     Attributes dataset = dis.readDataset(-1, -1);
                     dataset.addAll(attrs);
+                    if (transferSyntax == null || !transferSyntax.contains(tsuid)) {
+                        Decompressor.decompress(dataset, tsuid);
+                        tsuid = UID.ExplicitVRLittleEndian;
+                    }
                     Attributes fmi = 
-                            dataset.createFileMetaInformation(UID.ExplicitVRLittleEndian);
+                            dataset.createFileMetaInformation(tsuid);
                     @SuppressWarnings("resource")
-                    DicomOutputStream dos =
-                            new DicomOutputStream(out, UID.ExplicitVRLittleEndian);
+                    DicomOutputStream dos = new DicomOutputStream(out, tsuid);
                     dos.writeDataset(fmi, dataset);
                 } finally {
                     SafeClose.close(dis);
