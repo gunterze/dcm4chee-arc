@@ -287,7 +287,8 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
                 null, 
                 AuditMessages.RoleIDCode.Destination));
         msg.getParticipantObjectIdentification().add(AuditMessages.createParticipantObjectIdentification(
-                pids[0].toString(),
+                (pids.length == 0) ? ((Attributes) insts.get(0).getObject()).getString(Tag.PatientID) 
+                                   : pids[0].toString(),
                 AuditMessages.ParticipantObjectIDTypeCode.PatientNumber,
                 null,
                 null,
