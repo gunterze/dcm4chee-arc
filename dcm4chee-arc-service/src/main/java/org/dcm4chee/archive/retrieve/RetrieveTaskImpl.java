@@ -58,7 +58,9 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Issuer;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
+import org.dcm4che.data.UID;
 import org.dcm4che.data.VR;
+import org.dcm4che.imageio.codec.Decompressor;
 import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.io.DicomInputStream.IncludeBulkData;
 import org.dcm4che.io.SAXTransformer;
@@ -119,6 +121,14 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
     }
 
     @Override
+    protected String selectTransferSyntaxFor(InstanceLocator inst) {
+        if (as.getTransferSyntaxesFor(inst.cuid).contains(inst.tsuid))
+            return inst.tsuid;
+        
+        return UID.ExplicitVRLittleEndian;
+    }
+
+    @Override
     protected DataWriter createDataWriter(InstanceLocator inst, String tsuid)
             throws IOException {
         Attributes attrs;
@@ -135,6 +145,9 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
             SafeClose.close(in);
         }
         attrs.addAll((Attributes) inst.getObject());
+        if (!tsuid.equals(inst.tsuid))
+            Decompressor.decompress(attrs, inst.tsuid);
+
         adjustPatientID(attrs);
         adjustAccessionNumber(attrs);
         ApplicationEntity ae = as.getApplicationEntity();
