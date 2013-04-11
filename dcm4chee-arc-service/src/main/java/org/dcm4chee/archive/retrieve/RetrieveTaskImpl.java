@@ -287,8 +287,7 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
                 null, 
                 AuditMessages.RoleIDCode.Destination));
         msg.getParticipantObjectIdentification().add(AuditMessages.createParticipantObjectIdentification(
-                (pids.length == 0) ? ((Attributes) insts.get(0).getObject()).getString(Tag.PatientID) 
-                                   : pids[0].toString(),
+                (pids.length == 0) ? getPatientID((Attributes) insts.get(0).getObject()) : pids[0].toString(),
                 AuditMessages.ParticipantObjectIDTypeCode.PatientNumber,
                 null,
                 null,
@@ -299,6 +298,12 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
                 null));
         msg.getAuditSourceIdentification().add(logger.createAuditSourceIdentification());
         return msg;
+    }
+
+    private String getPatientID(Attributes attrs) {
+        String patID = attrs.getString(Tag.PatientID);
+        String issuer = attrs.getString(Tag.IssuerOfPatientID);
+        return (issuer == null || issuer.length() == 0) ? patID : patID + "^^^" + issuer;
     }
 
     private ParticipantObjectIdentification getOrCreatePOID(AuditMessage msg, InstanceLocator instLoc, String studyUID) {
