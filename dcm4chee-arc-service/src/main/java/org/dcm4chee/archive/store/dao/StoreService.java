@@ -184,6 +184,7 @@ public class StoreService {
         } catch (DicomServiceException e) {
             throw e;
         } catch (Exception e) {
+            LOG.error("Processing failure: ", e);
             throw new DicomServiceException(Status.ProcessingFailure, e.getMessage());
         }
 
@@ -234,12 +235,15 @@ public class StoreService {
             Attributes modified, Availability availability)
                     throws DicomServiceException {
         try {
-            Availability[] rejectionNote = { availability, null };
             if (rejectedByMPPS) {
-                rejectionNote[0] = Availability.INCORRECT_MODALITY_WORKLIST_ENTRY;
+                availability = Availability.INCORRECT_MODALITY_WORKLIST_ENTRY;
             } else {
-                if (storeParam.isRejectionNote(data, rejectionNote))
-                    processRejectionNote(data, rejectionNote[1]);
+                Availability rnAvailability =
+                        storeParam.getRejectionNoteAvailability(data);
+                if (rnAvailability != null) {
+                    processRejectionNote(data, rnAvailability);
+                    availability = Availability.availabilityOfRejectedObject(rnAvailability);
+                }
             }
             Series series = findOrCreateSeries(sourceAET, data, availability);
             coerceAttributes(series, data, modified);
@@ -264,8 +268,8 @@ public class StoreService {
                     createContentItems(data.getSequence(Tag.ContentSequence)));
             inst.setRetrieveAETs(storeParam.getRetrieveAETs());
             inst.setExternalRetrieveAET(storeParam.getExternalRetrieveAET());
-            inst.setAvailability(rejectionNote[0]);
-            inst.setAttributes(data, 
+            inst.setAvailability(availability);
+            inst.setAttributes(data,
                     storeParam.getAttributeFilter(Entity.Instance),
                     storeParam.getFuzzyStr());
             em.persist(inst);
@@ -275,6 +279,7 @@ public class StoreService {
         } catch (DicomServiceException e) {
             throw e;
         } catch (Exception e) {
+            LOG.error("Processing failure: ", e);
             throw new DicomServiceException(Status.ProcessingFailure, e.getMessage());
         }
     }

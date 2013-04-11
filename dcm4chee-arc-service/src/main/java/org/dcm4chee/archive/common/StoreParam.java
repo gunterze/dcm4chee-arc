@@ -187,38 +187,29 @@ public class StoreParam {
                 .equalsIgnoreMeaning(incorrectWorklistEntrySelectedCode);
     }
 
-    public boolean isRejectionNote(Attributes attrs, Availability[] rejectionNote) {
+    public Availability getRejectionNoteAvailability(Attributes attrs) {
         if (!attrs.getString(Tag.SOPClassUID)
                 .equals(UID.KeyObjectSelectionDocumentStorage))
-            return false;
+            return null;
 
         Attributes item = attrs.getNestedDataset(Tag.ConceptNameCodeSequence);
         if (item == null)
-            return false;
+            return null;
 
         Code code = new Code(item);
-        if (code.equalsIgnoreMeaning(rejectedForQualityReasonsCode)) {
-            rejectionNote[0] =
-                    Availability.REJECTED_FOR_QUALITY_REASONS_REJECTION_NOTE;
-            rejectionNote[1] =
-                    Availability.REJECTED_FOR_QUALITY_REASONS;
-        } else if (code.equalsIgnoreMeaning(rejectedForPatientSafetyReasonsCode)) {
-            rejectionNote[0] =
-                    Availability.REJECTED_FOR_PATIENT_SAFETY_REASONS_REJECTION_NOTE;
-            rejectionNote[1] =
-                    Availability.REJECTED_FOR_PATIENT_SAFETY_REASONS;
-        } else if (code.equalsIgnoreMeaning(incorrectModalityWorklistEntryCode)) {
-            rejectionNote[0] =
-                    Availability.INCORRECT_MODALITY_WORKLIST_ENTRY_REJECTION_NOTE;
-            rejectionNote[1] =
-                    Availability.INCORRECT_MODALITY_WORKLIST_ENTRY;
-        } else if (code.equalsIgnoreMeaning(dataRetentionPeriodExpiredCode)) {
-            rejectionNote[0] =
-                    Availability.DATA_RETENTION_PERIOD_EXPIRED_REJECTION_NOTE;
-            rejectionNote[1] =
-                    Availability.DATA_RETENTION_PERIOD_EXPIRED;
-        }
-        return true;
+        if (code.equalsIgnoreMeaning(rejectedForQualityReasonsCode))
+            return Availability.REJECTED_FOR_QUALITY_REASONS_REJECTION_NOTE;
+        
+        if (code.equalsIgnoreMeaning(rejectedForPatientSafetyReasonsCode))
+            return Availability.REJECTED_FOR_PATIENT_SAFETY_REASONS_REJECTION_NOTE;
+        
+        if (code.equalsIgnoreMeaning(incorrectModalityWorklistEntryCode))
+            return Availability.INCORRECT_MODALITY_WORKLIST_ENTRY_REJECTION_NOTE;
+
+        if (code.equalsIgnoreMeaning(dataRetentionPeriodExpiredCode))
+            return Availability.DATA_RETENTION_PERIOD_EXPIRED_REJECTION_NOTE;
+
+        return null;
     }
 
     public static StoreParam valueOf(Device dev) {

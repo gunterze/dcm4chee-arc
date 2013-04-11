@@ -64,4 +64,19 @@ public enum Availability {
         return compareTo(OFFLINE) <= 0;
     }
 
+    public static Availability availabilityOfRejectedObject(Availability avail) {
+        switch (avail) {
+        case REJECTED_FOR_QUALITY_REASONS_REJECTION_NOTE:
+            return REJECTED_FOR_QUALITY_REASONS;
+        case REJECTED_FOR_PATIENT_SAFETY_REASONS_REJECTION_NOTE:
+            return REJECTED_FOR_PATIENT_SAFETY_REASONS_REJECTION_NOTE;
+        case INCORRECT_MODALITY_WORKLIST_ENTRY_REJECTION_NOTE:
+            return INCORRECT_MODALITY_WORKLIST_ENTRY;
+        case DATA_RETENTION_PERIOD_EXPIRED_REJECTION_NOTE:
+            return DATA_RETENTION_PERIOD_EXPIRED;
+       default:
+            throw new IllegalArgumentException("availability: " + avail);
+        }
+    }
+
 }
