@@ -121,8 +121,8 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
     }
 
     @Override
-    protected String selectTransferSyntaxFor(InstanceLocator inst) {
-        if (as.getTransferSyntaxesFor(inst.cuid).contains(inst.tsuid))
+    protected String selectTransferSyntaxFor(Association storeas, InstanceLocator inst) {
+        if (storeas.getTransferSyntaxesFor(inst.cuid).contains(inst.tsuid))
             return inst.tsuid;
         
         return UID.ExplicitVRLittleEndian;
