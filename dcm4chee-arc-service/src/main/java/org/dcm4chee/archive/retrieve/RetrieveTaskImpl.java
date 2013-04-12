@@ -302,6 +302,8 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
 
     private String getPatientID(Attributes attrs) {
         String patID = attrs.getString(Tag.PatientID);
+        if (patID == null)
+            return "UNKNOWN";
         String issuer = attrs.getString(Tag.IssuerOfPatientID);
         return (issuer == null || issuer.length() == 0) ? patID : patID + "^^^" + issuer;
     }
