@@ -384,7 +384,7 @@ public class URIWado {
                     dis.setIncludeBulkData(IncludeBulkData.LOCATOR);
                     Attributes dataset = dis.readDataset(-1, -1);
                     dataset.addAll(attrs);
-                    if (transferSyntax == null || !transferSyntax.contains(tsuid)) {
+                    if (!transferSyntax.contains(tsuid)) {
                         Decompressor.decompress(dataset, tsuid);
                         tsuid = UID.ExplicitVRLittleEndian;
                     }
