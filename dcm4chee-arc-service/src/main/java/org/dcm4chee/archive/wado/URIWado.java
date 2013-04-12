@@ -348,7 +348,7 @@ public class URIWado {
                     || region != null || windowCenter != 0 || windowWidth != 0
                     || frameNumber != 0 || imageQuality != 0
                     || presentationUID != null || presentationSeriesUID != null)
-                : (anonymize != null || transferSyntax != null 
+                : (anonymize != null || !transferSyntax.isEmpty() 
                     || rows < 0 || columns < 0
                     || imageQuality < 0 || imageQuality > 100
                     || presentationUID != null && presentationSeriesUID == null))
