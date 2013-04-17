@@ -514,9 +514,9 @@ public class ArchiveDeviceTest {
     private static final Code REJECT_FOR_PATIENT_SAFETY_REASONS =
             new Code("113037", "DCM", null, "Rejected for Patient Safety Reasons");
     private static final Code INCORRECT_MODALITY_WORKLIST_ENTRY =
-            new Code("XXXXXX11", "99IHEIOCM", null, "Incorrect Modality Worklist Entry");
+            new Code("113038", "DCM", null, "Incorrect Modality Worklist Entry");
     private static final Code DATA_RETENTION_PERIOD_EXPIRED =
-            new Code("XXXXXX22", "99IHEIOCM", null, "Data Retention Period Expired");
+            new Code("113038", "DCM", null, "Data Retention Policy Expired");
 
     private static final String[] OTHER_DEVICES = {
         "dcmqrscp",

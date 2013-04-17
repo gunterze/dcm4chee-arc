@@ -6,7 +6,7 @@ dicomAETitle: DCMQRSCP
 
 dn: dicomDeviceName=dcmqrscp,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dicomInstalled: TRUE
-dicomInstitutionCode: (222.2222 ,99DCM4CHEE ,"Site B")
+dicomInstitutionCode: (222.2222, 99DCM4CHEE, "Site B")
 dicomIssuerOfPatientID: Site B&1.2.40.0.13.1.1.999.222.2222&ISO
 dicomDeviceName: dcmqrscp
 objectClass: dicomDevice
@@ -214,7 +214,7 @@ dicomAETitle: STORESCU
 
 dn: dicomDeviceName=storescu,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dicomInstalled: TRUE
-dicomInstitutionCode: (111.1111 ,99DCM4CHEE ,"Site A")
+dicomInstitutionCode: (111.1111, 99DCM4CHEE, "Site A")
 dicomIssuerOfPatientID: Site A&1.2.40.0.13.1.1.999.111.1111&ISO
 dicomDeviceName: storescu
 objectClass: dicomDevice
@@ -394,7 +394,7 @@ userCertificate;binary:: MIICSTCCAbKgAwIBAgIEUK3uRjANBgkqhkiG9w0BAQUFADBpMQswCQY
 
 dn: dicomDeviceName=hl7rcv,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dicomInstalled: TRUE
-dicomInstitutionCode: (111.1111 ,99DCM4CHEE ,"Site A")
+dicomInstitutionCode: (111.1111, 99DCM4CHEE, "Site A")
 dicomIssuerOfPatientID: Site A&1.2.40.0.13.1.1.999.111.1111&ISO
 dicomDeviceName: hl7rcv
 objectClass: dicomDevice
@@ -459,7 +459,7 @@ objectClass: dicomUniqueAETitle
 dicomAETitle: DCM4CHEE_ADMIN
 
 dn: dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmDataRetentionPeriodExpiredCode: (XXXXXX22 ,99IHEIOCM ,"Data Retention Period Expired")
+dcmDataRetentionPeriodExpiredCode: (113038, DCM, "Data Retention Policy Expired")
 dicomInstalled: TRUE
 dcmWadoAttributesStaleTimeout: 60
 dicomDeviceName: dcm4chee-arc
@@ -483,10 +483,10 @@ objectClass: dcmDevice
 objectClass: dcmArchiveDevice
 objectClass: pkiUser
 dcmFuzzyAlgorithmClass: org.dcm4che.soundex.ESoundex
-dcmRejectedForQualityReasonsCode: (113001 ,DCM ,"Rejected for Quality Reasons")
-dcmIncorrectModalityWorklistEntryCode: (XXXXXX11 ,99IHEIOCM ,"Incorrect Modality Worklist Entry")
-dcmIncorrectWorklistEntrySelectedCode: (110514 ,DCM ,"Incorrect worklist entry selected")
-dcmRejectedForPatientSafetyReasonsCode: (113037 ,DCM ,"Rejected for Patient Safety Reasons")
+dcmRejectedForQualityReasonsCode: (113001, DCM, "Rejected for Quality Reasons")
+dcmIncorrectModalityWorklistEntryCode: (113038, DCM, "Incorrect Modality Worklist Entry")
+dcmIncorrectWorklistEntrySelectedCode: (110514, DCM, "Incorrect worklist entry selected")
+dcmRejectedForPatientSafetyReasonsCode: (113037, DCM, "Rejected for Patient Safety Reasons")
 dicomThisNodeCertificateReference: dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 userCertificate;binary:: MIICTTCCAbagAwIBAgIEUK3wyDANBgkqhkiG9w0BAQUFADBrMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxETAPBgNVBAsTCGRjbTRjaGVlMRUwEwYDVQQDEwxkY200Y2hlZS1hcmMwHhcNMTIxMTIyMDkzMDQ4WhcNMTMxMTIyMDkzMDQ4WjBrMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxETAPBgNVBAsTCGRjbTRjaGVlMRUwEwYDVQQDEwxkY200Y2hlZS1hcmMwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAJAx/IuiHUy5WIuly4iFXZS4/ux4iUMlVlPmFeptY0hmhmbq/BRKt6c8So2fuVtaBND2QMVmOQggl+BssssL3KzgXXz7V5YthmEwxZu5T8EoePCEMMs7hAMvlbHzzBAHm93/IamPWgWic37ubci91gGULtf9zfQau3SmPlEkWCd/AgMBAAEwDQYJKoZIhvcNAQEFBQADgYEABETBurvWryJRo806iyRWsO4Ik80q1T37abLuD47aPKgXUFN0kPKZkh3wWDmyxZ1qZFKuByVeDcECBzS44lEtqpOruVgxo2TVEX9b0RxJQN5zILyeqhxmutNSKTEBk9hLrBhj97gFEjtredGnxSrZasLrLp9KmlNidp3JWmge0Cg=
 

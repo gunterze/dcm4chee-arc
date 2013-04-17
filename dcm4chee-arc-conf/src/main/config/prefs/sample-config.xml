@@ -11,15 +11,15 @@
           <map>
             <entry key="dcmArchiveDevice" value="true"/>
             <entry key="dcmConfigurationStaleTimeout" value="60"/>
-            <entry key="dcmDataRetentionPeriodExpiredCode" value="(XXXXXX22 ,99IHEIOCM ,&quot;Data Retention Period Expired&quot;)"/>
+            <entry key="dcmDataRetentionPeriodExpiredCode" value="(113038, DCM, &quot;Data Retention Policy Expired&quot;)"/>
             <entry key="dcmFuzzyAlgorithmClass" value="org.dcm4che.soundex.ESoundex"/>
-            <entry key="dcmIncorrectModalityWorklistEntryCode" value="(XXXXXX11 ,99IHEIOCM ,&quot;Incorrect Modality Worklist Entry&quot;)"/>
-            <entry key="dcmIncorrectWorklistEntrySelectedCode" value="(110514 ,DCM ,&quot;Incorrect worklist entry selected&quot;)"/>
+            <entry key="dcmIncorrectModalityWorklistEntryCode" value="(113038, DCM, &quot;Incorrect Modality Worklist Entry&quot;)"/>
+            <entry key="dcmIncorrectWorklistEntrySelectedCode" value="(110514, DCM, &quot;Incorrect worklist entry selected&quot;)"/>
             <entry key="dcmKeyStorePin" value="secret"/>
             <entry key="dcmKeyStoreType" value="JKS"/>
             <entry key="dcmKeyStoreURL" value="${jboss.server.config.url}/dcm4chee-arc/key.jks"/>
-            <entry key="dcmRejectedForPatientSafetyReasonsCode" value="(113037 ,DCM ,&quot;Rejected for Patient Safety Reasons&quot;)"/>
-            <entry key="dcmRejectedForQualityReasonsCode" value="(113001 ,DCM ,&quot;Rejected for Quality Reasons&quot;)"/>
+            <entry key="dcmRejectedForPatientSafetyReasonsCode" value="(113037, DCM, &quot;Rejected for Patient Safety Reasons&quot;)"/>
+            <entry key="dcmRejectedForQualityReasonsCode" value="(113001, DCM, &quot;Rejected for Quality Reasons&quot;)"/>
             <entry key="dcmWadoAttributesStaleTimeout" value="60"/>
             <entry key="dicomAuthorizedNodeCertificateReference.#" value="11"/>
             <entry key="dicomAuthorizedNodeCertificateReference.1" value="dicomConfigurationRoot/dicomDevicesRoot/dcmqrscp"/>
@@ -5238,7 +5238,7 @@
           <map>
             <entry key="dicomInstalled" value="true"/>
             <entry key="dicomInstitutionCode.#" value="1"/>
-            <entry key="dicomInstitutionCode.1" value="(222.2222 ,99DCM4CHEE ,&quot;Site B&quot;)"/>
+            <entry key="dicomInstitutionCode.1" value="(222.2222, 99DCM4CHEE, &quot;Site B&quot;)"/>
             <entry key="dicomInstitutionName.#" value="1"/>
             <entry key="dicomInstitutionName.1" value="Site B"/>
             <entry key="dicomIssuerOfAccessionNumber" value="Site B&amp;1.2.40.0.13.1.1.999.222.2222&amp;ISO"/>
@@ -5403,7 +5403,7 @@
           <map>
             <entry key="dicomInstalled" value="true"/>
             <entry key="dicomInstitutionCode.#" value="1"/>
-            <entry key="dicomInstitutionCode.1" value="(111.1111 ,99DCM4CHEE ,&quot;Site A&quot;)"/>
+            <entry key="dicomInstitutionCode.1" value="(111.1111, 99DCM4CHEE, &quot;Site A&quot;)"/>
             <entry key="dicomInstitutionName.#" value="1"/>
             <entry key="dicomInstitutionName.1" value="Site A"/>
             <entry key="dicomIssuerOfAccessionNumber" value="Site A&amp;1.2.40.0.13.1.1.999.111.1111&amp;ISO"/>
@@ -5755,7 +5755,7 @@
           <map>
             <entry key="dicomInstalled" value="true"/>
             <entry key="dicomInstitutionCode.#" value="1"/>
-            <entry key="dicomInstitutionCode.1" value="(111.1111 ,99DCM4CHEE ,&quot;Site A&quot;)"/>
+            <entry key="dicomInstitutionCode.1" value="(111.1111, 99DCM4CHEE, &quot;Site A&quot;)"/>
             <entry key="dicomInstitutionName.#" value="1"/>
             <entry key="dicomInstitutionName.1" value="Site A"/>
             <entry key="dicomIssuerOfAccessionNumber" value="Site A&amp;1.2.40.0.13.1.1.999.111.1111&amp;ISO"/>
