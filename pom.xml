@@ -18,6 +18,24 @@
     <dependencies>
       <dependency>
         <groupId>org.dcm4che</groupId>
+        <artifactId>dcm4che-conf-api</artifactId>
+        <version>${dcm4che.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.dcm4che</groupId>
+        <artifactId>dcm4che-conf-ldap</artifactId>
+        <version>${dcm4che.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.dcm4che</groupId>
+        <artifactId>dcm4che-conf-prefs</artifactId>
+        <version>${dcm4che.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.dcm4che</groupId>
         <artifactId>dcm4che-conf-api-hl7</artifactId>
         <version>${dcm4che.version}</version>
         <scope>provided</scope>
@@ -36,6 +54,12 @@
       </dependency>
       <dependency>
         <groupId>org.dcm4che</groupId>
+        <artifactId>dcm4che-conf-ldap-imageio</artifactId>
+        <version>${dcm4che.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.dcm4che</groupId>
         <artifactId>dcm4che-conf-prefs-audit</artifactId>
         <version>${dcm4che.version}</version>
         <scope>provided</scope>
@@ -48,7 +72,25 @@
       </dependency>
       <dependency>
         <groupId>org.dcm4che</groupId>
+        <artifactId>dcm4che-conf-prefs-imageio</artifactId>
+        <version>${dcm4che.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.dcm4che</groupId>
         <artifactId>dcm4che-core</artifactId>
+        <version>${dcm4che.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.dcm4che</groupId>
+        <artifactId>dcm4che-net</artifactId>
+        <version>${dcm4che.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.dcm4che</groupId>
+        <artifactId>dcm4che-net-hl7</artifactId>
         <version>${dcm4che.version}</version>
         <scope>provided</scope>
       </dependency>

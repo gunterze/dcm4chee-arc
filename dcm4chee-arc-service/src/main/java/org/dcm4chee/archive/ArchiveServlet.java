@@ -56,10 +56,12 @@ import org.dcm4che.conf.ldap.LdapDicomConfiguration;
 import org.dcm4che.conf.ldap.audit.LdapAuditLoggerConfiguration;
 import org.dcm4che.conf.ldap.audit.LdapAuditRecordRepositoryConfiguration;
 import org.dcm4che.conf.ldap.hl7.LdapHL7Configuration;
+import org.dcm4che.conf.ldap.imageio.LdapImageReaderConfiguration;
 import org.dcm4che.conf.prefs.PreferencesDicomConfiguration;
 import org.dcm4che.conf.prefs.audit.PreferencesAuditLoggerConfiguration;
 import org.dcm4che.conf.prefs.audit.PreferencesAuditRecordRepositoryConfiguration;
 import org.dcm4che.conf.prefs.hl7.PreferencesHL7Configuration;
+import org.dcm4che.conf.prefs.imageio.PreferencesImageReaderConfiguration;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.conf.ldap.LdapArchiveConfiguration;
@@ -131,6 +133,8 @@ public class ArchiveServlet extends HttpServlet {
                         new LdapAuditLoggerConfiguration());
                 ldapConfig.addDicomConfigurationExtension(
                         new LdapAuditRecordRepositoryConfiguration());
+                ldapConfig.addDicomConfigurationExtension(
+                        new LdapImageReaderConfiguration());
                 archive.init(ldapConfig, hl7Config,
                         ldapConfig.findDevice(deviceName));
             } catch(FileNotFoundException e) {
@@ -146,6 +150,8 @@ public class ArchiveServlet extends HttpServlet {
                         new PreferencesAuditLoggerConfiguration());
                 prefsConfig.addDicomConfigurationExtension(
                         new PreferencesAuditRecordRepositoryConfiguration());
+                prefsConfig.addDicomConfigurationExtension(
+                        new PreferencesImageReaderConfiguration());
                 archive.init(prefsConfig, hl7Config,
                         prefsConfig.findDevice(deviceName));
             } finally {

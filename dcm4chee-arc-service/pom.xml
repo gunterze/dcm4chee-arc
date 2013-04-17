@@ -54,11 +54,19 @@
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
+      <artifactId>dcm4che-conf-ldap-imageio</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dcm4che</groupId>
       <artifactId>dcm4che-conf-prefs-audit</artifactId>
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
       <artifactId>dcm4che-conf-prefs-hl7</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dcm4che</groupId>
+      <artifactId>dcm4che-conf-prefs-imageio</artifactId>
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
@@ -145,7 +153,7 @@
           <classifier>${db}</classifier>
           <archive>
             <manifestEntries>
-              <Dependencies>org.dcm4che.imageio services</Dependencies>
+              <Dependencies>org.dcm4che.imageio services,org.dcm4che.conf.ldap-audit,org.dcm4che.conf.ldap-imageio,org.dcm4che.conf.prefs-audit,org.dcm4che.conf.prefs-imageio</Dependencies>
             </manifestEntries>
           </archive>
           <webResources>

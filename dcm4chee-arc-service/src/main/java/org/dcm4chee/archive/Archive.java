@@ -59,6 +59,7 @@ import org.dcm4che.conf.api.DicomConfiguration;
 import org.dcm4che.conf.api.hl7.HL7ApplicationCache;
 import org.dcm4che.conf.api.hl7.HL7Configuration;
 import org.dcm4che.data.Attributes;
+import org.dcm4che.imageio.codec.ImageReaderFactory;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.DeviceService;
@@ -172,6 +173,7 @@ public class Archive extends DeviceService implements ArchiveMBean {
         device.getDeviceExtension(HL7DeviceExtension.class)
             .setHL7MessageListener(hl7ServiceRegistry());
         setConfigurationStaleTimeout();
+        initImageReaderFactory();
         initAuditLogger();
         AuditLogger.setDefaultLogger(
                 device.getDeviceExtension(AuditLogger.class));
@@ -196,8 +198,17 @@ public class Archive extends DeviceService implements ArchiveMBean {
     public void reload() throws Exception {
         device.reconfigure(dicomConfiguration.findDevice(device.getDeviceName()));
         setConfigurationStaleTimeout();
+        initImageReaderFactory();
         initAuditLogger();
         device.rebindConnections();
+    }
+
+    private void initImageReaderFactory() {
+        ImageReaderFactory factory = device.getDeviceExtension(ImageReaderFactory.class);
+        if (factory != null)
+            ImageReaderFactory.setDefault(factory);
+        else
+            ImageReaderFactory.resetDefault();
     }
 
     private void initAuditLogger() {

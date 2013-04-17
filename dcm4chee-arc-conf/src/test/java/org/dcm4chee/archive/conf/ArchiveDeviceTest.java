@@ -56,14 +56,17 @@ import org.dcm4che.conf.ldap.LdapDicomConfiguration;
 import org.dcm4che.conf.ldap.audit.LdapAuditLoggerConfiguration;
 import org.dcm4che.conf.ldap.audit.LdapAuditRecordRepositoryConfiguration;
 import org.dcm4che.conf.ldap.hl7.LdapHL7Configuration;
+import org.dcm4che.conf.ldap.imageio.LdapImageReaderConfiguration;
 import org.dcm4che.conf.prefs.PreferencesDicomConfiguration;
 import org.dcm4che.conf.prefs.audit.PreferencesAuditLoggerConfiguration;
 import org.dcm4che.conf.prefs.audit.PreferencesAuditRecordRepositoryConfiguration;
 import org.dcm4che.conf.prefs.hl7.PreferencesHL7Configuration;
+import org.dcm4che.conf.prefs.imageio.PreferencesImageReaderConfiguration;
 import org.dcm4che.data.Code;
 import org.dcm4che.data.Issuer;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
+import org.dcm4che.imageio.codec.ImageReaderFactory;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Connection;
 import org.dcm4che.net.Connection.Protocol;
@@ -623,6 +626,8 @@ public class ArchiveDeviceTest {
                 new LdapAuditLoggerConfiguration());
         config.addDicomConfigurationExtension(
                 new LdapAuditRecordRepositoryConfiguration());
+        config.addDicomConfigurationExtension(
+                new LdapImageReaderConfiguration());
         this.hl7Config = hl7Config;
         return config;
     }
@@ -638,6 +643,8 @@ public class ArchiveDeviceTest {
                 new PreferencesAuditLoggerConfiguration());
         config.addDicomConfigurationExtension(
                 new PreferencesAuditRecordRepositoryConfiguration());
+        config.addDicomConfigurationExtension(
+                new PreferencesImageReaderConfiguration());
         this.hl7Config = hl7Config;
         return config;
     }
@@ -783,6 +790,7 @@ public class ArchiveDeviceTest {
         ArchiveDeviceExtension arcDevExt = new ArchiveDeviceExtension();
         device.addDeviceExtension(hl7DevExt);
         device.addDeviceExtension(arcDevExt);
+        device.addDeviceExtension(ImageReaderFactory.getDefault());
         arcDevExt.setIncorrectWorklistEntrySelectedCode(INCORRECT_WORKLIST_ENTRY_SELECTED);
         arcDevExt.setRejectedForQualityReasonsCode(REJECTED_FOR_QUALITY_REASONS);
         arcDevExt.setRejectedForPatientSafetyReasonsCode(REJECT_FOR_PATIENT_SAFETY_REASONS);
