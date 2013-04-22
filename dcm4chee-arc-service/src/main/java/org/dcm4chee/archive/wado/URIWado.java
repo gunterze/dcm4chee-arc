@@ -385,7 +385,7 @@ public class URIWado {
                     Attributes dataset = dis.readDataset(-1, -1);
                     dataset.addAll(attrs);
                     if (!transferSyntax.contains(tsuid)) {
-                        Decompressor.decompress(dataset, tsuid);
+                        Decompressor.decompress(dataset, tsuid, null);
                         tsuid = UID.ExplicitVRLittleEndian;
                     }
                     Attributes fmi = 

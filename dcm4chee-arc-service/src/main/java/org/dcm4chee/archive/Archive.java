@@ -68,6 +68,7 @@ import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.net.hl7.HL7DeviceExtension;
 import org.dcm4che.net.hl7.HL7MessageListener;
 import org.dcm4che.net.hl7.service.HL7ServiceRegistry;
+import org.dcm4che.net.imageio.ImageReaderExtension;
 import org.dcm4che.net.service.BasicCEchoSCP;
 import org.dcm4che.net.service.DicomServiceRegistry;
 import org.dcm4chee.archive.common.IDWithIssuer;
@@ -204,9 +205,9 @@ public class Archive extends DeviceService implements ArchiveMBean {
     }
 
     private void initImageReaderFactory() {
-        ImageReaderFactory factory = device.getDeviceExtension(ImageReaderFactory.class);
-        if (factory != null)
-            ImageReaderFactory.setDefault(factory);
+        ImageReaderExtension ext = device.getDeviceExtension(ImageReaderExtension.class);
+        if (ext != null)
+            ImageReaderFactory.setDefault(ext.getImageReaderFactory());
         else
             ImageReaderFactory.resetDefault();
     }

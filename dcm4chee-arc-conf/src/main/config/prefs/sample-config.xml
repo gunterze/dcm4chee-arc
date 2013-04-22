@@ -340,48 +340,63 @@
             <node name="1.2.840.10008.1.2.4.50">
               <map>
                 <entry key="dcmIIOFormatName" value="jpeg"/>
+                <entry key="dcmPlanarConfiguration" value="0"/>
               </map>
             </node>
             <node name="1.2.840.10008.1.2.4.51">
               <map>
                 <entry key="dcmIIOFormatName" value="jpeg"/>
                 <entry key="dcmJavaClassName" value="com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageReader"/>
+                <entry key="dcmPlanarConfiguration" value="0"/>
               </map>
             </node>
             <node name="1.2.840.10008.1.2.4.57">
               <map>
                 <entry key="dcmIIOFormatName" value="jpeg"/>
                 <entry key="dcmJavaClassName" value="com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageReader"/>
+                <entry key="dcmPlanarConfiguration" value="0"/>
               </map>
             </node>
             <node name="1.2.840.10008.1.2.4.70">
               <map>
                 <entry key="dcmIIOFormatName" value="jpeg"/>
                 <entry key="dcmJavaClassName" value="com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageReader"/>
+                <entry key="dcmPlanarConfiguration" value="0"/>
               </map>
             </node>
             <node name="1.2.840.10008.1.2.4.80">
               <map>
                 <entry key="dcmIIOFormatName" value="jpeg"/>
                 <entry key="dcmJavaClassName" value="com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageReader"/>
+                <entry key="dcmPlanarConfiguration" value="0"/>
               </map>
             </node>
             <node name="1.2.840.10008.1.2.4.81">
               <map>
                 <entry key="dcmIIOFormatName" value="jpeg"/>
                 <entry key="dcmJavaClassName" value="com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageReader"/>
+                <entry key="dcmPlanarConfiguration" value="0"/>
               </map>
             </node>
             <node name="1.2.840.10008.1.2.4.90">
               <map>
                 <entry key="dcmIIOFormatName" value="jpeg2000"/>
                 <entry key="dcmJavaClassName" value="com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageReaderCodecLib"/>
+                <entry key="dcmPlanarConfiguration" value="0"/>
               </map>
             </node>
             <node name="1.2.840.10008.1.2.4.91">
               <map>
                 <entry key="dcmIIOFormatName" value="jpeg2000"/>
                 <entry key="dcmJavaClassName" value="com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageReaderCodecLib"/>
+                <entry key="dcmPlanarConfiguration" value="0"/>
+              </map>
+            </node>
+            <node name="1.2.840.10008.1.2.5">
+              <map>
+                <entry key="dcmIIOFormatName" value="rle"/>
+                <entry key="dcmJavaClassName" value="org.dcm4che.imageio.plugins.rle.RLEImageReader"/>
+                <entry key="dcmPlanarConfiguration" value="1"/>
               </map>
             </node>
           </node>

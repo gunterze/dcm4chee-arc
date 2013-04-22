@@ -79,6 +79,7 @@ import org.dcm4che.net.audit.AuditLogger;
 import org.dcm4che.net.audit.AuditRecordRepository;
 import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.net.hl7.HL7DeviceExtension;
+import org.dcm4che.net.imageio.ImageReaderExtension;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.StringUtils;
@@ -790,7 +791,7 @@ public class ArchiveDeviceTest {
         ArchiveDeviceExtension arcDevExt = new ArchiveDeviceExtension();
         device.addDeviceExtension(hl7DevExt);
         device.addDeviceExtension(arcDevExt);
-        device.addDeviceExtension(ImageReaderFactory.getDefault());
+        device.addDeviceExtension(new ImageReaderExtension(ImageReaderFactory.getDefault()));
         arcDevExt.setIncorrectWorklistEntrySelectedCode(INCORRECT_WORKLIST_ENTRY_SELECTED);
         arcDevExt.setRejectedForQualityReasonsCode(REJECTED_FOR_QUALITY_REASONS);
         arcDevExt.setRejectedForPatientSafetyReasonsCode(REJECT_FOR_PATIENT_SAFETY_REASONS);

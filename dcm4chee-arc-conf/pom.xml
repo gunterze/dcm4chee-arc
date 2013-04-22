@@ -25,6 +25,10 @@
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
+      <artifactId>dcm4che-net-imageio</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dcm4che</groupId>
       <artifactId>dcm4che-soundex</artifactId>
     </dependency>
     <dependency>
