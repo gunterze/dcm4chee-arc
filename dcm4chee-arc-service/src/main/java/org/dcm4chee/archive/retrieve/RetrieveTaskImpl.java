@@ -146,7 +146,7 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
         }
         attrs.addAll((Attributes) inst.getObject());
         if (!tsuid.equals(inst.tsuid))
-            Decompressor.decompress(attrs, inst.tsuid, null);
+            Decompressor.decompress(attrs, inst.tsuid);
 
         adjustPatientID(attrs);
         adjustAccessionNumber(attrs);
