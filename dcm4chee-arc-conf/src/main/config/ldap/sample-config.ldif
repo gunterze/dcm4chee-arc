@@ -846,62 +846,108 @@ dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageReader
 dcmIIOFormatName: jpeg
 dicomTransferSyntax: 1.2.840.10008.1.2.4.57
 objectClass: dcmImageReader
-dcmPlanarConfiguration: 0
 
 dn: dicomTransferSyntax=1.2.840.10008.1.2.5,cn=Image Reader Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmJavaClassName: org.dcm4che.imageio.plugins.rle.RLEImageReader
 dcmIIOFormatName: rle
 dicomTransferSyntax: 1.2.840.10008.1.2.5
 objectClass: dcmImageReader
-dcmPlanarConfiguration: 1
 
 dn: dicomTransferSyntax=1.2.840.10008.1.2.4.91,cn=Image Reader Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageReaderCodecLib
 dcmIIOFormatName: jpeg2000
 dicomTransferSyntax: 1.2.840.10008.1.2.4.91
 objectClass: dcmImageReader
-dcmPlanarConfiguration: 0
 
 dn: dicomTransferSyntax=1.2.840.10008.1.2.4.90,cn=Image Reader Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageReaderCodecLib
 dcmIIOFormatName: jpeg2000
 dicomTransferSyntax: 1.2.840.10008.1.2.4.90
 objectClass: dcmImageReader
-dcmPlanarConfiguration: 0
 
 dn: dicomTransferSyntax=1.2.840.10008.1.2.4.80,cn=Image Reader Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageReader
 dcmIIOFormatName: jpeg
 dicomTransferSyntax: 1.2.840.10008.1.2.4.80
 objectClass: dcmImageReader
-dcmPlanarConfiguration: 0
 
 dn: dicomTransferSyntax=1.2.840.10008.1.2.4.50,cn=Image Reader Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmIIOFormatName: jpeg
 dicomTransferSyntax: 1.2.840.10008.1.2.4.50
 objectClass: dcmImageReader
-dcmPlanarConfiguration: 0
 
 dn: dicomTransferSyntax=1.2.840.10008.1.2.4.51,cn=Image Reader Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageReader
 dcmIIOFormatName: jpeg
 dicomTransferSyntax: 1.2.840.10008.1.2.4.51
 objectClass: dcmImageReader
-dcmPlanarConfiguration: 0
 
 dn: dicomTransferSyntax=1.2.840.10008.1.2.4.70,cn=Image Reader Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageReader
 dcmIIOFormatName: jpeg
 dicomTransferSyntax: 1.2.840.10008.1.2.4.70
 objectClass: dcmImageReader
-dcmPlanarConfiguration: 0
 
 dn: dicomTransferSyntax=1.2.840.10008.1.2.4.81,cn=Image Reader Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageReader
 dcmIIOFormatName: jpeg
 dicomTransferSyntax: 1.2.840.10008.1.2.4.81
 objectClass: dcmImageReader
-dcmPlanarConfiguration: 0
+
+dn: cn=Image Writer Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+objectClass: dcmImageWriterFactory
+cn: Image Writer Factory
+
+dn: dicomTransferSyntax=1.2.840.10008.1.2.4.57,cn=Image Writer Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageWriter
+dcmIIOFormatName: jpeg
+dicomTransferSyntax: 1.2.840.10008.1.2.4.57
+objectClass: dcmImageWriter
+dcmImageWriteParam: compressionType=JPEG-LOSSLESS
+
+dn: dicomTransferSyntax=1.2.840.10008.1.2.4.91,cn=Image Writer Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmPhotometricInterpretation: YBR_ICT
+dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriterCodecLib
+dcmIIOFormatName: jpeg2000
+dicomTransferSyntax: 1.2.840.10008.1.2.4.91
+objectClass: dcmImageWriter
+dcmImageWriteParam: writeCodeStreamOnly=true
+dcmImageWriteParam: lossless=false
+
+dn: dicomTransferSyntax=1.2.840.10008.1.2.4.90,cn=Image Writer Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmPhotometricInterpretation: YBR_RCT
+dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriterCodecLib
+dcmIIOFormatName: jpeg2000
+dicomTransferSyntax: 1.2.840.10008.1.2.4.90
+objectClass: dcmImageWriter
+dcmImageWriteParam: writeCodeStreamOnly=true
+
+dn: dicomTransferSyntax=1.2.840.10008.1.2.4.80,cn=Image Writer Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageWriter
+dcmIIOFormatName: jpeg
+dicomTransferSyntax: 1.2.840.10008.1.2.4.80
+objectClass: dcmImageWriter
+dcmImageWriteParam: compressionType=JPEG-LS
+
+dn: dicomTransferSyntax=1.2.840.10008.1.2.4.50,cn=Image Writer Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmPhotometricInterpretation: YBR_FULL_422
+dcmIIOFormatName: jpeg
+dicomTransferSyntax: 1.2.840.10008.1.2.4.50
+objectClass: dcmImageWriter
+
+dn: dicomTransferSyntax=1.2.840.10008.1.2.4.51,cn=Image Writer Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmPhotometricInterpretation: YBR_FULL_422
+dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageWriter
+dcmIIOFormatName: jpeg
+dicomTransferSyntax: 1.2.840.10008.1.2.4.51
+objectClass: dcmImageWriter
+
+dn: dicomTransferSyntax=1.2.840.10008.1.2.4.70,cn=Image Writer Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageWriter
+dcmIIOFormatName: jpeg
+dicomTransferSyntax: 1.2.840.10008.1.2.4.70
+objectClass: dcmImageWriter
+dcmImageWriteParam: compressionType=JPEG-LOSSLESS
 
 dn: dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmInitFileSystemURI: ${jboss.server.data.url}

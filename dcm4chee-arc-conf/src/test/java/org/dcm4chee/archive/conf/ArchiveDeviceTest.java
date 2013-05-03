@@ -57,16 +57,19 @@ import org.dcm4che.conf.ldap.audit.LdapAuditLoggerConfiguration;
 import org.dcm4che.conf.ldap.audit.LdapAuditRecordRepositoryConfiguration;
 import org.dcm4che.conf.ldap.hl7.LdapHL7Configuration;
 import org.dcm4che.conf.ldap.imageio.LdapImageReaderConfiguration;
+import org.dcm4che.conf.ldap.imageio.LdapImageWriterConfiguration;
 import org.dcm4che.conf.prefs.PreferencesDicomConfiguration;
 import org.dcm4che.conf.prefs.audit.PreferencesAuditLoggerConfiguration;
 import org.dcm4che.conf.prefs.audit.PreferencesAuditRecordRepositoryConfiguration;
 import org.dcm4che.conf.prefs.hl7.PreferencesHL7Configuration;
 import org.dcm4che.conf.prefs.imageio.PreferencesImageReaderConfiguration;
+import org.dcm4che.conf.prefs.imageio.PreferencesImageWriterConfiguration;
 import org.dcm4che.data.Code;
 import org.dcm4che.data.Issuer;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
 import org.dcm4che.imageio.codec.ImageReaderFactory;
+import org.dcm4che.imageio.codec.ImageWriterFactory;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Connection;
 import org.dcm4che.net.Connection.Protocol;
@@ -80,6 +83,7 @@ import org.dcm4che.net.audit.AuditRecordRepository;
 import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.net.hl7.HL7DeviceExtension;
 import org.dcm4che.net.imageio.ImageReaderExtension;
+import org.dcm4che.net.imageio.ImageWriterExtension;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.StringUtils;
@@ -629,6 +633,8 @@ public class ArchiveDeviceTest {
                 new LdapAuditRecordRepositoryConfiguration());
         config.addDicomConfigurationExtension(
                 new LdapImageReaderConfiguration());
+        config.addDicomConfigurationExtension(
+                new LdapImageWriterConfiguration());
         this.hl7Config = hl7Config;
         return config;
     }
@@ -646,6 +652,8 @@ public class ArchiveDeviceTest {
                 new PreferencesAuditRecordRepositoryConfiguration());
         config.addDicomConfigurationExtension(
                 new PreferencesImageReaderConfiguration());
+        config.addDicomConfigurationExtension(
+                new PreferencesImageWriterConfiguration());
         this.hl7Config = hl7Config;
         return config;
     }
@@ -792,6 +800,7 @@ public class ArchiveDeviceTest {
         device.addDeviceExtension(hl7DevExt);
         device.addDeviceExtension(arcDevExt);
         device.addDeviceExtension(new ImageReaderExtension(ImageReaderFactory.getDefault()));
+        device.addDeviceExtension(new ImageWriterExtension(ImageWriterFactory.getDefault()));
         arcDevExt.setIncorrectWorklistEntrySelectedCode(INCORRECT_WORKLIST_ENTRY_SELECTED);
         arcDevExt.setRejectedForQualityReasonsCode(REJECTED_FOR_QUALITY_REASONS);
         arcDevExt.setRejectedForPatientSafetyReasonsCode(REJECT_FOR_PATIENT_SAFETY_REASONS);

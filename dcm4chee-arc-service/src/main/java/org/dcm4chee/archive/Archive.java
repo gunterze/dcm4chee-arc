@@ -60,6 +60,7 @@ import org.dcm4che.conf.api.hl7.HL7ApplicationCache;
 import org.dcm4che.conf.api.hl7.HL7Configuration;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.imageio.codec.ImageReaderFactory;
+import org.dcm4che.imageio.codec.ImageWriterFactory;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.DeviceService;
@@ -69,6 +70,7 @@ import org.dcm4che.net.hl7.HL7DeviceExtension;
 import org.dcm4che.net.hl7.HL7MessageListener;
 import org.dcm4che.net.hl7.service.HL7ServiceRegistry;
 import org.dcm4che.net.imageio.ImageReaderExtension;
+import org.dcm4che.net.imageio.ImageWriterExtension;
 import org.dcm4che.net.service.BasicCEchoSCP;
 import org.dcm4che.net.service.DicomServiceRegistry;
 import org.dcm4chee.archive.common.IDWithIssuer;
@@ -175,6 +177,7 @@ public class Archive extends DeviceService implements ArchiveMBean {
             .setHL7MessageListener(hl7ServiceRegistry());
         setConfigurationStaleTimeout();
         initImageReaderFactory();
+        initImageWriterFactory();
         initAuditLogger();
         AuditLogger.setDefaultLogger(
                 device.getDeviceExtension(AuditLogger.class));
@@ -200,6 +203,7 @@ public class Archive extends DeviceService implements ArchiveMBean {
         device.reconfigure(dicomConfiguration.findDevice(device.getDeviceName()));
         setConfigurationStaleTimeout();
         initImageReaderFactory();
+        initImageWriterFactory();
         initAuditLogger();
         device.rebindConnections();
     }
@@ -210,6 +214,14 @@ public class Archive extends DeviceService implements ArchiveMBean {
             ImageReaderFactory.setDefault(ext.getImageReaderFactory());
         else
             ImageReaderFactory.resetDefault();
+    }
+
+    private void initImageWriterFactory() {
+        ImageWriterExtension ext = device.getDeviceExtension(ImageWriterExtension.class);
+        if (ext != null)
+            ImageWriterFactory.setDefault(ext.getImageWriterFactory());
+        else
+            ImageWriterFactory.resetDefault();
     }
 
     private void initAuditLogger() {
