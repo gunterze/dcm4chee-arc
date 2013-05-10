@@ -866,6 +866,7 @@ dicomTransferSyntax: 1.2.840.10008.1.2.4.90
 objectClass: dcmImageReader
 
 dn: dicomTransferSyntax=1.2.840.10008.1.2.4.80,cn=Image Reader Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmPatchJPEGLS: ISO2JAI_IF_APP_OR_COM
 dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageReader
 dcmIIOFormatName: jpeg
 dicomTransferSyntax: 1.2.840.10008.1.2.4.80
@@ -906,7 +907,6 @@ objectClass: dcmImageWriter
 dcmImageWriteParam: compressionType=JPEG-LOSSLESS
 
 dn: dicomTransferSyntax=1.2.840.10008.1.2.4.91,cn=Image Writer Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmPhotometricInterpretation: YBR_ICT
 dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriterCodecLib
 dcmIIOFormatName: jpeg2000
 dicomTransferSyntax: 1.2.840.10008.1.2.4.91
@@ -915,7 +915,6 @@ dcmImageWriteParam: writeCodeStreamOnly=true
 dcmImageWriteParam: lossless=false
 
 dn: dicomTransferSyntax=1.2.840.10008.1.2.4.90,cn=Image Writer Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmPhotometricInterpretation: YBR_RCT
 dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriterCodecLib
 dcmIIOFormatName: jpeg2000
 dicomTransferSyntax: 1.2.840.10008.1.2.4.90
@@ -923,6 +922,7 @@ objectClass: dcmImageWriter
 dcmImageWriteParam: writeCodeStreamOnly=true
 
 dn: dicomTransferSyntax=1.2.840.10008.1.2.4.80,cn=Image Writer Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmPatchJPEGLS: JAI2ISO
 dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageWriter
 dcmIIOFormatName: jpeg
 dicomTransferSyntax: 1.2.840.10008.1.2.4.80
@@ -930,13 +930,11 @@ objectClass: dcmImageWriter
 dcmImageWriteParam: compressionType=JPEG-LS
 
 dn: dicomTransferSyntax=1.2.840.10008.1.2.4.50,cn=Image Writer Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmPhotometricInterpretation: YBR_FULL_422
 dcmIIOFormatName: jpeg
 dicomTransferSyntax: 1.2.840.10008.1.2.4.50
 objectClass: dcmImageWriter
 
 dn: dicomTransferSyntax=1.2.840.10008.1.2.4.51,cn=Image Writer Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmPhotometricInterpretation: YBR_FULL_422
 dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageWriter
 dcmIIOFormatName: jpeg
 dicomTransferSyntax: 1.2.840.10008.1.2.4.51

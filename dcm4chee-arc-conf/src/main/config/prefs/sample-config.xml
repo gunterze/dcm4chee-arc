@@ -364,6 +364,7 @@
               <map>
                 <entry key="dcmIIOFormatName" value="jpeg"/>
                 <entry key="dcmJavaClassName" value="com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageReader"/>
+                <entry key="dcmPatchJPEGLS" value="ISO2JAI_IF_APP_OR_COM"/>
               </map>
             </node>
             <node name="1.2.840.10008.1.2.4.81">
@@ -396,14 +397,12 @@
             <node name="1.2.840.10008.1.2.4.50">
               <map>
                 <entry key="dcmIIOFormatName" value="jpeg"/>
-                <entry key="dcmPhotometricInterpretation" value="YBR_FULL_422"/>
               </map>
             </node>
             <node name="1.2.840.10008.1.2.4.51">
               <map>
                 <entry key="dcmIIOFormatName" value="jpeg"/>
                 <entry key="dcmJavaClassName" value="com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageWriter"/>
-                <entry key="dcmPhotometricInterpretation" value="YBR_FULL_422"/>
               </map>
             </node>
             <node name="1.2.840.10008.1.2.4.57">
@@ -428,6 +427,7 @@
                 <entry key="dcmImageWriteParam.#" value="1"/>
                 <entry key="dcmImageWriteParam.1" value="compressionType=JPEG-LS"/>
                 <entry key="dcmJavaClassName" value="com.sun.media.imageioimpl.plugins.jpeg.CLibJPEGImageWriter"/>
+                <entry key="dcmPatchJPEGLS" value="JAI2ISO"/>
               </map>
             </node>
             <node name="1.2.840.10008.1.2.4.90">
@@ -436,7 +436,6 @@
                 <entry key="dcmImageWriteParam.#" value="1"/>
                 <entry key="dcmImageWriteParam.1" value="writeCodeStreamOnly=true"/>
                 <entry key="dcmJavaClassName" value="com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriterCodecLib"/>
-                <entry key="dcmPhotometricInterpretation" value="YBR_RCT"/>
               </map>
             </node>
             <node name="1.2.840.10008.1.2.4.91">
@@ -446,7 +445,6 @@
                 <entry key="dcmImageWriteParam.1" value="writeCodeStreamOnly=true"/>
                 <entry key="dcmImageWriteParam.2" value="lossless=false"/>
                 <entry key="dcmJavaClassName" value="com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriterCodecLib"/>
-                <entry key="dcmPhotometricInterpretation" value="YBR_ICT"/>
               </map>
             </node>
           </node>
