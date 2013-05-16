@@ -98,7 +98,7 @@ public class ArchiveAEExtension extends AEExtension {
 
     public AttributeCoercion getAttributeCoercion(String sopClass,
             Dimse dimse, Role role, String aeTitle) {
-        return attributeCoercions.findMatching(sopClass, dimse, role, aeTitle);
+        return attributeCoercions.findAttributeCoercion(sopClass, dimse, role, aeTitle);
     }
 
     public AttributeCoercions getAttributeCoercions() {
