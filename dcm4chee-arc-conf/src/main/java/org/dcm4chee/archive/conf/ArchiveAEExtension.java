@@ -47,6 +47,8 @@ import javax.xml.transform.TransformerConfigurationException;
 
 import org.dcm4che.conf.api.AttributeCoercion;
 import org.dcm4che.conf.api.AttributeCoercions;
+import org.dcm4che.imageio.codec.CompressionRule;
+import org.dcm4che.imageio.codec.CompressionRules;
 import org.dcm4che.io.TemplatesCache;
 import org.dcm4che.net.AEExtension;
 import org.dcm4che.net.Dimse;
@@ -90,6 +92,7 @@ public class ArchiveAEExtension extends AEExtension {
     private int ianRetryInterval = DEF_RETRY_INTERVAL;
     private final List<StoreDuplicate> storeDuplicates  = new ArrayList<StoreDuplicate>();
     private final AttributeCoercions attributeCoercions = new AttributeCoercions();
+    private final CompressionRules compressionRules = new CompressionRules();
     private boolean returnOtherPatientIDs;
     private boolean returnOtherPatientNames;
     private boolean showRejectedInstances;
@@ -116,6 +119,23 @@ public class ArchiveAEExtension extends AEExtension {
 
     public boolean removeAttributeCoercion(AttributeCoercion ac) {
         return attributeCoercions.remove(ac);
+    }
+
+    public CompressionRules getCompressionRules() {
+        return compressionRules;
+    }
+
+    public void addCompressionRule(CompressionRule rule) {
+        compressionRules.add(rule);
+    }
+
+    public void setCompressionRules(CompressionRules rules) {
+        compressionRules.clear();
+        compressionRules.add(rules);
+    }
+
+    public boolean removeCompressionRule(CompressionRule ac) {
+        return compressionRules.remove(ac);
     }
 
     public List<StoreDuplicate> getStoreDuplicates() {
@@ -413,6 +433,7 @@ public class ArchiveAEExtension extends AEExtension {
         setLocalPIXConsumerApplication(arcae.pixConsumerApplication);
         setStoreDuplicates(arcae.getStoreDuplicates());
         setAttributeCoercions(arcae.getAttributeCoercions());
+        setCompressionRules(arcae.getCompressionRules());
     }
 
 }

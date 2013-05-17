@@ -68,6 +68,7 @@ import org.dcm4che.data.Code;
 import org.dcm4che.data.Issuer;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
+import org.dcm4che.imageio.codec.CompressionRule;
 import org.dcm4che.imageio.codec.ImageReaderFactory;
 import org.dcm4che.imageio.codec.ImageWriterFactory;
 import org.dcm4che.net.ApplicationEntity;
@@ -810,6 +811,9 @@ public class ArchiveDeviceTest {
         arcDevExt.setConfigurationStaleTimeout(CONFIGURATION_STALE_TIMEOUT);
         arcDevExt.setWadoAttributesStaleTimeout(WADO_ATTRIBUTES_STALE_TIMEOUT);
         setAttributeFilters(arcDevExt);
+        device.setManufacturer("dcm4che.org");
+        device.setManufacturerModelName("dcm4chee-arc");
+        device.setSoftwareVersions("4.1.0.Alpha1");
         device.setKeyStoreURL("${jboss.server.config.url}/dcm4chee-arc/key.jks");
         device.setKeyStoreType("JKS");
         device.setKeyStorePin("secret");
@@ -932,16 +936,110 @@ public class ArchiveDeviceTest {
                 new StoreDuplicate(
                         StoreDuplicate.Condition.NE_CHECKSUM,
                         StoreDuplicate.Action.REPLACE));
-        aeExt.addAttributeCoercion(new AttributeCoercion(null, 
+        aeExt.addAttributeCoercion(new AttributeCoercion(
+                "Supplement missing PID",
+                null, 
                 Dimse.C_STORE_RQ, 
                 SCP,
-                "ENSURE_PID",
+                new String[]{"ENSURE_PID"},
                 "${jboss.server.config.url}/dcm4chee-arc/ensure-pid.xsl"));
-        aeExt.addAttributeCoercion(new AttributeCoercion(null, 
+        aeExt.addAttributeCoercion(new AttributeCoercion(
+                "Remove person names",
+                null,
                 Dimse.C_STORE_RQ, 
                 SCU,
-                "WITHOUT_PN",
+                new String[]{"WITHOUT_PN"},
                 "${jboss.server.config.url}/dcm4chee-arc/nullify-pn.xsl"));
+        aeExt.addCompressionRule(new CompressionRule(
+                "JPEG 8-bit Lossy",
+                new String[] {
+                    "MONOCHROME1",
+                    "MONOCHROME2",
+                    "RGB" },
+                new int[] { 8 },                // Bits Stored
+                0,                              // Pixel Representation
+                new String[] { "JPEG_LOSSY" },  // Source AETs
+                null,                           // SOP Classes
+                null,                           // Body Parts
+                UID.JPEGBaseline1,
+                new String[] { "compressionQuality=0.5" }
+                ));
+        aeExt.addCompressionRule(new CompressionRule(
+                "JPEG 12-bit Lossy",
+                new String[] {
+                    "MONOCHROME1",
+                    "MONOCHROME2", },
+                new int[] { 9, 10, 11, 12 },    // Bits Stored
+                0,                              // Pixel Representation
+                new String[] { "JPEG_LOSSY" },  // Source AETs
+                null,                           // SOP Classes
+                null,                           // Body Parts
+                UID.JPEGExtended24,
+                new String[] { "compressionQuality=0.5" }
+                ));
+        aeExt.addCompressionRule(new CompressionRule(
+                "JPEG Lossless",
+                new String[] {
+                    "MONOCHROME1",
+                    "MONOCHROME2",
+                    "PALETTE COLOR",
+                    "RGB",
+                    "YBR_FULL"
+                    },
+                new int[] { 8, 9, 10, 11, 12, 13, 14, 15, 16 },    // Bits Stored
+                -1,                              // Pixel Representation
+                new String[] { "JPEG_LOSSLESS" },  // Source AETs
+                null,                           // SOP Classes
+                null,                           // Body Parts
+                UID.JPEGLossless
+                ));
+        aeExt.addCompressionRule(new CompressionRule(
+                "JPEG LS Lossless",
+                new String[] {
+                    "MONOCHROME1",
+                    "MONOCHROME2",
+                    "PALETTE COLOR",
+                    "RGB",
+                    "YBR_FULL"
+                    },
+                new int[] { 8, 9, 10, 11, 12, 13, 14, 15, 16 },    // Bits Stored
+                -1,                             // Pixel Representation
+                new String[] { "JPEG_LS" },     // Source AETs
+                null,                           // SOP Classes
+                null,                           // Body Parts
+                UID.JPEGLSLossless
+                ));
+        aeExt.addCompressionRule(new CompressionRule(
+                "JPEG 2000 Lossless",
+                new String[] {
+                    "MONOCHROME1",
+                    "MONOCHROME2",
+                    "PALETTE COLOR",
+                    "RGB",
+                    "YBR_FULL"
+                    },
+                new int[] { 8, 9, 10, 11, 12, 13, 14, 15, 16 },  // Bits Stored
+                -1,                             // Pixel Representation
+                new String[] { "JPEG_2K_LOSSLESS" }, // Source AETs
+                null,                           // SOP Classes
+                null,                           // Body Parts
+                UID.JPEG2000LosslessOnly
+                ));
+        aeExt.addCompressionRule(new CompressionRule(
+                "JPEG 2000 Lossy",
+                new String[] {
+                    "MONOCHROME1",
+                    "MONOCHROME2",
+                    "RGB",
+                    "YBR_FULL"
+                    },
+                new int[] { 8, 9, 10, 11, 12, 13, 14, 15, 16 },  // Bits Stored
+                -1,                             // Pixel Representation
+                new String[] { "JPEG_2K_LOSSY" }, // Source AETs
+                null,                           // SOP Classes
+                null,                           // Body Parts
+                UID.JPEG2000
+                ));
         addTCs(ae, null, SCP, IMAGE_CUIDS, image_tsuids);
         addTCs(ae, null, SCP, VIDEO_CUIDS, video_tsuids);
         addTCs(ae, null, SCP, OTHER_CUIDS, other_tsuids);

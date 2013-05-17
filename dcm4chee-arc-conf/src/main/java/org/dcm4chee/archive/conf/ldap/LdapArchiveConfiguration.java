@@ -57,6 +57,7 @@ import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.conf.ldap.LdapDicomConfigurationExtension;
 import org.dcm4che.conf.ldap.LdapUtils;
 import org.dcm4che.conf.ldap.hl7.LdapHL7ConfigurationExtension;
+import org.dcm4che.conf.ldap.imageio.LdapCompressionRulesConfiguration;
 import org.dcm4che.data.Code;
 import org.dcm4che.data.ValueSelector;
 import org.dcm4che.net.ApplicationEntity;
@@ -123,6 +124,8 @@ public class LdapArchiveConfiguration extends LdapDicomConfigurationExtension
             return;
 
         config.store(arcAE.getAttributeCoercions(), aeDN);
+        new LdapCompressionRulesConfiguration(config)
+                .store(arcAE.getCompressionRules(), aeDN);
         for (StoreDuplicate sd : arcAE.getStoreDuplicates())
             config.createSubcontext(dnOf(sd, aeDN),
                     storeTo(sd, new BasicAttributes(true)));
@@ -338,6 +341,8 @@ public class LdapArchiveConfiguration extends LdapDicomConfigurationExtension
             return;
 
         config.load(arcae.getAttributeCoercions(), aeDN);
+        new LdapCompressionRulesConfiguration(config)
+                .load(arcae.getCompressionRules(), aeDN);
         loadStoreDuplicates(arcae.getStoreDuplicates(), aeDN);
     }
 
@@ -558,6 +563,8 @@ public class LdapArchiveConfiguration extends LdapDicomConfigurationExtension
             return;
 
         config.merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), aeDN);
+        new LdapCompressionRulesConfiguration(config)
+                .merge(aa.getCompressionRules(), bb.getCompressionRules(), aeDN);
         mergeStoreDuplicates(aa.getStoreDuplicates(), bb.getStoreDuplicates(), aeDN);
     }
 

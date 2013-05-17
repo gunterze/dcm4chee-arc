@@ -34,6 +34,10 @@
             <entry key="dicomAuthorizedNodeCertificateReference.8" value="dicomConfigurationRoot/dicomDevicesRoot/findscu"/>
             <entry key="dicomAuthorizedNodeCertificateReference.9" value="dicomConfigurationRoot/dicomDevicesRoot/getscu"/>
             <entry key="dicomInstalled" value="true"/>
+            <entry key="dicomManufacturer" value="dcm4che.org"/>
+            <entry key="dicomManufacturerModelName" value="dcm4chee-arc"/>
+            <entry key="dicomSoftwareVersion.#" value="1"/>
+            <entry key="dicomSoftwareVersion.1" value="4.1.0.Alpha1"/>
             <entry key="dicomThisNodeCertificateReference.#" value="1"/>
             <entry key="dicomThisNodeCertificateReference.1" value="dicomConfigurationRoot/dicomDevicesRoot/dcm4chee-arc"/>
             <entry key="userCertificate.#" value="1"/>
@@ -478,18 +482,154 @@
                 <map/>
                 <node name="1">
                   <map>
+                    <entry key="cn" value="Remove person names"/>
+                    <entry key="dcmAETitle.#" value="1"/>
+                    <entry key="dcmAETitle.1" value="WITHOUT_PN"/>
                     <entry key="dcmDIMSE" value="C_STORE_RQ"/>
-                    <entry key="dicomAETitle" value="ENSURE_PID"/>
-                    <entry key="dicomTransferRole" value="SCP"/>
-                    <entry key="labeledURI" value="${jboss.server.config.url}/dcm4chee-arc/ensure-pid.xsl"/>
+                    <entry key="dicomTransferRole" value="SCU"/>
+                    <entry key="labeledURI" value="${jboss.server.config.url}/dcm4chee-arc/nullify-pn.xsl"/>
                   </map>
                 </node>
                 <node name="2">
                   <map>
+                    <entry key="cn" value="Supplement missing PID"/>
+                    <entry key="dcmAETitle.#" value="1"/>
+                    <entry key="dcmAETitle.1" value="ENSURE_PID"/>
                     <entry key="dcmDIMSE" value="C_STORE_RQ"/>
-                    <entry key="dicomAETitle" value="WITHOUT_PN"/>
-                    <entry key="dicomTransferRole" value="SCU"/>
-                    <entry key="labeledURI" value="${jboss.server.config.url}/dcm4chee-arc/nullify-pn.xsl"/>
+                    <entry key="dicomTransferRole" value="SCP"/>
+                    <entry key="labeledURI" value="${jboss.server.config.url}/dcm4chee-arc/ensure-pid.xsl"/>
+                  </map>
+                </node>
+              </node>
+              <node name="dcmCompressionRule">
+                <map/>
+                <node name="1">
+                  <map>
+                    <entry key="cn" value="JPEG Lossless"/>
+                    <entry key="dcmAETitle.#" value="1"/>
+                    <entry key="dcmAETitle.1" value="JPEG_LOSSLESS"/>
+                    <entry key="dcmBitsStored.#" value="9"/>
+                    <entry key="dcmBitsStored.1" value="8"/>
+                    <entry key="dcmBitsStored.2" value="9"/>
+                    <entry key="dcmBitsStored.3" value="10"/>
+                    <entry key="dcmBitsStored.4" value="11"/>
+                    <entry key="dcmBitsStored.5" value="12"/>
+                    <entry key="dcmBitsStored.6" value="13"/>
+                    <entry key="dcmBitsStored.7" value="14"/>
+                    <entry key="dcmBitsStored.8" value="15"/>
+                    <entry key="dcmBitsStored.9" value="16"/>
+                    <entry key="dcmPhotometricInterpretation.#" value="5"/>
+                    <entry key="dcmPhotometricInterpretation.1" value="MONOCHROME1"/>
+                    <entry key="dcmPhotometricInterpretation.2" value="MONOCHROME2"/>
+                    <entry key="dcmPhotometricInterpretation.3" value="PALETTE COLOR"/>
+                    <entry key="dcmPhotometricInterpretation.4" value="RGB"/>
+                    <entry key="dcmPhotometricInterpretation.5" value="YBR_FULL"/>
+                    <entry key="dicomTransferSyntax" value="1.2.840.10008.1.2.4.70"/>
+                  </map>
+                </node>
+                <node name="2">
+                  <map>
+                    <entry key="cn" value="JPEG 2000 Lossless"/>
+                    <entry key="dcmAETitle.#" value="1"/>
+                    <entry key="dcmAETitle.1" value="JPEG_2K_LOSSLESS"/>
+                    <entry key="dcmBitsStored.#" value="9"/>
+                    <entry key="dcmBitsStored.1" value="8"/>
+                    <entry key="dcmBitsStored.2" value="9"/>
+                    <entry key="dcmBitsStored.3" value="10"/>
+                    <entry key="dcmBitsStored.4" value="11"/>
+                    <entry key="dcmBitsStored.5" value="12"/>
+                    <entry key="dcmBitsStored.6" value="13"/>
+                    <entry key="dcmBitsStored.7" value="14"/>
+                    <entry key="dcmBitsStored.8" value="15"/>
+                    <entry key="dcmBitsStored.9" value="16"/>
+                    <entry key="dcmPhotometricInterpretation.#" value="5"/>
+                    <entry key="dcmPhotometricInterpretation.1" value="MONOCHROME1"/>
+                    <entry key="dcmPhotometricInterpretation.2" value="MONOCHROME2"/>
+                    <entry key="dcmPhotometricInterpretation.3" value="PALETTE COLOR"/>
+                    <entry key="dcmPhotometricInterpretation.4" value="RGB"/>
+                    <entry key="dcmPhotometricInterpretation.5" value="YBR_FULL"/>
+                    <entry key="dicomTransferSyntax" value="1.2.840.10008.1.2.4.90"/>
+                  </map>
+                </node>
+                <node name="3">
+                  <map>
+                    <entry key="cn" value="JPEG 2000 Lossy"/>
+                    <entry key="dcmAETitle.#" value="1"/>
+                    <entry key="dcmAETitle.1" value="JPEG_2K_LOSSY"/>
+                    <entry key="dcmBitsStored.#" value="9"/>
+                    <entry key="dcmBitsStored.1" value="8"/>
+                    <entry key="dcmBitsStored.2" value="9"/>
+                    <entry key="dcmBitsStored.3" value="10"/>
+                    <entry key="dcmBitsStored.4" value="11"/>
+                    <entry key="dcmBitsStored.5" value="12"/>
+                    <entry key="dcmBitsStored.6" value="13"/>
+                    <entry key="dcmBitsStored.7" value="14"/>
+                    <entry key="dcmBitsStored.8" value="15"/>
+                    <entry key="dcmBitsStored.9" value="16"/>
+                    <entry key="dcmPhotometricInterpretation.#" value="4"/>
+                    <entry key="dcmPhotometricInterpretation.1" value="MONOCHROME1"/>
+                    <entry key="dcmPhotometricInterpretation.2" value="MONOCHROME2"/>
+                    <entry key="dcmPhotometricInterpretation.3" value="RGB"/>
+                    <entry key="dcmPhotometricInterpretation.4" value="YBR_FULL"/>
+                    <entry key="dicomTransferSyntax" value="1.2.840.10008.1.2.4.91"/>
+                  </map>
+                </node>
+                <node name="4">
+                  <map>
+                    <entry key="cn" value="JPEG LS Lossless"/>
+                    <entry key="dcmAETitle.#" value="1"/>
+                    <entry key="dcmAETitle.1" value="JPEG_LS"/>
+                    <entry key="dcmBitsStored.#" value="9"/>
+                    <entry key="dcmBitsStored.1" value="8"/>
+                    <entry key="dcmBitsStored.2" value="9"/>
+                    <entry key="dcmBitsStored.3" value="10"/>
+                    <entry key="dcmBitsStored.4" value="11"/>
+                    <entry key="dcmBitsStored.5" value="12"/>
+                    <entry key="dcmBitsStored.6" value="13"/>
+                    <entry key="dcmBitsStored.7" value="14"/>
+                    <entry key="dcmBitsStored.8" value="15"/>
+                    <entry key="dcmBitsStored.9" value="16"/>
+                    <entry key="dcmPhotometricInterpretation.#" value="5"/>
+                    <entry key="dcmPhotometricInterpretation.1" value="MONOCHROME1"/>
+                    <entry key="dcmPhotometricInterpretation.2" value="MONOCHROME2"/>
+                    <entry key="dcmPhotometricInterpretation.3" value="PALETTE COLOR"/>
+                    <entry key="dcmPhotometricInterpretation.4" value="RGB"/>
+                    <entry key="dcmPhotometricInterpretation.5" value="YBR_FULL"/>
+                    <entry key="dicomTransferSyntax" value="1.2.840.10008.1.2.4.80"/>
+                  </map>
+                </node>
+                <node name="5">
+                  <map>
+                    <entry key="cn" value="JPEG 12-bit Lossy"/>
+                    <entry key="dcmAETitle.#" value="1"/>
+                    <entry key="dcmAETitle.1" value="JPEG_LOSSY"/>
+                    <entry key="dcmBitsStored.#" value="4"/>
+                    <entry key="dcmBitsStored.1" value="9"/>
+                    <entry key="dcmBitsStored.2" value="10"/>
+                    <entry key="dcmBitsStored.3" value="11"/>
+                    <entry key="dcmBitsStored.4" value="12"/>
+                    <entry key="dcmImageWriteParams.#" value="1"/>
+                    <entry key="dcmImageWriteParams.1" value="compressionQuality=0.5"/>
+                    <entry key="dcmPhotometricInterpretation.#" value="2"/>
+                    <entry key="dcmPhotometricInterpretation.1" value="MONOCHROME1"/>
+                    <entry key="dcmPhotometricInterpretation.2" value="MONOCHROME2"/>
+                    <entry key="dicomTransferSyntax" value="1.2.840.10008.1.2.4.51"/>
+                  </map>
+                </node>
+                <node name="6">
+                  <map>
+                    <entry key="cn" value="JPEG 8-bit Lossy"/>
+                    <entry key="dcmAETitle.#" value="1"/>
+                    <entry key="dcmAETitle.1" value="JPEG_LOSSY"/>
+                    <entry key="dcmBitsStored.#" value="1"/>
+                    <entry key="dcmBitsStored.1" value="8"/>
+                    <entry key="dcmImageWriteParams.#" value="1"/>
+                    <entry key="dcmImageWriteParams.1" value="compressionQuality=0.5"/>
+                    <entry key="dcmPhotometricInterpretation.#" value="3"/>
+                    <entry key="dcmPhotometricInterpretation.1" value="MONOCHROME1"/>
+                    <entry key="dcmPhotometricInterpretation.2" value="MONOCHROME2"/>
+                    <entry key="dcmPhotometricInterpretation.3" value="RGB"/>
+                    <entry key="dicomTransferSyntax" value="1.2.840.10008.1.2.4.50"/>
                   </map>
                 </node>
               </node>
@@ -3620,6 +3760,9 @@
                 <entry key="hl7PIXManagerApplication" value="HL7RCV^DCM4CHEE"/>
               </map>
               <node name="dcmAttributeCoercion">
+                <map/>
+              </node>
+              <node name="dcmCompressionRule">
                 <map/>
               </node>
               <node name="dcmStoreDuplicate">

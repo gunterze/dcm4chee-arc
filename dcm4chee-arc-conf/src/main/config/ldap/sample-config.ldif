@@ -459,14 +459,14 @@ objectClass: dicomUniqueAETitle
 dicomAETitle: DCM4CHEE_ADMIN
 
 dn: dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmDataRetentionPeriodExpiredCode: (113038, DCM, "Data Retention Policy Expired")
-dicomInstalled: TRUE
 dcmWadoAttributesStaleTimeout: 60
-dicomDeviceName: dcm4chee-arc
-dcmKeyStorePin: secret
+dicomSoftwareVersion: 4.1.0.Alpha1
+objectClass: dicomDevice
+objectClass: dcmDevice
+objectClass: dcmArchiveDevice
+objectClass: pkiUser
+dcmRejectedForQualityReasonsCode: (113001, DCM, "Rejected for Quality Reasons")
 dcmKeyStoreType: JKS
-dcmConfigurationStaleTimeout: 60
-dcmKeyStoreURL: ${jboss.server.config.url}/dcm4chee-arc/key.jks
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=dcmqrscp,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=stgcmtscu,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=storescp,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
@@ -478,16 +478,19 @@ dicomAuthorizedNodeCertificateReference: dicomDeviceName=findscu,cn=Devices,cn=D
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=getscu,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=movescu,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=hl7snd,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-objectClass: dicomDevice
-objectClass: dcmDevice
-objectClass: dcmArchiveDevice
-objectClass: pkiUser
+dicomInstalled: TRUE
+dcmConfigurationStaleTimeout: 60
+dicomManufacturer: dcm4che.org
+dicomDeviceName: dcm4chee-arc
 dcmFuzzyAlgorithmClass: org.dcm4che.soundex.ESoundex
-dcmRejectedForQualityReasonsCode: (113001, DCM, "Rejected for Quality Reasons")
 dcmIncorrectModalityWorklistEntryCode: (113038, DCM, "Incorrect Modality Worklist Entry")
-dcmIncorrectWorklistEntrySelectedCode: (110514, DCM, "Incorrect worklist entry selected")
-dcmRejectedForPatientSafetyReasonsCode: (113037, DCM, "Rejected for Patient Safety Reasons")
+dcmKeyStoreURL: ${jboss.server.config.url}/dcm4chee-arc/key.jks
 dicomThisNodeCertificateReference: dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmRejectedForPatientSafetyReasonsCode: (113037, DCM, "Rejected for Patient Safety Reasons")
+dcmIncorrectWorklistEntrySelectedCode: (110514, DCM, "Incorrect worklist entry selected")
+dcmKeyStorePin: secret
+dcmDataRetentionPeriodExpiredCode: (113038, DCM, "Data Retention Policy Expired")
+dicomManufacturerModelName: dcm4chee-arc
 userCertificate;binary:: MIICTTCCAbagAwIBAgIEUK3wyDANBgkqhkiG9w0BAQUFADBrMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxETAPBgNVBAsTCGRjbTRjaGVlMRUwEwYDVQQDEwxkY200Y2hlZS1hcmMwHhcNMTIxMTIyMDkzMDQ4WhcNMTMxMTIyMDkzMDQ4WjBrMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxETAPBgNVBAsTCGRjbTRjaGVlMRUwEwYDVQQDEwxkY200Y2hlZS1hcmMwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAJAx/IuiHUy5WIuly4iFXZS4/ux4iUMlVlPmFeptY0hmhmbq/BRKt6c8So2fuVtaBND2QMVmOQggl+BssssL3KzgXXz7V5YthmEwxZu5T8EoePCEMMs7hAMvlbHzzBAHm93/IamPWgWic37ubci91gGULtf9zfQau3SmPlEkWCd/AgMBAAEwDQYJKoZIhvcNAQEFBQADgYEABETBurvWryJRo806iyRWsO4Ik80q1T37abLuD47aPKgXUFN0kPKZkh3wWDmyxZ1qZFKuByVeDcECBzS44lEtqpOruVgxo2TVEX9b0RxJQN5zILyeqhxmutNSKTEBk9hLrBhj97gFEjtredGnxSrZasLrLp9KmlNidp3JWmge0Cg=
 
 dn: cn=dicom,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
@@ -4281,19 +4284,124 @@ objectClass: dicomTransferCapability
 objectClass: dcmTransferCapability
 cn: Encapsulated PDF Storage SCU
 
-dn: dcmDIMSE=C_STORE_RQ+dicomAETitle=ENSURE_PID+dicomTransferRole=SCP,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dn: cn=Remove person names,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmDIMSE: C_STORE_RQ
-dicomTransferRole: SCP
-labeledURI: ${jboss.server.config.url}/dcm4chee-arc/ensure-pid.xsl
-objectClass: dcmAttributeCoercion
-dicomAETitle: ENSURE_PID
-
-dn: dcmDIMSE=C_STORE_RQ+dicomAETitle=WITHOUT_PN+dicomTransferRole=SCU,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmDIMSE: C_STORE_RQ
+dcmAETitle: WITHOUT_PN
 dicomTransferRole: SCU
 labeledURI: ${jboss.server.config.url}/dcm4chee-arc/nullify-pn.xsl
 objectClass: dcmAttributeCoercion
-dicomAETitle: WITHOUT_PN
+cn: Remove person names
+
+dn: cn=Supplement missing PID,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmDIMSE: C_STORE_RQ
+dcmAETitle: ENSURE_PID
+dicomTransferRole: SCP
+labeledURI: ${jboss.server.config.url}/dcm4chee-arc/ensure-pid.xsl
+objectClass: dcmAttributeCoercion
+cn: Supplement missing PID
+
+dn: cn=JPEG Lossless,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmAETitle: JPEG_LOSSLESS
+dcmPhotometricInterpretation: MONOCHROME1
+dcmPhotometricInterpretation: MONOCHROME2
+dcmPhotometricInterpretation: PALETTE COLOR
+dcmPhotometricInterpretation: RGB
+dcmPhotometricInterpretation: YBR_FULL
+dicomTransferSyntax: 1.2.840.10008.1.2.4.70
+objectClass: dcmCompressionRule
+dcmBitsStored: 8
+dcmBitsStored: 9
+dcmBitsStored: 10
+dcmBitsStored: 11
+dcmBitsStored: 12
+dcmBitsStored: 13
+dcmBitsStored: 14
+dcmBitsStored: 15
+dcmBitsStored: 16
+cn: JPEG Lossless
+
+dn: cn=JPEG 2000 Lossless,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmAETitle: JPEG_2K_LOSSLESS
+dcmPhotometricInterpretation: MONOCHROME1
+dcmPhotometricInterpretation: MONOCHROME2
+dcmPhotometricInterpretation: PALETTE COLOR
+dcmPhotometricInterpretation: RGB
+dcmPhotometricInterpretation: YBR_FULL
+dicomTransferSyntax: 1.2.840.10008.1.2.4.90
+objectClass: dcmCompressionRule
+dcmBitsStored: 8
+dcmBitsStored: 9
+dcmBitsStored: 10
+dcmBitsStored: 11
+dcmBitsStored: 12
+dcmBitsStored: 13
+dcmBitsStored: 14
+dcmBitsStored: 15
+dcmBitsStored: 16
+cn: JPEG 2000 Lossless
+
+dn: cn=JPEG 2000 Lossy,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmAETitle: JPEG_2K_LOSSY
+dcmPhotometricInterpretation: MONOCHROME1
+dcmPhotometricInterpretation: MONOCHROME2
+dcmPhotometricInterpretation: RGB
+dcmPhotometricInterpretation: YBR_FULL
+dicomTransferSyntax: 1.2.840.10008.1.2.4.91
+objectClass: dcmCompressionRule
+dcmBitsStored: 8
+dcmBitsStored: 9
+dcmBitsStored: 10
+dcmBitsStored: 11
+dcmBitsStored: 12
+dcmBitsStored: 13
+dcmBitsStored: 14
+dcmBitsStored: 15
+dcmBitsStored: 16
+cn: JPEG 2000 Lossy
+
+dn: cn=JPEG LS Lossless,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmAETitle: JPEG_LS
+dcmPhotometricInterpretation: MONOCHROME1
+dcmPhotometricInterpretation: MONOCHROME2
+dcmPhotometricInterpretation: PALETTE COLOR
+dcmPhotometricInterpretation: RGB
+dcmPhotometricInterpretation: YBR_FULL
+dicomTransferSyntax: 1.2.840.10008.1.2.4.80
+objectClass: dcmCompressionRule
+dcmBitsStored: 8
+dcmBitsStored: 9
+dcmBitsStored: 10
+dcmBitsStored: 11
+dcmBitsStored: 12
+dcmBitsStored: 13
+dcmBitsStored: 14
+dcmBitsStored: 15
+dcmBitsStored: 16
+cn: JPEG LS Lossless
+
+dn: cn=JPEG 12-bit Lossy,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmAETitle: JPEG_LOSSY
+dcmPhotometricInterpretation: MONOCHROME1
+dcmPhotometricInterpretation: MONOCHROME2
+dicomTransferSyntax: 1.2.840.10008.1.2.4.51
+objectClass: dcmCompressionRule
+dcmImageWriteParam: compressionQuality=0.5
+dcmBitsStored: 9
+dcmBitsStored: 10
+dcmBitsStored: 11
+dcmBitsStored: 12
+cn: JPEG 12-bit Lossy
+
+dn: cn=JPEG 8-bit Lossy,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmAETitle: JPEG_LOSSY
+dcmPhotometricInterpretation: MONOCHROME1
+dcmPhotometricInterpretation: MONOCHROME2
+dcmPhotometricInterpretation: RGB
+dicomTransferSyntax: 1.2.840.10008.1.2.4.50
+objectClass: dcmCompressionRule
+dcmImageWriteParam: compressionQuality=0.5
+dcmBitsStored: 8
+cn: JPEG 8-bit Lossy
 
 dn: dcmStoreDuplicateCondition=NO_FILE,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmStoreDuplicateAction: STORE

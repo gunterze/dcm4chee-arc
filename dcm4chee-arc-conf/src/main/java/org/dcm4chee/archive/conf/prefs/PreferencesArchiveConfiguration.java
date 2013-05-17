@@ -49,6 +49,7 @@ import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.conf.prefs.PreferencesDicomConfigurationExtension;
 import org.dcm4che.conf.prefs.PreferencesUtils;
 import org.dcm4che.conf.prefs.hl7.PreferencesHL7ConfigurationExtension;
+import org.dcm4che.conf.prefs.imageio.PreferencesCompressionRulesConfiguration;
 import org.dcm4che.data.Code;
 import org.dcm4che.data.ValueSelector;
 import org.dcm4che.net.ApplicationEntity;
@@ -116,6 +117,8 @@ public class PreferencesArchiveConfiguration
             return;
 
         config.store(arcAE.getAttributeCoercions(), aeNode);
+        PreferencesCompressionRulesConfiguration
+                .store(arcAE.getCompressionRules(), aeNode);
         storeStoreDuplicates(arcAE.getStoreDuplicates(), aeNode);
     }
 
@@ -200,30 +203,6 @@ public class PreferencesArchiveConfiguration
         prefs.putBoolean("dcmArchiveHL7Application", true);
         PreferencesUtils.storeNotEmpty(prefs, "labeledURI", arcHL7App.getTemplatesURIs());
     }
-
-//    @Override
-//    protected Device newDevice(Preferences deviceNode) {
-//        if (!deviceNode.getBoolean("dcmArchiveDevice", false))
-//            return super.newDevice(deviceNode);
-//
-//        return new ArchiveDeviceExtension(deviceNode.name());
-//    }
-//
-//    @Override
-//    protected ApplicationEntity newApplicationEntity(Preferences aeNode) {
-//        if (!aeNode.getBoolean("dcmArchiveNetworkAE", false))
-//            return super.newApplicationEntity(aeNode);
-//
-//        return new ArchiveAEExtension(aeNode.name());
-//    }
-//
-//    @Override
-//    protected HL7Application newHL7Application(Preferences hl7AppNode) {
-//        if (!hl7AppNode.getBoolean("dcmArchiveHL7Application", false))
-//            return super.newHL7Application(hl7AppNode);
-//
-//        return new ArchiveHL7ApplicationExtension(hl7AppNode.name());
-//    }
 
     @Override
     protected void loadFrom(Device device, Preferences prefs)
@@ -320,6 +299,8 @@ public class PreferencesArchiveConfiguration
             return;
 
         config.load(arcae.getAttributeCoercions(), aeNode);
+        PreferencesCompressionRulesConfiguration
+                .load(arcae.getCompressionRules(), aeNode);
         loadStoreDuplicates(arcae.getStoreDuplicates(), aeNode);
     }
 
@@ -579,6 +560,9 @@ public class PreferencesArchiveConfiguration
             return;
 
         config.merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), aePrefs);
+        PreferencesCompressionRulesConfiguration
+            .merge(aa.getCompressionRules(), bb.getCompressionRules(), aePrefs);
+
         mergeStoreDuplicates(aa.getStoreDuplicates(), bb.getStoreDuplicates(), aePrefs);
     }
 
