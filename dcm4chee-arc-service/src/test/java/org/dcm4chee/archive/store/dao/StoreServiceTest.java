@@ -41,6 +41,7 @@ package org.dcm4chee.archive.store.dao;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
+import java.util.List;
 
 import javax.ejb.EJB;
 
@@ -103,6 +104,7 @@ public class StoreServiceTest {
                 .addAsResource("testdata/mpps-create.xml")
                 .addAsResource("testdata/mpps-set.xml")
                 .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml");
+        System.out.println(arc.toString(true));
         return arc;
     }
 
@@ -156,8 +158,8 @@ public class StoreServiceTest {
                 load("testdata/store-pr-1.xml"), modified3, Availability.ONLINE);
         assertEquals(1, modified3.size());
         assertEquals("TEST-REPLACE", modified3.getString(Tag.StudyID));
-        Attributes ian = storeService.createIANforCurrentMPPS();
-        assertNotNull(ian);
+        List<Attributes> ians = storeService.createIANsforCurrentMPPS();
+        assertEquals(1, ians.size());
 
         Series ctSeries = ct1.getSeries();
         Series prSeries = pr1.getSeries();

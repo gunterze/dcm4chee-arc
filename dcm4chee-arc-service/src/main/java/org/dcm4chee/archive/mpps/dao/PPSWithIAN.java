@@ -38,6 +38,8 @@
 
 package org.dcm4chee.archive.mpps.dao;
 
+import java.util.List;
+
 import org.dcm4che.data.Attributes;
 import org.dcm4chee.archive.entity.PerformedProcedureStep;
 
@@ -47,10 +49,10 @@ import org.dcm4chee.archive.entity.PerformedProcedureStep;
 public class PPSWithIAN {
 
     public final PerformedProcedureStep pps;
-    public final Attributes ian;
+    public final List<Attributes> ians;
 
-    public PPSWithIAN(PerformedProcedureStep pps, Attributes ian) {
+    public PPSWithIAN(PerformedProcedureStep pps, List<Attributes> ians) {
         this.pps = pps;
-        this.ian = ian;
+        this.ians = ians;
     }
 }

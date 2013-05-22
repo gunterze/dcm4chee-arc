@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.mpps.dao;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -68,23 +69,13 @@ public class IANQueryService {
     @PersistenceContext
     private EntityManager em;
 
-    public Attributes createIANforMPPS(PerformedProcedureStep mpps)
-            throws DicomServiceException {
+    public List<Attributes> createIANsforMPPS(PerformedProcedureStep mpps) {
         Sequence perfSeriesSeq = mpps.getAttributes()
                 .getSequence(Tag.PerformedSeriesSequence);
         if (perfSeriesSeq == null || perfSeriesSeq.isEmpty())
-            return null;
+            return Collections.emptyList();
 
-        Attributes ian = new Attributes(3);
-        Attributes refPPS = new Attributes(3);
-        ian.newSequence(Tag.ReferencedPerformedProcedureStepSequence, 1).add(refPPS);
-        refPPS.setString(Tag.ReferencedSOPClassUID, VR.UI,
-                UID.ModalityPerformedProcedureStepSOPClass);
-        refPPS.setString(Tag.ReferencedSOPInstanceUID, VR.UI,
-                mpps.getSopInstanceUID());
-        refPPS.setNull(Tag.PerformedWorkitemCodeSequence, VR.SQ);
-        Sequence refSeriesSeq = ian.newSequence(Tag.ReferencedSeriesSequence, perfSeriesSeq.size());
-        String studyInstanceUID = null;
+        List<Attributes> ians = new ArrayList<Attributes>(1);
         for (Attributes perfSeries : perfSeriesSeq) {
             Sequence refImgs =
                     perfSeries.getSequence(Tag.ReferencedImageSequence);
@@ -106,17 +97,9 @@ public class IANQueryService {
                   .setParameter(1, seriesInstanceUID)
                   .getResultList();
             if (storedSOPs.isEmpty())
-                return null;
-
-            String studyInstanceUID0 = storedSOPs.get(0).studyInstanceUID;
-            if (studyInstanceUID == null)
-                ian.setString(Tag.StudyInstanceUID, VR.UI, studyInstanceUID = studyInstanceUID0);
-            else if (!studyInstanceUID.equals(studyInstanceUID0))
-                throw new DicomServiceException(Status.ProcessingFailure,
-                        "Series referenced by MPPS belong to multiple Studies");
+                return Collections.emptyList();
 
             Attributes refSeries = new Attributes(2);
-            refSeriesSeq.add(refSeries);
             Sequence refSOPs = refSeries.newSequence(Tag.ReferencedSOPSequence, seriesSize);
             refSeries.setString(Tag.SeriesInstanceUID, VR.UI, seriesInstanceUID);
 
@@ -126,7 +109,32 @@ public class IANQueryService {
             if (refNonImgs != null)
                 if (!containsAll(storedSOPs, refNonImgs, refSOPs))
                     return null;
+
+            Attributes ian = getOrCreateIAN(ians, 
+                    storedSOPs.get(0).studyInstanceUID,
+                    mpps, perfSeriesSeq.size());
+            ian.getSequence(Tag.ReferencedSeriesSequence).add(refSeries);
         }
+        return ians;
+    }
+
+    private Attributes getOrCreateIAN(List<Attributes> ians,
+            String studyInstanceUID, PerformedProcedureStep mpps, int numSeries) {
+        for (Attributes ian : ians)
+            if (ian.getString(Tag.StudyInstanceUID).equals(studyInstanceUID))
+                return ian;
+
+        Attributes ian = new Attributes(3);
+        Attributes refPPS = new Attributes(3);
+        ian.newSequence(Tag.ReferencedPerformedProcedureStepSequence, 1).add(refPPS);
+        refPPS.setString(Tag.ReferencedSOPClassUID, VR.UI,
+                UID.ModalityPerformedProcedureStepSOPClass);
+        refPPS.setString(Tag.ReferencedSOPInstanceUID, VR.UI,
+                mpps.getSopInstanceUID());
+        refPPS.setNull(Tag.PerformedWorkitemCodeSequence, VR.SQ);
+        ian.newSequence(Tag.ReferencedSeriesSequence, numSeries);
+        ian.setString(Tag.StudyInstanceUID, VR.UI, studyInstanceUID);
+        ians.add(ian);
         return ian;
     }
 

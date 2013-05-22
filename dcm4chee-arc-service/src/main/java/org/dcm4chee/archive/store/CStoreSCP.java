@@ -39,48 +39,51 @@
 package org.dcm4chee.archive.store;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Calendar;
-import java.util.List;
 
 import javax.ejb.EJB;
 import javax.xml.transform.Templates;
 
 import org.dcm4che.audit.AuditMessage;
-import org.dcm4che.audit.AuditMessages;
-import org.dcm4che.audit.AuditMessages.EventActionCode;
-import org.dcm4che.audit.AuditMessages.EventID;
 import org.dcm4che.audit.AuditMessages.EventOutcomeIndicator;
-import org.dcm4che.audit.AuditMessages.RoleIDCode;
-import org.dcm4che.audit.Instance;
-import org.dcm4che.audit.ParticipantObjectDescription;
-import org.dcm4che.audit.ParticipantObjectIdentification;
-import org.dcm4che.audit.SOPClass;
 import org.dcm4che.conf.api.ConfigurationNotFoundException;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4che.data.UID;
 import org.dcm4che.data.VR;
+import org.dcm4che.io.DicomInputStream;
+import org.dcm4che.io.DicomInputStream.IncludeBulkData;
+import org.dcm4che.io.DicomOutputStream;
 import org.dcm4che.io.SAXTransformer;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Dimse;
+import org.dcm4che.net.PDVInputStream;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.TransferCapability;
-import org.dcm4che.net.audit.AuditLogger;
+import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicCStoreSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.util.AttributesFormat;
+import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.Archive;
 import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.entity.FileRef;
 import org.dcm4chee.archive.entity.FileSystem;
+import org.dcm4chee.archive.entity.Instance;
 import org.dcm4chee.archive.mpps.dao.IANQueryService;
 import org.dcm4chee.archive.store.dao.StoreService;
+import org.dcm4chee.archive.util.AuditUtils;
 import org.dcm4chee.archive.util.BeanLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -89,10 +92,11 @@ import org.dcm4chee.archive.util.BeanLocator;
 public class CStoreSCP extends BasicCStoreSCP {
 
     private static final String STORE_SERVICE_PROPERTY = CStoreSCP.class.getName();
-    private static final String AUDIT_MESSAGE_SUCCESS = "AuditMessageSuccess";
-    private static final String AUDIT_MESSAGE_FAILURE = "AuditMessageFailure";
+    private static final String AUDIT_MESSAGE_SUCCESS = "InstanceStoredSuccess";
+    private static final String AUDIT_MESSAGE_FAILURE = "InstanceStoredFailed";
 
-    private AuditLogger logger;
+    private static final Logger LOG = LoggerFactory.getLogger(CStoreSCP.class);
+
 
     @EJB
     private IANQueryService ianQueryService;
@@ -111,258 +115,194 @@ public class CStoreSCP extends BasicCStoreSCP {
     }
 
     @Override
-    protected File getSpoolFile(Association as, Attributes fmi)
-            throws DicomServiceException {
-        StoreService store = initStoreService(as);
-        try {
-            FileSystem fs = store.getCurrentFileSystem();
-            ApplicationEntity ae = as.getApplicationEntity();
-            ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
-            AttributesFormat filePathFormat = aeExt.getSpoolFilePathFormat();
-            File file;
-            synchronized (filePathFormat) {
-                file = new File(fs.getDirectory(), filePathFormat.format(fmi));
-            }
-            while (file.exists()) {
-                file = new File(file.getParentFile(),
-                        Integer.toString(LazyInitialization.nextInt()));
-            }
-            return file;
-        } catch (Exception e) {
-            LOG.warn(as + ": Failed to create file:", e);
-            throw new DicomServiceException(Status.OutOfResources, e);
-        }
-    }
+    protected void store(Association as, PresentationContext pc,
+            Attributes rq, PDVInputStream data, Attributes rsp)
+            throws IOException {
 
-    @Override
-    protected MessageDigest getMessageDigest(Association as) {
         ApplicationEntity ae = as.getApplicationEntity();
         ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
-        String algorithm = aeExt.getDigestAlgorithm();
-        try {
-            return algorithm != null 
-                    ? MessageDigest.getInstance(algorithm)
-                    : null;
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    protected File getFinalFile(Association as, Attributes fmi, Attributes ds,
-            File spoolFile) {
-        ApplicationEntity ae = as.getApplicationEntity();
-        ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
-        AttributesFormat filePathFormat = aeExt.getStorageFilePathFormat();
-        if (filePathFormat == null)
-            return spoolFile;
-
-        StoreService store = (StoreService) as.getProperty(
-                STORE_SERVICE_PROPERTY);
-        File storeDir = store.getCurrentFileSystem().getDirectory();
-        File dst;
-        synchronized (filePathFormat) {
-            dst = new File(storeDir, filePathFormat.format(ds));
-        }
-        while (dst.exists()) {
-            dst = new File(dst.getParentFile(),
-                    TagUtils.toHexString(LazyInitialization.nextInt()));
-        }
-        return dst;
-    }
-
-    @Override
-     protected void process(Association as, Attributes fmi, Attributes ds,
-            File file, MessageDigest digest, Attributes rsp)
-            throws DicomServiceException {
-        if (logger == null)
-            logger = Archive.getInstance().getAuditLogger();
-        if (ds.bigEndian())
-            ds = new Attributes(ds, false);
         String sourceAET = as.getRemoteAET();
-        String cuid = fmi.getString(Tag.MediaStorageSOPClassUID);
-        ApplicationEntity ae = as.getApplicationEntity();
-        ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
+        String cuid = rq.getString(Tag.AffectedSOPClassUID);
+        String iuid = rq.getString(Tag.AffectedSOPInstanceUID);
+        String tsuid = pc.getTransferSyntax();
+        Attributes fmi = as.createFileMetaInformation(iuid, cuid, tsuid);
+        Attributes attrs = null;
+        File spoolFile = null;
+        File destFile = null;
         try {
-            Attributes modified = new Attributes();
-            Templates tpl = aeExt.getAttributeCoercionTemplates(cuid,
-                    Dimse.C_STORE_RQ, TransferCapability.Role.SCP, sourceAET);
-            if (tpl != null)
-                ds.update(SAXTransformer.transform(ds, tpl, false, false),
-                        modified);
-            try {
-                ApplicationEntity sourceAE = Archive.getInstance()
-                        .findApplicationEntity(sourceAET);
-                Supplements.supplementComposite(ds, sourceAE.getDevice());
-            } catch (ConfigurationNotFoundException e) {
+            MessageDigest digest = createMessageDigest(
+                    aeExt.getDigestAlgorithm());
+
+            StoreService store = initStoreService(as, ae, aeExt);
+
+            FileSystem storeDir = store.getCurrentFileSystem();
+            destFile = spoolFile =
+                    newFile(storeDir, aeExt.getSpoolFilePathFormat(), fmi);
+            storeTo(as, fmi, data, spoolFile, digest);
+            attrs = parse(spoolFile);
+            if (attrs.bigEndian())
+                attrs = new Attributes(attrs, false);
+            AttributesFormat filePathFormat = aeExt.getStorageFilePathFormat();
+            if (filePathFormat != null) {
+                File f = newFile(storeDir, filePathFormat, attrs);
+                renameTo(as, spoolFile, f);
+                destFile = f;
             }
-            StoreService store = (StoreService) as.getProperty(
-                            STORE_SERVICE_PROPERTY);
-            FileRef fileRef = store.addFileRef(sourceAET, ds, modified, file, 
+            Attributes modified = coerceAttributes(aeExt, sourceAET, cuid, attrs);
+            FileRef fileRef = store.addFileRef(sourceAET, attrs, modified, spoolFile, 
                     digest(digest), fmi.getString(Tag.TransferSyntaxUID));
-            if (fileRef == null) {
-                delete(as, file);
-            } else if (aeExt.hasIANDestinations()) {
-                scheduleIAN(ae, store.createIANforPreviousMPPS());
-                switch (fileRef.getInstance().getAvailability()) {
-                case REJECTED_FOR_QUALITY_REASONS_REJECTION_NOTE:
-                case REJECTED_FOR_PATIENT_SAFETY_REASONS_REJECTION_NOTE:
-                case DATA_RETENTION_PERIOD_EXPIRED_REJECTION_NOTE:
-                    scheduleIAN(ae, ianQueryService.createIANforRejectionNote(ds));
-                    break;
-                case INCORRECT_MODALITY_WORKLIST_ENTRY_REJECTION_NOTE:
-                    for (Attributes ian : ianQueryService
-                            .createIANsforIncorrectModalityWorklistEntry(ds))
-                        scheduleIAN(ae, ian);
-                    break;
-                default:
-                    break;
-                }
+            if (!modified.isEmpty())
+                onCoercionOfDataElements(as, aeExt, attrs, modified, rsp);
+            if (fileRef != null) {
+                if (aeExt.hasIANDestinations())
+                    scheduleIANs(store, ae, attrs, fileRef.getInstance());
+            } else {
+                deleteFile(as, destFile);
             }
-            if (!modified.isEmpty()) {
-                if (LOG.isInfoEnabled()) {
-                    LOG.info("{}:Coercion of Data Elements:\n{}\nto:\n{}",
-                            new Object[] { 
-                                as,
-                                modified,
-                                new Attributes(ds, ds.bigEndian(), modified.tags())
-                            });
-                }
-                if (!aeExt.isSuppressWarningCoercionOfDataElements()) {
-                    rsp.setInt(Tag.Status, VR.US, Status.CoercionOfDataElements);
-                    rsp.setInt(Tag.OffendingElement, VR.AT, modified.tags());
-                }
-            }
-            log(as, ds, EventOutcomeIndicator.Success, true);
-        } catch (DicomServiceException e) {
-            throw e;
+            AuditUtils.logInstanceStored(as, attrs,
+                    EventOutcomeIndicator.Success, AUDIT_MESSAGE_SUCCESS);
         } catch (Exception e) {
-            log(as, ds, EventOutcomeIndicator.SeriousFailure, false);
-            throw new DicomServiceException(Status.ProcessingFailure,
-                    DicomServiceException.initialCauseOf(e));
+            if (destFile != null) {
+                AuditUtils.logInstanceStored(as, attrs,
+                        EventOutcomeIndicator.SeriousFailure,
+                        AUDIT_MESSAGE_FAILURE);
+                if (aeExt.isPreserveSpoolFileOnFailure()) {
+                    if (destFile != spoolFile)
+                        renameTo(as, destFile, spoolFile);
+                } else {
+                    deleteFile(as, destFile);
+                }
+            }
+            if (e instanceof DicomServiceException) {
+                throw (DicomServiceException) e;
+            } else {
+                throw new DicomServiceException(Status.ProcessingFailure, e);
+            }
         }
     }
 
-    private void log(Association as, Attributes ds, String eventOutcomeIndicator, boolean success) {
-        if (logger == null || !logger.isInstalled())
-            return;
+    private void scheduleIANs(StoreService store, ApplicationEntity ae,
+            Attributes attrs, Instance instance) {
+        for (Attributes ian : store.createIANsforPreviousMPPS())
+            scheduleIAN(ae, ian);
 
-        Calendar timeStamp = logger.timeStamp();
-        AuditMessage msg = (AuditMessage) as.getProperty(success ? AUDIT_MESSAGE_SUCCESS : AUDIT_MESSAGE_FAILURE);
-        if (!(msg instanceof AuditMessage)) {
-            as.setProperty(success ? AUDIT_MESSAGE_SUCCESS : AUDIT_MESSAGE_FAILURE,
-                    createAuditMessage(as, ds, timeStamp, eventOutcomeIndicator));
-            return;
+        switch (instance.getAvailability()) {
+        case REJECTED_FOR_QUALITY_REASONS_REJECTION_NOTE:
+        case REJECTED_FOR_PATIENT_SAFETY_REASONS_REJECTION_NOTE:
+        case DATA_RETENTION_PERIOD_EXPIRED_REJECTION_NOTE:
+            scheduleIAN(ae, ianQueryService.createIANforRejectionNote(attrs));
+            break;
+        case INCORRECT_MODALITY_WORKLIST_ENTRY_REJECTION_NOTE:
+            for (Attributes ian : ianQueryService
+                    .createIANsforIncorrectModalityWorklistEntry(attrs))
+                scheduleIAN(ae, ian);
+            break;
+        default:
+            break;
         }
-        String studyUID = ds.getString(Tag.StudyInstanceUID);
-        ParticipantObjectIdentification poid = null;
-        for (ParticipantObjectIdentification p : msg.getParticipantObjectIdentification())
-            if (p.getParticipantObjectID().equals(studyUID))
-                poid = p;
-        if (poid == null) {
-            sendAuditLogMessage(msg, timeStamp);
-            msg = createAuditMessage(as, ds, timeStamp, eventOutcomeIndicator);
-            as.setProperty(success ? AUDIT_MESSAGE_SUCCESS : AUDIT_MESSAGE_FAILURE,
-                    createAuditMessage(as, ds, timeStamp, eventOutcomeIndicator));
-            return;
+    }
+
+    private void onCoercionOfDataElements(Association as,
+            ArchiveAEExtension aeExt, Attributes attrs, Attributes modified,
+            Attributes rsp) {
+        if (LOG.isInfoEnabled()) {
+            LOG.info("{}:Coercion of Data Elements:\n{}\nto:\n{}",
+                    new Object[] { 
+                        as,
+                        modified,
+                        new Attributes(attrs, attrs.bigEndian(), modified.tags())
+                    });
         }
-        SOPClass sc = getOrCreateSOPClass(msg, ds.getString(Tag.SOPClassUID), studyUID, poid);
-        Instance instance = new Instance();
-        instance.setUID(ds.getString(Tag.SOPInstanceUID));
-        sc.getInstance().add(instance);
-        sc.setNumberOfInstances(sc.getInstance().size());
-        as.setProperty(success ? AUDIT_MESSAGE_SUCCESS : AUDIT_MESSAGE_FAILURE, msg);
+        if (!aeExt.isSuppressWarningCoercionOfDataElements()) {
+            rsp.setInt(Tag.Status, VR.US, Status.CoercionOfDataElements);
+            rsp.setInt(Tag.OffendingElement, VR.AT, modified.tags());
+        }
     }
 
-    private SOPClass getOrCreateSOPClass(AuditMessage msg, String cuid, String studyUID,
-            ParticipantObjectIdentification poid) {
-        ParticipantObjectDescription pod = poid.getParticipantObjectDescription();
-        List<SOPClass> scl = pod.getSOPClass();
-        for (SOPClass sc : scl)
-            if (sc.getUID().equals(cuid))
-                return sc;
-
-        SOPClass sc = new SOPClass();
-        sc.setUID(cuid);
-        poid.getParticipantObjectDescription().getSOPClass().add(sc);
-        return sc;
-    }
-
-    private AuditMessage createAuditMessage(Association as, Attributes ds, Calendar timeStamp,
-            String eventOutcomeIndicator) {
-        AuditMessage msg = new AuditMessage();
-        msg.setEventIdentification(AuditMessages.createEventIdentification(
-                EventID.DICOMInstancesTransferred, 
-                EventActionCode.Create, 
-                timeStamp, 
-                eventOutcomeIndicator, 
-                null));
-        msg.getActiveParticipant().add(logger.createActiveParticipant(false, RoleIDCode.Source));
-        msg.getActiveParticipant().add(AuditMessages.createActiveParticipant(
-                as.getRemoteAET(), 
-                AuditMessages.alternativeUserIDForAETitle(as.getRemoteAET()), 
-                null, 
-                true, 
-                as.getSocket().getInetAddress().getCanonicalHostName(),
-                AuditMessages.NetworkAccessPointTypeCode.MachineName, 
-                null, 
-                AuditMessages.RoleIDCode.Destination));
-        ParticipantObjectDescription pod = createObjectPOD(ds);
-        msg.getParticipantObjectIdentification().add(AuditMessages.createParticipantObjectIdentification(
-                ds.getString(Tag.StudyInstanceUID), 
-                AuditMessages.ParticipantObjectIDTypeCode.StudyInstanceUID, 
-                null, 
-                null, 
-                AuditMessages.ParticipantObjectTypeCode.SystemObject, 
-                AuditMessages.ParticipantObjectTypeCodeRole.Report, 
-                null, 
-                null, 
-                pod));
-        msg.getParticipantObjectIdentification().add(AuditMessages.createParticipantObjectIdentification(
-                getPatientIDString(ds),
-                AuditMessages.ParticipantObjectIDTypeCode.PatientNumber,
-                null,
-                null,
-                AuditMessages.ParticipantObjectTypeCode.Person,
-                AuditMessages.ParticipantObjectTypeCodeRole.Patient,
-                null,
-                null,
-                null));
-        msg.getAuditSourceIdentification().add(logger.createAuditSourceIdentification());
-        return msg;
-    }
-
-    private ParticipantObjectDescription createObjectPOD(Attributes ds) {
-        ParticipantObjectDescription pod = new ParticipantObjectDescription();
-        SOPClass sc = new SOPClass();
-        sc.setUID(ds.getString(Tag.SOPClassUID));
-        sc.setNumberOfInstances(1);
-        Instance inst = new Instance();
-        inst.setUID(ds.getString(Tag.SOPInstanceUID));
-        sc.getInstance().add(inst);
-        pod.getSOPClass().add(sc);
-        return pod;
-    }
-
-    private String getPatientIDString(Attributes ds) {
-        String id = ds.getString(Tag.PatientID);
-        String issuer = ds.getString(Tag.IssuerOfPatientID);
-        return issuer == null ? id : id + "^^^" + issuer;
-    }
-
-    private void sendAuditLogMessage(AuditMessage msg, Calendar timeStamp) {
-        if (!(msg instanceof AuditMessage))
-            return;
-    
+    private Attributes coerceAttributes(ArchiveAEExtension aeExt,
+            String sourceAET, String cuid, Attributes attrs) throws Exception {
+        Attributes modified = new Attributes();
+        Templates tpl = aeExt.getAttributeCoercionTemplates(cuid,
+                Dimse.C_STORE_RQ, TransferCapability.Role.SCP, sourceAET);
+        if (tpl != null)
+            attrs.update(SAXTransformer.transform(attrs, tpl, false, false),
+                    modified);
         try {
-            if (LOG.isDebugEnabled())
-                LOG.debug("Send Audit Log message: {}", AuditMessages.toXML(msg));
-            logger.write(timeStamp, msg);
-        } catch (Exception e) {
-            LOG.error("Failed to write audit log message: {}", e.getMessage());
-            LOG.debug(e.getMessage(), e);
+            ApplicationEntity sourceAE = Archive.getInstance()
+                    .findApplicationEntity(sourceAET);
+            Supplements.supplementComposite(attrs, sourceAE.getDevice());
+        } catch (ConfigurationNotFoundException e) {
+        }
+        return modified;
+    }
+
+    private MessageDigest createMessageDigest(String algorithm)
+            throws NoSuchAlgorithmException {
+        return algorithm != null
+                ? MessageDigest.getInstance(algorithm)
+                : null;
+    }
+
+    private static File newFile(FileSystem fs, AttributesFormat filePathFormat,
+            Attributes fmi) {
+        File file;
+        synchronized (filePathFormat) {
+            file = new File(fs.getDirectory(), filePathFormat.format(fmi));
+        }
+        while (file.exists()) {
+            file = new File(file.getParentFile(),
+                    Integer.toString(LazyInitialization.nextInt()));
+        }
+        return file;
+    }
+
+    private void storeTo(Association as, Attributes fmi, 
+            PDVInputStream data, File file, MessageDigest digest)
+                    throws IOException  {
+        LOG.info("{}: M-WRITE {}", as, file);
+        file.getParentFile().mkdirs();
+        DicomOutputStream out;
+        if (digest == null)
+            out = new DicomOutputStream(file);
+        else {
+            out = new DicomOutputStream(
+                    new DigestOutputStream(
+                            new FileOutputStream(file), digest),
+                    UID.ExplicitVRLittleEndian);
+        }
+        try {
+            out.writeFileMetaInformation(fmi);
+            data.copyTo(out);
+        } finally {
+            SafeClose.close(out);
         }
     }
+
+    private static void renameTo(Association as, File from, File dest)
+            throws IOException {
+        LOG.info("{}: M-RENAME {} to {}", new Object[]{ as, from, dest });
+        dest.getParentFile().mkdirs();
+        if (!from.renameTo(dest))
+            throw new IOException("Failed to rename " + from + " to " + dest);
+    }
+
+    private static Attributes parse(File file) throws IOException {
+        DicomInputStream in = new DicomInputStream(file);
+        try {
+            in.setIncludeBulkData(IncludeBulkData.NO);
+            return in.readDataset(-1, Tag.PixelData);
+        } finally {
+            SafeClose.close(in);
+        }
+    }
+
+    private static void deleteFile(Association as, File file) {
+        if (file.delete())
+            LOG.info("{}: M-DELETE {}", as, file);
+        else
+            LOG.warn("{}: M-DELETE {} failed!", as, file);
+    }
+
 
     private void scheduleIAN(ApplicationEntity ae, Attributes ian) {
         Archive r = Archive.getInstance();
@@ -376,17 +316,16 @@ public class CStoreSCP extends BasicCStoreSCP {
         return digest != null ? TagUtils.toHexString(digest.digest()) : null;
     }
 
-    private StoreService initStoreService(Association as)
-            throws DicomServiceException {
+    private StoreService initStoreService(Association as, ApplicationEntity ae,
+            ArchiveAEExtension aeExt) throws DicomServiceException {
         StoreService store =
                     (StoreService) as.getProperty(STORE_SERVICE_PROPERTY);
         if (store == null) {
-            ApplicationEntity ae = as.getApplicationEntity();
-            ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
             String fsGroupID = aeExt.getFileSystemGroupID();
             if (fsGroupID == null)
-                throw new IllegalStateException(
-                        "No File System Group ID configured for " + ae.getAETitle());
+                throw new DicomServiceException(Status.OutOfResources,
+                        "No File System Group ID configured for "
+                                + ae.getAETitle());
             store = BeanLocator.lookup(StoreService.class);
             store.setStoreParam(StoreParam.valueOf(ae));
             store.selectFileSystem(fsGroupID, aeExt.getInitFileSystemURI());
@@ -401,12 +340,11 @@ public class CStoreSCP extends BasicCStoreSCP {
         if (store != null) {
             ApplicationEntity ae = as.getApplicationEntity();
             ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
-            if (aeExt.hasIANDestinations())
-                try {
-                    scheduleIAN(ae, store.createIANforCurrentMPPS());
-                } catch (Exception e) {
-                    LOG.warn(as + ": Failed to create IAN for MPPS:", e);
+            if (aeExt.hasIANDestinations()) {
+                for (Attributes ian : store.createIANsforCurrentMPPS()) {
+                    scheduleIAN(ae, ian);
                 }
+            }
             store.close();
         }
     }
@@ -414,22 +352,10 @@ public class CStoreSCP extends BasicCStoreSCP {
     @Override
     public void onClose(Association as) {
         closeStoreService(as);
-        if (logger != null && logger.isInstalled()) {
-            Calendar timeStamp = logger.timeStamp();
-            sendAuditLogMessage((AuditMessage) as.getProperty(AUDIT_MESSAGE_SUCCESS), timeStamp);
-            sendAuditLogMessage((AuditMessage) as.getProperty(AUDIT_MESSAGE_FAILURE), timeStamp);
-        }
-    }
-
-    @Override
-    protected void cleanup(Association as, File spoolFile, File finalFile) {
-        ApplicationEntity ae = as.getApplicationEntity();
-        ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
-        if (!aeExt.isPreserveSpoolFileOnFailure())
-            super.cleanup(as, spoolFile, finalFile);
-        else
-            if (finalFile != null && finalFile.exists())
-                rename(as, finalFile, spoolFile);
+        AuditUtils.sendAuditLogMessage(
+                (AuditMessage) as.clearProperty(AUDIT_MESSAGE_SUCCESS));
+        AuditUtils.sendAuditLogMessage(
+                (AuditMessage) as.clearProperty(AUDIT_MESSAGE_FAILURE));
     }
 
 }

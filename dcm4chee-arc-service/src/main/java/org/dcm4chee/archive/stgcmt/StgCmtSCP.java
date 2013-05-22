@@ -55,7 +55,6 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
-import org.dcm4che.net.AssociationStateException;
 import org.dcm4che.net.Commands;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.Dimse;
@@ -72,11 +71,15 @@ import org.dcm4chee.archive.Archive;
 import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.jms.JMSService;
 import org.dcm4chee.archive.stgcmt.dao.StgCmtService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 public class StgCmtSCP extends DicomService implements MessageListener {
+
+    private static final Logger LOG = LoggerFactory.getLogger(StgCmtSCP.class);
 
     @Resource(mappedName="java:/queue/stgcmtscp")
     private Queue stgcmtSCPQueue;
@@ -133,11 +136,7 @@ public class StgCmtSCP extends DicomService implements MessageListener {
         } catch (Exception e) {
             throw new DicomServiceException(Status.ProcessingFailure, e);
         }
-        try {
-            as.writeDimseRSP(pc, rsp, null);
-        } catch (AssociationStateException e) {
-            LOG.warn("{} << N-ACTION-RSP failed: {}", as, e.getMessage());
-        }
+        as.tryWriteDimseRSP(pc, rsp, null);
     }
 
     @Override

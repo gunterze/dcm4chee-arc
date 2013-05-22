@@ -12,7 +12,7 @@
     <servlet-class>org.dcm4chee.archive.ArchiveServlet</servlet-class>
     <init-param>
       <param-name>ldapPropertiesURL</param-name>
-      <param-value>file:${jboss.server.config.dir}/dcm4chee-arc/ldap.properties</param-value>
+      <param-value>${jboss.server.config.url}/dcm4chee-arc/ldap.properties</param-value>
     </init-param>
     <init-param>
       <param-name>deviceName</param-name>

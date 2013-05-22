@@ -38,6 +38,8 @@
 
 package org.dcm4chee.archive.mpps;
 
+import java.util.List;
+
 import javax.ejb.EJB;
 
 import org.dcm4che.conf.api.ConfigurationException;
@@ -127,12 +129,13 @@ public class MPPSSCP extends BasicMPPSSCP {
             if (matchIssuerOfPatientID(remoteAET, ppsWithIAN.pps.getPatient().getAttributes()))
                 Archive.getInstance()
                         .scheduleMPPSSet(localAET, remoteAET, iuid, rqAttrs);
-        Attributes ian = ppsWithIAN.ian;
+        List<Attributes> ians = ppsWithIAN.ians;
         Archive r = Archive.getInstance();
-        if (ian != null)
-        for (String remoteAET1 : ae.getAEExtension(ArchiveAEExtension.class)
-                .getIANDestinations())
-            r.scheduleIAN(ae.getAETitle(), remoteAET1, ian);
+        if (ians != null && !ians.isEmpty())
+            for (String remoteAET1 : ae.getAEExtension(ArchiveAEExtension.class)
+                    .getIANDestinations())
+                for (Attributes ian : ians)
+                    r.scheduleIAN(ae.getAETitle(), remoteAET1, ian);
         return null;
     }
 

@@ -679,23 +679,22 @@ public class StoreService {
         return list;
     }
 
-    public Attributes createIANforPreviousMPPS() throws DicomServiceException {
+    public  List<Attributes> createIANsforPreviousMPPS() {
         PerformedProcedureStep mpps = prevMpps;
         prevMpps = null;
-        return createIANforMPPS(mpps);
+        return createIANsforMPPS(mpps);
     }
 
-    public Attributes createIANforCurrentMPPS() throws DicomServiceException {
-        return createIANforMPPS(curMpps);
+    public List<Attributes> createIANsforCurrentMPPS() {
+        return createIANsforMPPS(curMpps);
     }
 
-    private Attributes createIANforMPPS(PerformedProcedureStep mpps) 
-            throws DicomServiceException {
+    private List<Attributes> createIANsforMPPS(PerformedProcedureStep mpps) {
         if (mpps == null 
                 || mpps.getStatus() == PerformedProcedureStep.Status.IN_PROGRESS)
-            return null;
+            return Collections.emptyList();
 
-        return ianQueryService.createIANforMPPS(mpps);
+        return ianQueryService.createIANsforMPPS(mpps);
     }
 
 }

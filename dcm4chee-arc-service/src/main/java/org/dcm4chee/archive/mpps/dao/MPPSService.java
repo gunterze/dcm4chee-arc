@@ -130,7 +130,7 @@ public class MPPSService {
         Attributes attrs = pps.getAttributes();
         attrs.addAll(modified);
         pps.setAttributes(attrs, filter);
-        Attributes ian = null;
+        List<Attributes> ians = null;
         if (pps.getStatus() != PerformedProcedureStep.Status.IN_PROGRESS) {
             if (!attrs.containsValue(Tag.PerformedSeriesSequence))
                 throw new DicomServiceException(Status.MissingAttributeValue)
@@ -138,10 +138,10 @@ public class MPPSService {
             if (storeParam.isRejectedByMPPS(pps))
                     rejectPerformedSeries(
                             attrs.getSequence(Tag.PerformedSeriesSequence));
-            ian  = ianQuery.createIANforMPPS(pps);
+            ians = ianQuery.createIANsforMPPS(pps);
         }
         em.merge(pps);
-        return new PPSWithIAN(pps, ian);
+        return new PPSWithIAN(pps, ians);
     }
 
     private void rejectPerformedSeries(Sequence perfSeriesSeq) {
