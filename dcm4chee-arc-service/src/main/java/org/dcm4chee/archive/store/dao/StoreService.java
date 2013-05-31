@@ -160,6 +160,7 @@ public class StoreService {
                 }
                 switch (storeDuplicate) {
                 case IGNORE:
+                    LOG.info("Ignore already received object");
                     coerceAttributes(inst, data, modified);
                     return null;
                 case STORE:
@@ -167,6 +168,7 @@ public class StoreService {
                     coerceAttributes(inst.getSeries(), data, modified);
                     break;
                 case REPLACE:
+                    LOG.info("Replace already received object");
                     inst.setReplaced(true);
                     inst = newInstance(sourceAET, data, modified, fs.getAvailability());
                     break;

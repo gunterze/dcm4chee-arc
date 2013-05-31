@@ -915,7 +915,6 @@ dcmIIOFormatName: jpeg2000
 dicomTransferSyntax: 1.2.840.10008.1.2.4.91
 objectClass: dcmImageWriter
 dcmImageWriteParam: writeCodeStreamOnly=true
-dcmImageWriteParam: lossless=false
 
 dn: dicomTransferSyntax=1.2.840.10008.1.2.4.90,cn=Image Writer Factory,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmJavaClassName: com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriterCodecLib
@@ -4309,6 +4308,7 @@ dcmPhotometricInterpretation: RGB
 dcmPhotometricInterpretation: YBR_FULL
 dicomTransferSyntax: 1.2.840.10008.1.2.4.70
 objectClass: dcmCompressionRule
+dcmImageWriteParam: maxPixelValueError=0.0
 dcmBitsStored: 8
 dcmBitsStored: 9
 dcmBitsStored: 10
@@ -4321,7 +4321,7 @@ dcmBitsStored: 16
 cn: JPEG Lossless
 
 dn: cn=JPEG 2000 Lossless,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmAETitle: JPEG_2K_LOSSLESS
+dcmAETitle: JPEG_2000
 dcmPhotometricInterpretation: MONOCHROME1
 dcmPhotometricInterpretation: MONOCHROME2
 dcmPhotometricInterpretation: PALETTE COLOR
@@ -4329,6 +4329,7 @@ dcmPhotometricInterpretation: RGB
 dcmPhotometricInterpretation: YBR_FULL
 dicomTransferSyntax: 1.2.840.10008.1.2.4.90
 objectClass: dcmCompressionRule
+dcmImageWriteParam: maxPixelValueError=0.0
 dcmBitsStored: 8
 dcmBitsStored: 9
 dcmBitsStored: 10
@@ -4340,25 +4341,6 @@ dcmBitsStored: 15
 dcmBitsStored: 16
 cn: JPEG 2000 Lossless
 
-dn: cn=JPEG 2000 Lossy,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
-dcmAETitle: JPEG_2K_LOSSY
-dcmPhotometricInterpretation: MONOCHROME1
-dcmPhotometricInterpretation: MONOCHROME2
-dcmPhotometricInterpretation: RGB
-dcmPhotometricInterpretation: YBR_FULL
-dicomTransferSyntax: 1.2.840.10008.1.2.4.91
-objectClass: dcmCompressionRule
-dcmBitsStored: 8
-dcmBitsStored: 9
-dcmBitsStored: 10
-dcmBitsStored: 11
-dcmBitsStored: 12
-dcmBitsStored: 13
-dcmBitsStored: 14
-dcmBitsStored: 15
-dcmBitsStored: 16
-cn: JPEG 2000 Lossy
-
 dn: cn=JPEG LS Lossless,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmAETitle: JPEG_LS
 dcmPhotometricInterpretation: MONOCHROME1
@@ -4368,6 +4350,7 @@ dcmPhotometricInterpretation: RGB
 dcmPhotometricInterpretation: YBR_FULL
 dicomTransferSyntax: 1.2.840.10008.1.2.4.80
 objectClass: dcmCompressionRule
+dcmImageWriteParam: maxPixelValueError=0.0
 dcmBitsStored: 8
 dcmBitsStored: 9
 dcmBitsStored: 10
@@ -4385,7 +4368,9 @@ dcmPhotometricInterpretation: MONOCHROME1
 dcmPhotometricInterpretation: MONOCHROME2
 dicomTransferSyntax: 1.2.840.10008.1.2.4.51
 objectClass: dcmCompressionRule
-dcmImageWriteParam: compressionQuality=0.5
+dcmImageWriteParam: compressionQuality=0.8
+dcmImageWriteParam: maxPixelValueError=20.0
+dcmImageWriteParam: avgPixelValueBlockSize=8.0
 dcmBitsStored: 9
 dcmBitsStored: 10
 dcmBitsStored: 11
@@ -4399,7 +4384,9 @@ dcmPhotometricInterpretation: MONOCHROME2
 dcmPhotometricInterpretation: RGB
 dicomTransferSyntax: 1.2.840.10008.1.2.4.50
 objectClass: dcmCompressionRule
-dcmImageWriteParam: compressionQuality=0.5
+dcmImageWriteParam: compressionQuality=0.8
+dcmImageWriteParam: maxPixelValueError=10.0
+dcmImageWriteParam: avgPixelValueBlockSize=8.0
 dcmBitsStored: 8
 cn: JPEG 8-bit Lossy
 

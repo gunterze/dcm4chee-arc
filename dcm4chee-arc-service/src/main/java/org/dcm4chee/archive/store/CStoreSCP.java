@@ -38,6 +38,7 @@
 
 package org.dcm4chee.archive.store;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -53,9 +54,12 @@ import org.dcm4che.audit.AuditMessage;
 import org.dcm4che.audit.AuditMessages.EventOutcomeIndicator;
 import org.dcm4che.conf.api.ConfigurationNotFoundException;
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.BulkDataLocator;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
 import org.dcm4che.data.VR;
+import org.dcm4che.imageio.codec.CompressionRule;
+import org.dcm4che.imageio.codec.Compressor;
 import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.io.DicomInputStream.IncludeBulkData;
 import org.dcm4che.io.DicomOutputStream;
@@ -145,19 +149,37 @@ public class CStoreSCP extends BasicCStoreSCP {
             AttributesFormat filePathFormat = aeExt.getStorageFilePathFormat();
             if (filePathFormat != null) {
                 File f = newFile(storeDir, filePathFormat, attrs);
-                renameTo(as, spoolFile, f);
+                CompressionRule compressionRule =
+                        findCompressionRules(aeExt, sourceAET, attrs);
+                if (compressionRule != null) {
+                    try {
+                        MessageDigest digest2 = createMessageDigest(
+                                aeExt.getDigestAlgorithm());
+                        CStoreSCP.compress(as, fmi, attrs, tsuid,
+                                compressionRule, spoolFile, f, digest2);
+                        tsuid = compressionRule.getTransferSyntax();
+                        digest = digest2;
+                        CStoreSCP.deleteFile(as, spoolFile);
+                    } catch (IOException e) {
+                        LOG.info("Compression failed:", e);
+                        deleteFile(as, f);
+                        CStoreSCP.renameTo(as, spoolFile, f);
+                    }
+                } else {
+                    CStoreSCP.renameTo(as, spoolFile, f);
+                }
                 destFile = f;
             }
             Attributes modified = coerceAttributes(aeExt, sourceAET, cuid, attrs);
-            FileRef fileRef = store.addFileRef(sourceAET, attrs, modified, spoolFile, 
-                    digest(digest), fmi.getString(Tag.TransferSyntaxUID));
+            FileRef fileRef = store.addFileRef(sourceAET, attrs, modified, destFile, 
+                    digest(digest), tsuid);
             if (!modified.isEmpty())
                 onCoercionOfDataElements(as, aeExt, attrs, modified, rsp);
             if (fileRef != null) {
                 if (aeExt.hasIANDestinations())
                     scheduleIANs(store, ae, attrs, fileRef.getInstance());
             } else {
-                deleteFile(as, destFile);
+               deleteFile(as, destFile);
             }
             AuditUtils.logInstanceStored(as, attrs,
                     EventOutcomeIndicator.Success, AUDIT_MESSAGE_SUCCESS);
@@ -178,6 +200,41 @@ public class CStoreSCP extends BasicCStoreSCP {
             } else {
                 throw new DicomServiceException(Status.ProcessingFailure, e);
             }
+        }
+    }
+
+    private static CompressionRule findCompressionRules(ArchiveAEExtension aeExt,
+            String sourceAET, Attributes attrs) {
+        if (!(attrs.getValue(Tag.PixelData) instanceof BulkDataLocator))
+            return null;
+
+        return aeExt.getCompressionRules().findCompressionRule(sourceAET, attrs);
+    }
+
+    private static void compress(Association as, Attributes fmi,
+            Attributes attrs, String tsuid, CompressionRule rule, File src,
+            File dest, MessageDigest digest) throws IOException {
+        LOG.info("{}: M-COMPRESS {} to {}", new Object[]{ as, src, dest });
+        dest.getParentFile().mkdirs();
+        Compressor compressor = new Compressor(attrs, tsuid);
+        DicomOutputStream out = null;
+        try {
+            compressor.compress(rule.getTransferSyntax(),
+                    rule.getImageWriteParams());
+            if (digest == null)
+                out = new DicomOutputStream(dest);
+            else {
+                out = new DicomOutputStream(
+                        new BufferedOutputStream(
+                            new DigestOutputStream(
+                                    new FileOutputStream(dest), digest)),
+                        UID.ExplicitVRLittleEndian);
+            }
+            fmi.setString(Tag.TransferSyntaxUID, VR.UI, tsuid);
+            out.writeDataset(fmi, attrs);
+        } finally {
+            SafeClose.close(out);
+            compressor.close();
         }
     }
 
@@ -266,8 +323,9 @@ public class CStoreSCP extends BasicCStoreSCP {
             out = new DicomOutputStream(file);
         else {
             out = new DicomOutputStream(
-                    new DigestOutputStream(
-                            new FileOutputStream(file), digest),
+                    new BufferedOutputStream(
+                        new DigestOutputStream(
+                                new FileOutputStream(file), digest)),
                     UID.ExplicitVRLittleEndian);
         }
         try {
@@ -289,8 +347,8 @@ public class CStoreSCP extends BasicCStoreSCP {
     private static Attributes parse(File file) throws IOException {
         DicomInputStream in = new DicomInputStream(file);
         try {
-            in.setIncludeBulkData(IncludeBulkData.NO);
-            return in.readDataset(-1, Tag.PixelData);
+            in.setIncludeBulkData(IncludeBulkData.LOCATOR);
+            return in.readDataset(-1, -1);
         } finally {
             SafeClose.close(in);
         }

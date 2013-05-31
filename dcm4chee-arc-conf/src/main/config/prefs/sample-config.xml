@@ -445,9 +445,8 @@
             <node name="1.2.840.10008.1.2.4.91">
               <map>
                 <entry key="dcmIIOFormatName" value="jpeg2000"/>
-                <entry key="dcmImageWriteParam.#" value="2"/>
+                <entry key="dcmImageWriteParam.#" value="1"/>
                 <entry key="dcmImageWriteParam.1" value="writeCodeStreamOnly=true"/>
-                <entry key="dcmImageWriteParam.2" value="lossless=false"/>
                 <entry key="dcmJavaClassName" value="com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriterCodecLib"/>
               </map>
             </node>
@@ -518,6 +517,8 @@
                     <entry key="dcmBitsStored.7" value="14"/>
                     <entry key="dcmBitsStored.8" value="15"/>
                     <entry key="dcmBitsStored.9" value="16"/>
+                    <entry key="dcmImageWriteParams.#" value="1"/>
+                    <entry key="dcmImageWriteParams.1" value="maxPixelValueError=0.0"/>
                     <entry key="dcmPhotometricInterpretation.#" value="5"/>
                     <entry key="dcmPhotometricInterpretation.1" value="MONOCHROME1"/>
                     <entry key="dcmPhotometricInterpretation.2" value="MONOCHROME2"/>
@@ -531,7 +532,7 @@
                   <map>
                     <entry key="cn" value="JPEG 2000 Lossless"/>
                     <entry key="dcmAETitle.#" value="1"/>
-                    <entry key="dcmAETitle.1" value="JPEG_2K_LOSSLESS"/>
+                    <entry key="dcmAETitle.1" value="JPEG_2000"/>
                     <entry key="dcmBitsStored.#" value="9"/>
                     <entry key="dcmBitsStored.1" value="8"/>
                     <entry key="dcmBitsStored.2" value="9"/>
@@ -542,6 +543,8 @@
                     <entry key="dcmBitsStored.7" value="14"/>
                     <entry key="dcmBitsStored.8" value="15"/>
                     <entry key="dcmBitsStored.9" value="16"/>
+                    <entry key="dcmImageWriteParams.#" value="1"/>
+                    <entry key="dcmImageWriteParams.1" value="maxPixelValueError=0.0"/>
                     <entry key="dcmPhotometricInterpretation.#" value="5"/>
                     <entry key="dcmPhotometricInterpretation.1" value="MONOCHROME1"/>
                     <entry key="dcmPhotometricInterpretation.2" value="MONOCHROME2"/>
@@ -552,29 +555,6 @@
                   </map>
                 </node>
                 <node name="3">
-                  <map>
-                    <entry key="cn" value="JPEG 2000 Lossy"/>
-                    <entry key="dcmAETitle.#" value="1"/>
-                    <entry key="dcmAETitle.1" value="JPEG_2K_LOSSY"/>
-                    <entry key="dcmBitsStored.#" value="9"/>
-                    <entry key="dcmBitsStored.1" value="8"/>
-                    <entry key="dcmBitsStored.2" value="9"/>
-                    <entry key="dcmBitsStored.3" value="10"/>
-                    <entry key="dcmBitsStored.4" value="11"/>
-                    <entry key="dcmBitsStored.5" value="12"/>
-                    <entry key="dcmBitsStored.6" value="13"/>
-                    <entry key="dcmBitsStored.7" value="14"/>
-                    <entry key="dcmBitsStored.8" value="15"/>
-                    <entry key="dcmBitsStored.9" value="16"/>
-                    <entry key="dcmPhotometricInterpretation.#" value="4"/>
-                    <entry key="dcmPhotometricInterpretation.1" value="MONOCHROME1"/>
-                    <entry key="dcmPhotometricInterpretation.2" value="MONOCHROME2"/>
-                    <entry key="dcmPhotometricInterpretation.3" value="RGB"/>
-                    <entry key="dcmPhotometricInterpretation.4" value="YBR_FULL"/>
-                    <entry key="dicomTransferSyntax" value="1.2.840.10008.1.2.4.91"/>
-                  </map>
-                </node>
-                <node name="4">
                   <map>
                     <entry key="cn" value="JPEG LS Lossless"/>
                     <entry key="dcmAETitle.#" value="1"/>
@@ -589,6 +569,8 @@
                     <entry key="dcmBitsStored.7" value="14"/>
                     <entry key="dcmBitsStored.8" value="15"/>
                     <entry key="dcmBitsStored.9" value="16"/>
+                    <entry key="dcmImageWriteParams.#" value="1"/>
+                    <entry key="dcmImageWriteParams.1" value="maxPixelValueError=0.0"/>
                     <entry key="dcmPhotometricInterpretation.#" value="5"/>
                     <entry key="dcmPhotometricInterpretation.1" value="MONOCHROME1"/>
                     <entry key="dcmPhotometricInterpretation.2" value="MONOCHROME2"/>
@@ -598,7 +580,7 @@
                     <entry key="dicomTransferSyntax" value="1.2.840.10008.1.2.4.80"/>
                   </map>
                 </node>
-                <node name="5">
+                <node name="4">
                   <map>
                     <entry key="cn" value="JPEG 12-bit Lossy"/>
                     <entry key="dcmAETitle.#" value="1"/>
@@ -608,23 +590,27 @@
                     <entry key="dcmBitsStored.2" value="10"/>
                     <entry key="dcmBitsStored.3" value="11"/>
                     <entry key="dcmBitsStored.4" value="12"/>
-                    <entry key="dcmImageWriteParams.#" value="1"/>
-                    <entry key="dcmImageWriteParams.1" value="compressionQuality=0.5"/>
+                    <entry key="dcmImageWriteParams.#" value="3"/>
+                    <entry key="dcmImageWriteParams.1" value="compressionQuality=0.8"/>
+                    <entry key="dcmImageWriteParams.2" value="maxPixelValueError=20.0"/>
+                    <entry key="dcmImageWriteParams.3" value="avgPixelValueBlockSize=8.0"/>
                     <entry key="dcmPhotometricInterpretation.#" value="2"/>
                     <entry key="dcmPhotometricInterpretation.1" value="MONOCHROME1"/>
                     <entry key="dcmPhotometricInterpretation.2" value="MONOCHROME2"/>
                     <entry key="dicomTransferSyntax" value="1.2.840.10008.1.2.4.51"/>
                   </map>
                 </node>
-                <node name="6">
+                <node name="5">
                   <map>
                     <entry key="cn" value="JPEG 8-bit Lossy"/>
                     <entry key="dcmAETitle.#" value="1"/>
                     <entry key="dcmAETitle.1" value="JPEG_LOSSY"/>
                     <entry key="dcmBitsStored.#" value="1"/>
                     <entry key="dcmBitsStored.1" value="8"/>
-                    <entry key="dcmImageWriteParams.#" value="1"/>
-                    <entry key="dcmImageWriteParams.1" value="compressionQuality=0.5"/>
+                    <entry key="dcmImageWriteParams.#" value="3"/>
+                    <entry key="dcmImageWriteParams.1" value="compressionQuality=0.8"/>
+                    <entry key="dcmImageWriteParams.2" value="maxPixelValueError=10.0"/>
+                    <entry key="dcmImageWriteParams.3" value="avgPixelValueBlockSize=8.0"/>
                     <entry key="dcmPhotometricInterpretation.#" value="3"/>
                     <entry key="dcmPhotometricInterpretation.1" value="MONOCHROME1"/>
                     <entry key="dcmPhotometricInterpretation.2" value="MONOCHROME2"/>

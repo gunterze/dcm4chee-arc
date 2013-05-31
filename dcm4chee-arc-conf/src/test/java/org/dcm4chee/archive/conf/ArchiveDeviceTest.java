@@ -962,7 +962,9 @@ public class ArchiveDeviceTest {
                 null,                           // SOP Classes
                 null,                           // Body Parts
                 UID.JPEGBaseline1,
-                new String[] { "compressionQuality=0.5" }
+                "compressionQuality=0.8",
+                "maxPixelValueError=10",
+                "avgPixelValueBlockSize=8"
                 ));
         aeExt.addCompressionRule(new CompressionRule(
                 "JPEG 12-bit Lossy",
@@ -975,7 +977,9 @@ public class ArchiveDeviceTest {
                 null,                           // SOP Classes
                 null,                           // Body Parts
                 UID.JPEGExtended24,
-                new String[] { "compressionQuality=0.5" }
+                "compressionQuality=0.8",
+                "maxPixelValueError=20",
+                "avgPixelValueBlockSize=8"
                 ));
         aeExt.addCompressionRule(new CompressionRule(
                 "JPEG Lossless",
@@ -984,14 +988,14 @@ public class ArchiveDeviceTest {
                     "MONOCHROME2",
                     "PALETTE COLOR",
                     "RGB",
-                    "YBR_FULL"
-                    },
+                    "YBR_FULL" },
                 new int[] { 8, 9, 10, 11, 12, 13, 14, 15, 16 },    // Bits Stored
                 -1,                              // Pixel Representation
                 new String[] { "JPEG_LOSSLESS" },  // Source AETs
                 null,                           // SOP Classes
                 null,                           // Body Parts
-                UID.JPEGLossless
+                UID.JPEGLossless,
+                "maxPixelValueError=0"
                 ));
         aeExt.addCompressionRule(new CompressionRule(
                 "JPEG LS Lossless",
@@ -1000,14 +1004,14 @@ public class ArchiveDeviceTest {
                     "MONOCHROME2",
                     "PALETTE COLOR",
                     "RGB",
-                    "YBR_FULL"
-                    },
+                    "YBR_FULL" },
                 new int[] { 8, 9, 10, 11, 12, 13, 14, 15, 16 },    // Bits Stored
                 -1,                             // Pixel Representation
                 new String[] { "JPEG_LS" },     // Source AETs
                 null,                           // SOP Classes
                 null,                           // Body Parts
-                UID.JPEGLSLossless
+                UID.JPEGLSLossless,
+                "maxPixelValueError=0"
                 ));
         aeExt.addCompressionRule(new CompressionRule(
                 "JPEG 2000 Lossless",
@@ -1016,29 +1020,14 @@ public class ArchiveDeviceTest {
                     "MONOCHROME2",
                     "PALETTE COLOR",
                     "RGB",
-                    "YBR_FULL"
-                    },
+                    "YBR_FULL" },
                 new int[] { 8, 9, 10, 11, 12, 13, 14, 15, 16 },  // Bits Stored
                 -1,                             // Pixel Representation
-                new String[] { "JPEG_2K_LOSSLESS" }, // Source AETs
+                new String[] { "JPEG_2000" },   // Source AETs
                 null,                           // SOP Classes
                 null,                           // Body Parts
-                UID.JPEG2000LosslessOnly
-                ));
-        aeExt.addCompressionRule(new CompressionRule(
-                "JPEG 2000 Lossy",
-                new String[] {
-                    "MONOCHROME1",
-                    "MONOCHROME2",
-                    "RGB",
-                    "YBR_FULL"
-                    },
-                new int[] { 8, 9, 10, 11, 12, 13, 14, 15, 16 },  // Bits Stored
-                -1,                             // Pixel Representation
-                new String[] { "JPEG_2K_LOSSY" }, // Source AETs
-                null,                           // SOP Classes
-                null,                           // Body Parts
-                UID.JPEG2000
+                UID.JPEG2000LosslessOnly,
+                "maxPixelValueError=0"
                 ));
         addTCs(ae, null, SCP, IMAGE_CUIDS, image_tsuids);
         addTCs(ae, null, SCP, VIDEO_CUIDS, video_tsuids);
