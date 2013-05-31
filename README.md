@@ -14,7 +14,7 @@ specified in [DICOM 2011, Part 15][1], Annex H.
 
 [1]: ftp://medical.nema.org/medical/dicom/2011/11_15pu.pdf
 
-This first Alpha version supports DICOM and HL7 Services required for
+This Alpha version supports DICOM and HL7 Services required for
 compliance with IHE Radiology Workflow Integration Profiles:
 
 - [Scheduled Workflow (SWF)][2]
@@ -32,11 +32,13 @@ for these Profiles.
 [4]: http://www.ihe.net/Technical_Framework/upload/IHE_RAD_Suppl_IOCM_Rev1-1_TI_2011-05-17.pdf
 [5]: http://www.ihe.net/Technical_Framework/upload/IHE_RAD_Suppl_MIMA.pdf
 
+Additionally it supports
+- WADO URI Service
+- compression/decompression of images
+
 There are still major gaps compared to the functionality of DCM4CHEE Archive 2.x:
 
 - no Web-interface
-- no WADO Service
-- no compression/decompression
 - no auto-routing
 - no auto-switch of storage filesystems
 - no HSM support

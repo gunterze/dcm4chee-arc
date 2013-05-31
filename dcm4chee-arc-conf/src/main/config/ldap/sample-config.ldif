@@ -460,7 +460,7 @@ dicomAETitle: DCM4CHEE_ADMIN
 
 dn: dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmWadoAttributesStaleTimeout: 60
-dicomSoftwareVersion: 4.1.0.Alpha1
+dicomSoftwareVersion: 4.2.0.Alpha2
 objectClass: dicomDevice
 objectClass: dcmDevice
 objectClass: dcmArchiveDevice

@@ -813,7 +813,7 @@ public class ArchiveDeviceTest {
         setAttributeFilters(arcDevExt);
         device.setManufacturer("dcm4che.org");
         device.setManufacturerModelName("dcm4chee-arc");
-        device.setSoftwareVersions("4.1.0.Alpha1");
+        device.setSoftwareVersions("4.2.0.Alpha2");
         device.setKeyStoreURL("${jboss.server.config.url}/dcm4chee-arc/key.jks");
         device.setKeyStoreType("JKS");
         device.setKeyStorePin("secret");

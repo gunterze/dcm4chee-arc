@@ -1,4 +1,4 @@
-Getting Started with DCM4CHEE Archive 4.0.0.Alpha1
+Getting Started with DCM4CHEE Archive 4.2.0.Alpha2
 ==================================================
 
 Requirements
@@ -6,7 +6,7 @@ Requirements
 -   Java SE 6 or later - tested with [OpenJDK](http://openjdk.java.net/)
     and [Oracle JDK](http://java.com/en/download)
 
--   [JBoss Application Server 7.1.1.Final](http://www.jboss.org/jbossas/downloads)
+-   [JBoss Application Server EAP 6.1.0](http://www.jboss.org/jbossas/downloads)
 
 -   Supported SQL Database:
     - [MySQL 5.5](http://dev.mysql.com/downloads/mysql)
@@ -22,15 +22,15 @@ Requirements
     - [OpenLDAP 2.4.33](http://www.openldap.org/software/download/) and
     - [Apache DS 2.0.0-M8](http://directory.apache.org/apacheds/2.0/downloads.html).
 
-    *Note*: DCM4CHEE Archive 4.x also supports using Java Preferences as configuration
-    backend. But because DCM4CHEE Archive 4.0.0.Alpha1 does not yet contain a
+    *Note*: DCM4CHEE Archive 4.2.0.Alpha2 also supports using Java Preferences as configuration
+    backend. But because DCM4CHEE Archive 4.2. does not yet contain a
     configuration front-end, you would have to edit configuration entries in the
     Java Preferences back-end manually, which is quit cumbersome and therefore not
     further described here.
 
 -   LDAP Browser - [Apache Directory Studio 1.5.3](http://directory.apache.org/studio/)
 
-    *Note*: Because DCM4CHEE Archive 4.0.0.Alpha1 does not yet contain a specific
+    *Note*: Because DCM4CHEE Archive 4.2.0.Alpha2 does not yet contain a specific
     configuration front-end, the LDAP Browser is needed to modify the archive
     configuration.
 
@@ -44,9 +44,9 @@ Extract (unzip) your chosen download to the directory of your choice.
 
 Initialize Database
 -------------------
-*Note*: DCM4CHEE Archive 4.0.0.Alpha1 does not provide SQL scripts and utilities to
+*Note*: DCM4CHEE Archive 4.2.0.Alpha2 does not provide SQL scripts and utilities to
 migrate DCM4CHEE Archive 2.x data base schema to DCM4CHEE Archive 4.x. There will be
-provided by DCM4CHEE Archive 4.0.0 final release.
+provided by DCM4CHEE Archive 4.x final releases.
 
 ### MySQL
 
@@ -395,8 +395,8 @@ Import sample configuration into LDAP Server
     such record. 
 
 
-Setup JBoss AS 7
-----------------
+Setup JBoss AS
+--------------
 
 1.  Adjust DCM4CHEE Archive LDAP Connection configuration file
     `$DCM4CHEE_ARC/configuration/dcm4chee-arc/ldap.properties`:
@@ -409,7 +409,7 @@ Setup JBoss AS 7
 
     to your LDAP Server configuration.
 
-2.  Copy configuration files into JBoss AS 7 installation:
+2.  Copy configuration files into the JBoss AS installation:
 
         > cp -r $DCM4CHEE_ARC/configuration/dcm4chee-arc $JBOSS_HOME/standalone/configuration [UNIX]
         > xcopy %DCM4CHEE_ARC%\configuration\dcm4chee-arc %JBOSS_HOME%\standalone\configuration [Windows]
@@ -418,12 +418,12 @@ Setup JBoss AS 7
     and XSLT stylesheets specifing attribute coercion in incoming or outgoing DICOM messages
     and mapping of HL7 fields in incoming HL7 messages are not stored in LDAP.
 
-3.  Install DCM4CHE 3.0.1 libraries as JBoss AS 7 module:
+3.  Install DCM4CHE 3.2.0 libraries as JBoss AS module:
 
         > cd  $JBOSS_HOME
         > unzip $DCM4CHEE_ARC/jboss-module/dcm4che-jboss-modules-3.0.0.zip
 
-4.  Install QueryDSL 2.8.1 libraries as JBoss AS 7 module:
+4.  Install QueryDSL 2.8.1 libraries as JBoss AS module:
 
         > cd  $JBOSS_HOME
         > unzip $DCM4CHEE_ARC/jboss-module/querydsl-jboss-modules-2.8.1.zip
@@ -469,52 +469,52 @@ Setup JBoss AS 7
          </module>
 
 
-6.  Start JBoss AS 7 in standalone mode with the Java EE 6 Full Profile configuration.
-    To preserve the original JBoss AS 7 configuration you may copy the original
+6.  Start JBoss AS in standalone mode with the Java EE 6 Full Profile configuration.
+    To preserve the original JBoss AS configuration you may copy the original
     configuration file for JavaEE 6 Full Profile:
 
         > cd $JBOSS_HOME/standalone/configuration/
         > cp standalone-full.xml dcm4chee-arc.xml
 
-    and start JBoss AS 7 specifying the new configuration file:
+    and start JBoss AS specifying the new configuration file:
         
         > $JBOSS_HOME/bin/standalone.sh -c dcm4chee-arc.xml [UNIX]
         > %JBOSS_HOME%\bin\standalone.bat -c dcm4chee-arc.xml [Windows]
    
-    Verify, that JBoss AS 7 started successfully, e.g.:
+    Verify, that JBoss AS started successfully, e.g.:
 
         =========================================================================
 
           JBoss Bootstrap Environment
 
-          JBOSS_HOME: /home/gunter/jboss7
+          JBOSS_HOME: /home/gunter/jboss-eap-6.1
 
-          JAVA: /usr/lib/jvm/java-6-openjdk/bin/java
+          JAVA: /usr/lib/jvm/java-7-openjdk/bin/java
 
-          JAVA_OPTS:  -server -XX:+UseCompressedOops -XX:+TieredCompilation ...
+          JAVA_OPTS:  -server -XX:+UseCompressedOops -Xms1303m -Xmx1303m -XX:MaxPermSize=256m -Djava.net.preferIPv4Stack=true -Djboss.modules.system.pkgs=org.jboss.byteman -Djava.awt.headless=true
 
         =========================================================================
 
-        13:01:48,788 INFO  [org.jboss.modules] JBoss Modules version 1.1.1.GA
-        13:01:48,926 INFO  [org.jboss.msc] JBoss MSC version 1.0.2.GA
-        13:01:48,969 INFO  [org.jboss.as] JBAS015899: JBoss AS 7.1.1.Final "Brontes" starting
+        15:20:55,920 INFO  [org.jboss.modules] (main) JBoss Modules version 1.2.0.Final-redhat-1
+        15:20:56,134 INFO  [org.jboss.msc] (main) JBoss MSC version 1.0.4.GA-redhat-1
+        15:20:56,209 INFO  [org.jboss.as] (MSC service thread 1-6) JBAS015899: JBoss EAP 6.1.0.GA (AS 7.2.0.Final-redhat-8) starting
         :
-        13:01:51,239 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015874: JBoss AS 7.1.1.Final "Brontes" started ...
+        15:20:59,220 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015874: JBoss EAP 6.1.0.GA (AS 7.2.0.Final-redhat-8) started in 3751ms - Started 145 of 207 services (61 services are passive or on-demand)
                 
-    Running JBoss AS 7 in domain mode should work, but was not yet tested.
+    Running JBoss AS in domain mode should work, but was not yet tested.
 
-7.  Add JDBC Driver into the server configuration using JBoss AS 7 CLI in a new console window:
+7.  Add JDBC Driver into the server configuration using JBoss AS CLI in a new console window:
 
         > $JBOSS_HOME/bin/jboss-cli.sh -c [UNIX]
         > %JBOSS_HOME%\bin\jboss-cli.bat -c [Windows]
-        [standalone@localhost:9999 /] /subsystem=datasources/jdbc-driver=<driver-name>:add(driver-module-name=<module-name>)
+        [standalone@localhost:9999 /] /subsystem=datasources/jdbc-driver=<driver-name>:add(driver-name=<driver-name>,driver-module-name=<module-name>)
 
     You may choose any `<driver-name>` for the JDBC Driver, `<module-name>` must match the name
     defined in the module definition file `module.xml` of the JDBC driver, e.g.:
 
         [standalone@localhost:9999 /] /subsystem=datasources/jdbc-driver=db2:add(driver-module-name=com.ibm.db2)
 
-8.  Create and enable a new Data Source bound to JNDI name `java:/PacsDS` using JBoss AS 7 CLI:
+8.  Create and enable a new Data Source bound to JNDI name `java:/PacsDS` using JBoss AS CLI:
 
         [standalone@localhost:9999 /] data-source add --name=PacsDS \
         >     --driver-name=<driver-name> \
@@ -532,7 +532,7 @@ Setup JBoss AS 7
     -  Oracle: `jdbc:oracle:thin:@localhost:1521:<database-name>`
     -  Microsoft SQL Server: `jdbc:sqlserver://localhost:1433;databaseName=<database-name>`
 
-9.  Create JMS Queues using JBoss AS 7 CLI:
+9.  Create JMS Queues using JBoss AS CLI:
 
         [standalone@localhost:9999 /] jms-queue add --queue-address=ianscu --entries=queue/ianscu
         [standalone@localhost:9999 /] jms-queue add --queue-address=mppsscu --entries=queue/mppsscu
@@ -543,7 +543,7 @@ Setup JBoss AS 7
         $JBOSS_HOME/standalone/configuration/dcm4chee-arc/ldap.properties
 
     You may specify a different location by system property `org.dcm4chee.archive.ldapPropertiesURL`
-    using JBoss AS 7 CLI:
+    using JBoss AS CLI:
 
         [standalone@localhost:9999 /] /system-property=org.dcm4chee.archive.ldapPropertiesURL:add(value=<url>)
 
@@ -552,24 +552,24 @@ Setup JBoss AS 7
 
 11. At default, DCM4CHEE Archive 4.x will assume `dcm4chee-arc` as its Device Name, used to find its
     configuration in the configuration backend (LDAP Server or Java Preferences). You may specify a different
-    Device Name by system property `org.dcm4chee.archive.deviceName` using JBoss AS 7 CLI:
+    Device Name by system property `org.dcm4chee.archive.deviceName` using JBoss AS CLI:
 
         [standalone@localhost:9999 /] /system-property=org.dcm4chee.archive.deviceName:add(value=<device-name>)
 
 12. At default, DCM4CHEE Archive 4.x will register a JMX MBean under `org.dcm4chee.archive:type=Service` to enable
     to start and stop the archive and to reload its configuration from the configuration backend using the
     Java Monitoring and Management Console `jconsole`. You may specify a different JMX name by system property
-    `org.dcm4chee.archive.jmxName` using JBoss AS 7 CLI:
+    `org.dcm4chee.archive.jmxName` using JBoss AS CLI:
 
         [standalone@localhost:9999 /] /system-property=org.dcm4chee.archive.jmxName:add(value=<jmx-name>)
    
-13. Deploy DCM4CHEE Archive 4.x using JBoss AS 7 CLI, e.g.:
+13. Deploy DCM4CHEE Archive 4.x using JBoss AS CLI, e.g.:
 
-        [standalone@localhost:9999 /] deploy $DCM4CHEE_ARC/deploy/dcm4chee-arc-4.1.0.Alpha1-mysql.war
+        [standalone@localhost:9999 /] deploy $DCM4CHEE_ARC/deploy/dcm4chee-arc-4.2.0.Alpha2-mysql.war
 
     Verify that DCM4CHEE Archive was deployed and started successfully, e.g.:
 
-        13:11:01,711 INFO  [org.jboss.as.server.deployment] (MSC service thread 1-1) JBAS015876: Starting deployment of "dcm4chee-arc-4.1.0.Alpha1-mysql.war"
+        13:11:01,711 INFO  [org.jboss.as.server.deployment] (MSC service thread 1-1) JBAS015876: Starting deployment of "dcm4chee-arc-4.2.0.Alpha2-mysql.war"
         13:11:01,763 INFO  [org.jboss.as.jpa] (MSC service thread 1-8) JBAS011401: Read persistence.xml for dcm4chee-arc
         :
         13:11:02,706 INFO  [org.dcm4che.net.Connection] (pool-18-thread-1) Start listening on localhost/127.0.0.1:11112
@@ -577,26 +577,26 @@ Setup JBoss AS 7
         13:11:02,713 INFO  [org.dcm4che.net.Connection] (pool-18-thread-3) Start listening on localhost/127.0.0.1:2575
         13:11:02,714 INFO  [org.dcm4che.net.Connection] (pool-18-thread-4) Start listening on localhost/127.0.0.1:12575
         13:11:02,726 INFO  [org.jboss.web] (MSC service thread 1-1) JBAS018210: Registering web context: /service
-        13:11:02,771 INFO  [org.jboss.as.server] (management-handler-thread - 1) JBAS018559: Deployed "dcm4chee-arc-4.1.0.Alpha1-mysql.war"
+        13:11:02,771 INFO  [org.jboss.as.server] (management-handler-thread - 1) JBAS018559: Deployed "dcm4chee-arc-4.2.0.Alpha2-mysql.war"
 
-14. You may undeploy DCM4CHEE Archive at any time using JBoss AS 7 CLI, e.g.:
+14. You may undeploy DCM4CHEE Archive at any time using JBoss AS CLI, e.g.:
 
-        [standalone@localhost:9999 /] undeploy dcm4chee-arc-4.1.0.Alpha1-mysql.war
+        [standalone@localhost:9999 /] undeploy dcm4chee-arc-4.2.0.Alpha2-mysql.war
 
         14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-2) Stop listening on localhost/127.0.0.1:2762
         14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-4) Stop listening on localhost/127.0.0.1:12575
         14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-1) Stop listening on localhost/127.0.0.1:11112
         14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-3) Stop listening on localhost/127.0.0.1:2575
-        14:06:09,955 INFO  [org.jboss.as.jpa] (MSC service thread 1-7) JBAS011403: Stopping Persistence Unit Service 'dcm4chee-arc-4.1.0.Alpha1-mysql.war#dcm4chee-arc'
-        14:06:10,000 INFO  [org.jboss.as.server.deployment] (MSC service thread 1-5) JBAS015877: Stopped deployment dcm4chee-arc-4.1.0.Alpha1-mysql.war in 132ms
+        14:06:09,955 INFO  [org.jboss.as.jpa] (MSC service thread 1-7) JBAS011403: Stopping Persistence Unit Service 'dcm4chee-arc-4.2.0.Alpha2-mysql.war#dcm4chee-arc'
+        14:06:10,000 INFO  [org.jboss.as.server.deployment] (MSC service thread 1-5) JBAS015877: Stopped deployment dcm4chee-arc-4.2.0.Alpha2-mysql.war in 132ms
         14:06:10,561 INFO  [org.jboss.as.repository] (management-handler-thread - 7) JBAS014901: Content removed from location ... 
-        14:06:10,563 INFO  [org.jboss.as.server] (management-handler-thread - 7) JBAS018558: Undeployed "dcm4chee-arc-4.1.0.Alpha1-mysql.war"
+        14:06:10,563 INFO  [org.jboss.as.server] (management-handler-thread - 7) JBAS018558: Undeployed "dcm4chee-arc-4.2.0.Alpha2-mysql.war"
 
 
 Java Monitoring and Management Console `jconsole`
 -------------------------------------------------
 
-1.  Invoke `jconsole` using the launcher script provided by JBoss AS 7:
+1.  Invoke `jconsole` using the launcher script provided by JBoss AS:
 
         > $JBOSS_HOME/bin/jconsole.sh -c [UNIX]
         > %JBOSS_HOME%\bin\jconsole.bat -c [Windows]

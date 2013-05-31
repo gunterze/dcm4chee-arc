@@ -37,7 +37,7 @@
             <entry key="dicomManufacturer" value="dcm4che.org"/>
             <entry key="dicomManufacturerModelName" value="dcm4chee-arc"/>
             <entry key="dicomSoftwareVersion.#" value="1"/>
-            <entry key="dicomSoftwareVersion.1" value="4.1.0.Alpha1"/>
+            <entry key="dicomSoftwareVersion.1" value="4.2.0.Alpha2"/>
             <entry key="dicomThisNodeCertificateReference.#" value="1"/>
             <entry key="dicomThisNodeCertificateReference.1" value="dicomConfigurationRoot/dicomDevicesRoot/dcm4chee-arc"/>
             <entry key="userCertificate.#" value="1"/>
