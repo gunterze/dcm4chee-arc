@@ -10,7 +10,7 @@ Requirements
 
 -   Supported SQL Database:
     - [MySQL 5.5](http://dev.mysql.com/downloads/mysql)
-    - [PostgreSQL 9.2.1](http://www.postgresql.org/download/)
+    - [PostgreSQL 9.2.4](http://www.postgresql.org/download/)
     - [Firebird 2.5.1](http://www.firebirdsql.org/en/firebird-2-5-1/)
     - [DB2 10.1](http://www-01.ibm.com/software/data/db2/express/download.html)
     - [Oracle 11g](http://www.oracle.com/technetwork/products/express-edition/downloads/)
@@ -18,17 +18,17 @@ Requirements
       (not yet tested!)
 
 -   LDAP Server - tested with
-    - [OpenDJ 2.4.6](http://www.forgerock.org/opendj.html),
-    - [OpenLDAP 2.4.33](http://www.openldap.org/software/download/) and
-    - [Apache DS 2.0.0-M8](http://directory.apache.org/apacheds/2.0/downloads.html).
+    - [OpenDJ 2.5.0-Xpress1](http://www.forgerock.org/opendj.html),
+    - [OpenLDAP 2.4.35](http://www.openldap.org/software/download/) and
+    - [Apache DS 2.0.0-M12](http://directory.apache.org/apacheds/downloads.html).
 
-    *Note*: DCM4CHEE Archive 4.2.0.Alpha2 also supports using Java Preferences as configuration
-    backend. But because DCM4CHEE Archive 4.2. does not yet contain a
-    configuration front-end, you would have to edit configuration entries in the
-    Java Preferences back-end manually, which is quit cumbersome and therefore not
-    further described here.
+    *Note*: DCM4CHEE Archive 4.2.0.Alpha2 also supports using Java Preferences 
+    as configuration backend. But because DCM4CHEE Archive 4.2. does not yet
+    contain a configuration front-end, you would have to edit configuration 
+    entries in the Java Preferences back-end manually, which is quit cumbersome 
+    and therefore not further described here.
 
--   LDAP Browser - [Apache Directory Studio 1.5.3](http://directory.apache.org/studio/)
+-   LDAP Browser - [Apache Directory Studio 2.0.0](http://directory.apache.org/studio/)
 
     *Note*: Because DCM4CHEE Archive 4.2.0.Alpha2 does not yet contain a specific
     configuration front-end, the LDAP Browser is needed to modify the archive
@@ -188,7 +188,6 @@ See also [Converting old style slapd.conf file to cn=config format][1]
         include         /etc/openldap/schema/core.schema
         include         /etc/openldap/schema/dicom.schema
         include         /etc/openldap/schema/dcm4che.schema
-        include         /etc/openldap/schema/dcm4che-hl7.schema
         include         /etc/openldap/schema/dcm4chee-archive.schema
 
 3.  You may also change the default values for 
@@ -207,7 +206,6 @@ See also [Converting old style slapd.conf file to cn=config format][1]
 
         > ldapadd -xW -Dcn=config -f $DCM4CHEE_ARC/ldap/slapd/dicom.ldif
         > ldapadd -xW -Dcn=config -f $DCM4CHEE_ARC/ldap/slapd/dcm4che.ldif
-        > ldapadd -xW -Dcn=config -f $DCM4CHEE_ARC/ldap/slapd/dcm4che-hl7.ldif
         > ldapadd -xW -Dcn=config -f $DCM4CHEE_ARC/ldap/slapd/dcm4chee-archive.ldif
 
     If you don't know the root user and its password of the config backend, you may
@@ -248,9 +246,9 @@ See also [Converting old style slapd.conf file to cn=config format][1]
         > ldapmodify -xW -Dcn=config -f modify-baseDN.ldif
 
 
-### Apache DS 2.0
+### Apache DS 2.0.0
 
-1.  Install [Apache DS 2.0.0-M8](http://directory.apache.org/apacheds/2.0/downloads.html)
+1.  Install [Apache DS 2.0.0-M12](http://directory.apache.org/apacheds/downloads.html)
     on your system and start Apache DS.
 
 2.  Install [Apache Directory Studio 1.5.3](http://directory.apache.org/studio/) and
@@ -267,7 +265,6 @@ See also [Converting old style slapd.conf file to cn=config format][1]
 
         $DCM4CHEE_ARC/ldap/apacheds/dicom.ldif
         $DCM4CHEE_ARC/ldap/apacheds/dcm4che.ldif
-        $DCM4CHEE_ARC/ldap/apacheds/dcm4che-hl7.ldif
         $DCM4CHEE_ARC/ldap/apacheds/dcm4chee-archive.ldif
 
     using the LDIF import function of Apache Directory Studio LDAP Browser.
@@ -423,12 +420,19 @@ Setup JBoss AS
         > cd  $JBOSS_HOME
         > unzip $DCM4CHEE_ARC/jboss-module/dcm4che-jboss-modules-3.0.0.zip
 
-4.  Install QueryDSL 2.8.1 libraries as JBoss AS module:
+4.  Install JAI Image IO 1.2 libraries as JBoss AS module
+    (needed for compression/decompression, does not work on Windows 64 bit
+    and Mac OS X caused by missing native components for these platforms):
+
+        > cd  $JBOSS_HOME
+        > unzip $DCM4CHEE_ARC/jboss-module/jai-imageio-jboss-modules-1.2-pre-dr-b04.zip
+
+5.  Install QueryDSL 2.8.1 libraries as JBoss AS module:
 
         > cd  $JBOSS_HOME
         > unzip $DCM4CHEE_ARC/jboss-module/querydsl-jboss-modules-2.8.1.zip
 
-5.  Install JDBC Driver. DCM4CHEE Archive 4.x binary distributions do not include
+6.  Install JDBC Driver. DCM4CHEE Archive 4.x binary distributions do not include
     a JDBC driver for the database for license issues. You may download it from:
     -   [MySQL](http://www.mysql.com/products/connector/)
     -   [PostgreSQL]( http://jdbc.postgresql.org/)
@@ -469,7 +473,7 @@ Setup JBoss AS
          </module>
 
 
-6.  Start JBoss AS in standalone mode with the Java EE 6 Full Profile configuration.
+7.  Start JBoss AS in standalone mode with the Java EE 6 Full Profile configuration.
     To preserve the original JBoss AS configuration you may copy the original
     configuration file for JavaEE 6 Full Profile:
 
@@ -503,7 +507,7 @@ Setup JBoss AS
                 
     Running JBoss AS in domain mode should work, but was not yet tested.
 
-7.  Add JDBC Driver into the server configuration using JBoss AS CLI in a new console window:
+8.  Add JDBC Driver into the server configuration using JBoss AS CLI in a new console window:
 
         > $JBOSS_HOME/bin/jboss-cli.sh -c [UNIX]
         > %JBOSS_HOME%\bin\jboss-cli.bat -c [Windows]
@@ -514,7 +518,7 @@ Setup JBoss AS
 
         [standalone@localhost:9999 /] /subsystem=datasources/jdbc-driver=db2:add(driver-module-name=com.ibm.db2)
 
-8.  Create and enable a new Data Source bound to JNDI name `java:/PacsDS` using JBoss AS CLI:
+9.  Create and enable a new Data Source bound to JNDI name `java:/PacsDS` using JBoss AS CLI:
 
         [standalone@localhost:9999 /] data-source add --name=PacsDS \
         >     --driver-name=<driver-name> \
@@ -532,13 +536,13 @@ Setup JBoss AS
     -  Oracle: `jdbc:oracle:thin:@localhost:1521:<database-name>`
     -  Microsoft SQL Server: `jdbc:sqlserver://localhost:1433;databaseName=<database-name>`
 
-9.  Create JMS Queues using JBoss AS CLI:
+10. Create JMS Queues using JBoss AS CLI:
 
         [standalone@localhost:9999 /] jms-queue add --queue-address=ianscu --entries=queue/ianscu
         [standalone@localhost:9999 /] jms-queue add --queue-address=mppsscu --entries=queue/mppsscu
         [standalone@localhost:9999 /] jms-queue add --queue-address=stgcmtscp --entries=queue/stgcmtscp
 
-10. At default, DCM4CHEE Archive 4.x will look for the LDAP connection configuration file at
+11. At default, DCM4CHEE Archive 4.x will look for the LDAP connection configuration file at
 
         $JBOSS_HOME/standalone/configuration/dcm4chee-arc/ldap.properties
 
@@ -550,20 +554,20 @@ Setup JBoss AS
     If DCM4CHEE Archive 4.x cannot find the LDAP connection configuration on the specified location, it
     will try to fetch the Archive configuration from Java Preferences.
 
-11. At default, DCM4CHEE Archive 4.x will assume `dcm4chee-arc` as its Device Name, used to find its
+12. At default, DCM4CHEE Archive 4.x will assume `dcm4chee-arc` as its Device Name, used to find its
     configuration in the configuration backend (LDAP Server or Java Preferences). You may specify a different
     Device Name by system property `org.dcm4chee.archive.deviceName` using JBoss AS CLI:
 
         [standalone@localhost:9999 /] /system-property=org.dcm4chee.archive.deviceName:add(value=<device-name>)
 
-12. At default, DCM4CHEE Archive 4.x will register a JMX MBean under `org.dcm4chee.archive:type=Service` to enable
+13. At default, DCM4CHEE Archive 4.x will register a JMX MBean under `org.dcm4chee.archive:type=Service` to enable
     to start and stop the archive and to reload its configuration from the configuration backend using the
     Java Monitoring and Management Console `jconsole`. You may specify a different JMX name by system property
     `org.dcm4chee.archive.jmxName` using JBoss AS CLI:
 
         [standalone@localhost:9999 /] /system-property=org.dcm4chee.archive.jmxName:add(value=<jmx-name>)
    
-13. Deploy DCM4CHEE Archive 4.x using JBoss AS CLI, e.g.:
+14. Deploy DCM4CHEE Archive 4.x using JBoss AS CLI, e.g.:
 
         [standalone@localhost:9999 /] deploy $DCM4CHEE_ARC/deploy/dcm4chee-arc-4.2.0.Alpha2-mysql.war
 
@@ -579,7 +583,7 @@ Setup JBoss AS
         13:11:02,726 INFO  [org.jboss.web] (MSC service thread 1-1) JBAS018210: Registering web context: /service
         13:11:02,771 INFO  [org.jboss.as.server] (management-handler-thread - 1) JBAS018559: Deployed "dcm4chee-arc-4.2.0.Alpha2-mysql.war"
 
-14. You may undeploy DCM4CHEE Archive at any time using JBoss AS CLI, e.g.:
+15. You may undeploy DCM4CHEE Archive at any time using JBoss AS CLI, e.g.:
 
         [standalone@localhost:9999 /] undeploy dcm4chee-arc-4.2.0.Alpha2-mysql.war
 
@@ -605,9 +609,28 @@ Java Monitoring and Management Console `jconsole`
 
 3.  Select `org.dcm4chee.archive/Service/Operations` in the MBeans tab.
 
-4.  Invoke the `Start`, `Stop` or `ReloadConfiguration` operation to start or stop
+4.  Invoke the `start`, `stop` or `reload` operation to start or stop
     DCM4CHEE Archive 4.x, or to reload its configuration from the configuration
     backend (LDAP Server or Java Preferences).
+
+
+Control DCM4CHEE Archive 4.x by HTTP GET
+----------------------------------------
+
+1.  `HTTP GET http://localhost:8080/service/archive/running` 
+    returns `true`, if the archive is running, otherwise `false`.
+
+2.  `HTTP GET http://localhost:8080/service/archive/stop` 
+     stops DCM4CHEE Archive 4.x. 
+
+3.  `HTTP GET http://localhost:8080/service/archive/start` 
+    starts DCM4CHEE Archive 4.x. 
+
+4.  `HTTP GET http://localhost:8080/service/archive/reload` 
+    reloads the configuration from the configuration backend.
+
+*Note*: `start`, `stop` and `reload` returns `HTTP status: 204 No Content` 
+on success,  which causes some HTTP clients (in particular `wget`) to hang.
 
 
 Testing DCM4CHEE Archive 4.x
@@ -727,3 +750,22 @@ DCM4CHE 3.x's `getscu` utility:
     > $DCM4CHE_HOME/bin/getscu -cDCM4CHEE@localhost:11112 \
       -mStudyInstanceUID=1.2.840.113674.514.212.200
 
+### Test Web Access to DICOM Persistent Objects (WADO)
+
+Use DCM4CHE 3.x's `dcmdump` utility to determine `Study`, `Series` and
+'SOP Instance UID` of one of the previous stored DICOM Composite Objects:
+
+    > $DCM4CHE_HOME/bin/dcmdump ~/MESA-storage-A_12_5_0/modality/CT/CT1/CT1S1/CT1S1IM1.dcm | grep InstanceUID
+    68: (0008,0018) UI #34 [1.2.840.113674.950809132354242.100] SOPInstanceUID
+    530: (0020,000D) UI #26 [1.2.840.113674.514.212.200] StudyInstanceUID
+    564: (0020,000E) UI #30 [1.2.840.113674.514.212.81.300] SeriesInstanceUID
+
+Invoke
+
+    GET http://localhost:8080/service/archive/wado?requestType=WADO
+      &studyUID=1.2.840.113674.514.212.200
+      &seriesUID=1.2.840.113674.514.212.81.300
+      &objectUID=1.2.840.113674.950809132354242.100
+      &contentType=application/dicom
+
+by your Web Browser or any other HTTP client to retrieve the DICOM object.
