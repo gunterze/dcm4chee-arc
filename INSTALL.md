@@ -1,4 +1,4 @@
-Getting Started with DCM4CHEE Archive 4.2.0.Alpha2
+Getting Started with DCM4CHEE Archive 4.1.0.Alpha1
 ==================================================
 
 Requirements
@@ -22,7 +22,7 @@ Requirements
     - [OpenLDAP 2.4.35](http://www.openldap.org/software/download/) and
     - [Apache DS 2.0.0-M12](http://directory.apache.org/apacheds/downloads.html).
 
-    *Note*: DCM4CHEE Archive 4.2.0.Alpha2 also supports using Java Preferences 
+    *Note*: DCM4CHEE Archive 4.1.0.Alpha1 also supports using Java Preferences 
     as configuration backend. But because DCM4CHEE Archive 4.2. does not yet
     contain a configuration front-end, you would have to edit configuration 
     entries in the Java Preferences back-end manually, which is quit cumbersome 
@@ -30,7 +30,7 @@ Requirements
 
 -   LDAP Browser - [Apache Directory Studio 2.0.0](http://directory.apache.org/studio/)
 
-    *Note*: Because DCM4CHEE Archive 4.2.0.Alpha2 does not yet contain a specific
+    *Note*: Because DCM4CHEE Archive 4.1.0.Alpha1 does not yet contain a specific
     configuration front-end, the LDAP Browser is needed to modify the archive
     configuration.
 
@@ -44,7 +44,7 @@ Extract (unzip) your chosen download to the directory of your choice.
 
 Initialize Database
 -------------------
-*Note*: DCM4CHEE Archive 4.2.0.Alpha2 does not provide SQL scripts and utilities to
+*Note*: DCM4CHEE Archive 4.1.0.Alpha1 does not provide SQL scripts and utilities to
 migrate DCM4CHEE Archive 2.x data base schema to DCM4CHEE Archive 4.x. There will be
 provided by DCM4CHEE Archive 4.x final releases.
 
@@ -569,11 +569,11 @@ Setup JBoss AS
    
 14. Deploy DCM4CHEE Archive 4.x using JBoss AS CLI, e.g.:
 
-        [standalone@localhost:9999 /] deploy $DCM4CHEE_ARC/deploy/dcm4chee-arc-4.2.0.Alpha2-mysql.war
+        [standalone@localhost:9999 /] deploy $DCM4CHEE_ARC/deploy/dcm4chee-arc-4.1.0.Alpha1-mysql.war
 
     Verify that DCM4CHEE Archive was deployed and started successfully, e.g.:
 
-        13:11:01,711 INFO  [org.jboss.as.server.deployment] (MSC service thread 1-1) JBAS015876: Starting deployment of "dcm4chee-arc-4.2.0.Alpha2-mysql.war"
+        13:11:01,711 INFO  [org.jboss.as.server.deployment] (MSC service thread 1-1) JBAS015876: Starting deployment of "dcm4chee-arc-4.1.0.Alpha1-mysql.war"
         13:11:01,763 INFO  [org.jboss.as.jpa] (MSC service thread 1-8) JBAS011401: Read persistence.xml for dcm4chee-arc
         :
         13:11:02,706 INFO  [org.dcm4che.net.Connection] (pool-18-thread-1) Start listening on localhost/127.0.0.1:11112
@@ -581,20 +581,20 @@ Setup JBoss AS
         13:11:02,713 INFO  [org.dcm4che.net.Connection] (pool-18-thread-3) Start listening on localhost/127.0.0.1:2575
         13:11:02,714 INFO  [org.dcm4che.net.Connection] (pool-18-thread-4) Start listening on localhost/127.0.0.1:12575
         13:11:02,726 INFO  [org.jboss.web] (MSC service thread 1-1) JBAS018210: Registering web context: /service
-        13:11:02,771 INFO  [org.jboss.as.server] (management-handler-thread - 1) JBAS018559: Deployed "dcm4chee-arc-4.2.0.Alpha2-mysql.war"
+        13:11:02,771 INFO  [org.jboss.as.server] (management-handler-thread - 1) JBAS018559: Deployed "dcm4chee-arc-4.1.0.Alpha1-mysql.war"
 
 15. You may undeploy DCM4CHEE Archive at any time using JBoss AS CLI, e.g.:
 
-        [standalone@localhost:9999 /] undeploy dcm4chee-arc-4.2.0.Alpha2-mysql.war
+        [standalone@localhost:9999 /] undeploy dcm4chee-arc-4.1.0.Alpha1-mysql.war
 
         14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-2) Stop listening on localhost/127.0.0.1:2762
         14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-4) Stop listening on localhost/127.0.0.1:12575
         14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-1) Stop listening on localhost/127.0.0.1:11112
         14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-3) Stop listening on localhost/127.0.0.1:2575
-        14:06:09,955 INFO  [org.jboss.as.jpa] (MSC service thread 1-7) JBAS011403: Stopping Persistence Unit Service 'dcm4chee-arc-4.2.0.Alpha2-mysql.war#dcm4chee-arc'
-        14:06:10,000 INFO  [org.jboss.as.server.deployment] (MSC service thread 1-5) JBAS015877: Stopped deployment dcm4chee-arc-4.2.0.Alpha2-mysql.war in 132ms
+        14:06:09,955 INFO  [org.jboss.as.jpa] (MSC service thread 1-7) JBAS011403: Stopping Persistence Unit Service 'dcm4chee-arc-4.1.0.Alpha1-mysql.war#dcm4chee-arc'
+        14:06:10,000 INFO  [org.jboss.as.server.deployment] (MSC service thread 1-5) JBAS015877: Stopped deployment dcm4chee-arc-4.1.0.Alpha1-mysql.war in 132ms
         14:06:10,561 INFO  [org.jboss.as.repository] (management-handler-thread - 7) JBAS014901: Content removed from location ... 
-        14:06:10,563 INFO  [org.jboss.as.server] (management-handler-thread - 7) JBAS018558: Undeployed "dcm4chee-arc-4.2.0.Alpha2-mysql.war"
+        14:06:10,563 INFO  [org.jboss.as.server] (management-handler-thread - 7) JBAS018558: Undeployed "dcm4chee-arc-4.1.0.Alpha1-mysql.war"
 
 
 Java Monitoring and Management Console `jconsole`
