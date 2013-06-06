@@ -94,9 +94,9 @@ import org.slf4j.LoggerFactory;
  * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 @Path("/wado")
-public class URIWado {
+public class WadoURI {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(URIWado.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(WadoURI.class);
 
     public enum Anonymize { yes }
 

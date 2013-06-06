@@ -44,7 +44,7 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
-import org.dcm4chee.archive.wado.URIWado;
+import org.dcm4chee.archive.wado.WadoURI;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -56,7 +56,7 @@ public class ArchiveApplication extends Application {
     private final Set<Class<?>> classes = new HashSet<Class<?>>(4);
 
     public ArchiveApplication() {
-        classes.add(URIWado.class);
+        classes.add(WadoURI.class);
     }
 
     @Override
