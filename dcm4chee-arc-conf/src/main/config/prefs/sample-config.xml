@@ -479,9 +479,8 @@
               </map>
               <node name="dcmAttributeCoercion">
                 <map/>
-                <node name="1">
+                <node name="Remove person names">
                   <map>
-                    <entry key="cn" value="Remove person names"/>
                     <entry key="dcmAETitle.#" value="1"/>
                     <entry key="dcmAETitle.1" value="WITHOUT_PN"/>
                     <entry key="dcmDIMSE" value="C_STORE_RQ"/>
@@ -489,9 +488,8 @@
                     <entry key="labeledURI" value="${jboss.server.config.url}/dcm4chee-arc/nullify-pn.xsl"/>
                   </map>
                 </node>
-                <node name="2">
+                <node name="Supplement missing PID">
                   <map>
-                    <entry key="cn" value="Supplement missing PID"/>
                     <entry key="dcmAETitle.#" value="1"/>
                     <entry key="dcmAETitle.1" value="ENSURE_PID"/>
                     <entry key="dcmDIMSE" value="C_STORE_RQ"/>
