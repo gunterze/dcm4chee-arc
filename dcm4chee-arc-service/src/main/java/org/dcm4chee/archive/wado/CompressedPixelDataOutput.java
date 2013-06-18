@@ -35,60 +35,52 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-package org.dcm4chee.archive.entity;
+package org.dcm4chee.archive.wado;
 
-import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Iterator;
 
-import org.dcm4che.data.Attributes;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.StreamingOutput;
+
+import org.dcm4che.data.BulkData;
+import org.dcm4che.data.Fragments;
+import org.dcm4che.util.SafeClose;
+import org.dcm4che.util.StreamUtils;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-public class InstanceFileRef {
-    public final Long seriesPk;
-    public final String sopClassUID;
-    public final String sopInstanceUID;
-    public final Availability instanceAvailability;
-    public final String retrieveAETs;
-    public final String externalRetrieveAET;
-    public final String uri;
-    public final String transferSyntaxUID;
-    public final Availability fileAvailability;
-    private final byte[] instAttrs;
+public class CompressedPixelDataOutput implements StreamingOutput {
 
-    public InstanceFileRef(Long seriesPk, String sopClassUID,
-            String sopInstanceUID, Availability instanceAvailability,
-            String retrieveAETs, String externalRetrieveAET,
-            String fsuri, String filePath, String transferSyntaxUID,
-            Availability fileAvailability, byte[] instAttrs) {
-        this.seriesPk = seriesPk;
-        this.sopClassUID = sopClassUID;
-        this.sopInstanceUID = sopInstanceUID;
-        this.instanceAvailability = instanceAvailability;
-        this.retrieveAETs = retrieveAETs;
-        this.externalRetrieveAET = externalRetrieveAET;
-        this.uri = fsuri != null ? fsuri + filePath : null;
-        this.transferSyntaxUID = transferSyntaxUID;
-        this.fileAvailability = fileAvailability;
-        this.instAttrs = instAttrs;
+    private final Fragments fragments;
+
+    public CompressedPixelDataOutput(Fragments fragments) {
+        this.fragments = fragments;
     }
 
-    public File getFile() {
+    @Override
+    public void write(OutputStream out) throws IOException,
+            WebApplicationException {
+        Iterator<Object> iter = fragments.iterator();
+        iter.next(); // skip frame offset table
+        BulkData fragment = (BulkData) iter.next();
+        InputStream in = fragment.openStream();
         try {
-            return new File(new URI(uri));
-        } catch (URISyntaxException e) {
-            throw new IllegalStateException("uri: " + uri);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalStateException("uri: " + uri);
+            StreamUtils.skipFully(in, fragment.offset);
+            StreamUtils.copy(in, out, fragment.length);
+            while (iter.hasNext()) {
+                long streamPosition = fragment.offset + fragment.length;
+                fragment = (BulkData) iter.next();
+                StreamUtils.skipFully(in, fragment.offset - streamPosition);
+                StreamUtils.copy(in, out, fragment.length);
+            }
+        } finally {
+            SafeClose.close(in);
         }
     }
 
-    public Attributes getAttributes(Attributes seriesAttrs) {
-        Attributes attrs = new Attributes(seriesAttrs);
-        Utils.decodeAttributes(attrs, instAttrs);
-        return attrs;
-    }
 }

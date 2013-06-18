@@ -57,8 +57,41 @@ public class MediaTypes {
     /**
      * "application/dicom"
      */
+    public final static String APPLICATION_DICOM = "application/dicom";
+
+    /**
+     * "application/dicom"
+     */
     public final static MediaType APPLICATION_DICOM_TYPE =
             new MediaType("application", "dicom");
+
+    /**
+     * "application/dicom+xml"
+     */
+    public final static String APPLICATION_DICOM_XML = "application/dicom+xml";
+
+    /**
+     * "application/dicom+xml"
+     */
+    public final static MediaType APPLICATION_DICOM_XML_TYPE =
+            new MediaType("application", "dicom+xml");
+
+    /**
+     * "application/octet-stream"
+     */
+    public final static String APPLICATION_OCTET_STREAM =
+            "application/octet-stream";
+
+    /**
+     * "application/octet-stream"
+     */
+    public final static MediaType APPLICATION_OCTET_STREAM_TYPE =
+            new MediaType("application", "octet-stream");
+
+    /**
+     * "image/jpeg"
+     */
+    public final static String IMAGE_JPEG = "image/jpeg";
 
     /**
      * "image/jpeg"
@@ -67,10 +100,86 @@ public class MediaTypes {
             new MediaType("image", "jpeg");
 
     /**
+     * "image/dicom+jpeg"
+     */
+    public final static String IMAGE_DICOM_JPEG = "image/dicom+jpeg";
+
+    /**
+     * "image/dicom+jpeg"
+     */
+    public final static MediaType IMAGE_DICOM_JPEG_TYPE =
+            new MediaType("image", "dicom+jpeg");
+
+    /**
+     * "image/dicom+jpeg-ls"
+     */
+    public final static String IMAGE_DICOM_JPEG_LS = "image/dicom+jpeg-ls";
+
+    /**
+     * "image/dicom+jpeg-ls"
+     */
+    public final static MediaType IMAGE_DICOM_JPEG_LS_TYPE =
+            new MediaType("image", "dicom+jpeg-ls");
+
+    /**
+     * "image/dicom+jpeg-jp2"
+     */
+    public final static String IMAGE_DICOM_JPEG_JP2 = "image/dicom+jpeg-jp2";
+
+    /**
+     * "image/dicom+jpeg-jp2"
+     */
+    public final static MediaType IMAGE_DICOM_JPEG_JP2_TYPE =
+            new MediaType("image", "dicom+jpeg-jp2");
+
+    /**
+     * "image/dicom+jpeg-jpx"
+     */
+    public final static String IMAGE_DICOM_JPEG_JPX = "image/dicom+jpeg-jpx";
+
+    /**
+     * "image/dicom+jpeg-jpx"
+     */
+    public final static MediaType IMAGE_DICOM_JPEG_JPX_TYPE =
+            new MediaType("image", "dicom+jpeg-jpx");
+
+    /**
+     * "image/dicom+rle"
+     */
+    public final static String IMAGE_DICOM_RLE = "image/dicom+rle";
+
+    /**
+     * "image/dicom+rle"
+     */
+    public final static MediaType IMAGE_DICOM_RLE_TYPE =
+            new MediaType("image", "dicom+rle");
+
+    /**
+     * "video/mpeg"
+     */
+    public final static String VIDEO_MPEG = "video/mpeg";
+
+    /**
      * "video/mpeg"
      */
     public final static MediaType VIDEO_MPEG_TYPE =
             new MediaType("video", "mpeg");
+
+    /**
+     * "video/mp4"
+     */
+    public final static String VIDEO_MP4 = "video/mp4";
+
+    /**
+     * "video/mp4"
+     */
+    public final static MediaType VIDEO_MP4_TYPE =
+            new MediaType("video", "mp4");
+
+    /**
+     * "application/pdf"
+     */
+    public final static String APPLICATION_PDF = "application/pdf";
 
     /**
      * "application/pdf"
@@ -78,14 +187,36 @@ public class MediaTypes {
     public final static MediaType APPLICATION_PDF_TYPE =
             new MediaType("application", "pdf");
 
-    public static boolean equalsIgnoreParams(MediaType type1, MediaType type2) {
-        return type1 == type2 
-                || type1.getType().equalsIgnoreCase(type2.getType())
-                && type1.getSubtype().equalsIgnoreCase(type2.getSubtype());
+    /**
+     * "multipart/related"
+     */
+    public final static String MULTIPART_RELATED = "multipart/related";
+
+    /**
+     * "multipart/related"
+     */
+    public final static MediaType MULTIPART_RELATED_TYPE =
+            new MediaType("multipart", "related");
+
+    public static MediaType bodyPartMediaType(MediaType mediaType) {
+        if (mediaType.isWildcardType())
+            return mediaType;
+
+        return MediaType.valueOf(mediaType.getParameters().get("type"));
     }
 
-    public static boolean isDicomApplicationType(MediaType mediaType) {
-        return equalsIgnoreParams(mediaType, APPLICATION_DICOM_TYPE);
+    public static boolean equalsIgnoreParameters(MediaType a, MediaType b) {
+       return a.getType().equalsIgnoreCase(b.getType())
+           && a.getSubtype().equalsIgnoreCase(b.getSubtype());
+    }
+
+    public static boolean isApplicationOctetStream(MediaType mediaType) {
+        return equalsIgnoreParameters(mediaType, APPLICATION_OCTET_STREAM_TYPE);
+    }
+
+    public static boolean isMultiframeMediaType(MediaType mediaType) {
+        return mediaType.getType().equalsIgnoreCase("video")
+                || mediaType.getSubtype().equalsIgnoreCase("dicom+jpeg-jpx");
     }
 
     public static List<MediaType> supportedMediaTypesOf(InstanceFileRef ref,
@@ -94,14 +225,19 @@ public class MediaTypes {
         if (attrs.contains(Tag.BitsAllocated)) {
             if (attrs.getInt(Tag.NumberOfFrames, 1) > 1) {
                 list.add(APPLICATION_DICOM_TYPE);
-                boolean mpeg = (UID.MPEG2.equals(ref.transferSyntaxUID)
+                MediaType mediaType;
+                if (UID.MPEG2.equals(ref.transferSyntaxUID)
                         || UID.MPEG2MainProfileHighLevel
-                            .equals(ref.transferSyntaxUID)
-                        || UID.MPEG4AVCH264HighProfileLevel41
-                            .equals(ref.transferSyntaxUID)
+                        .equals(ref.transferSyntaxUID))
+                    mediaType = VIDEO_MPEG_TYPE;
+                else if (UID.MPEG4AVCH264HighProfileLevel41
+                        .equals(ref.transferSyntaxUID)
                         || UID.MPEG4AVCH264BDCompatibleHighProfileLevel41
-                            .equals(ref.transferSyntaxUID));
-                list.add(mpeg ? VIDEO_MPEG_TYPE : IMAGE_JPEG_TYPE);
+                        .equals(ref.transferSyntaxUID))
+                    mediaType = VIDEO_MP4_TYPE;
+                else
+                    mediaType= IMAGE_JPEG_TYPE;
+                list.add(mediaType);
             } else {
                 list.add(IMAGE_JPEG_TYPE);
                 list.add(APPLICATION_DICOM_TYPE);
@@ -120,4 +256,52 @@ public class MediaTypes {
         }
         return list ;
     }
+
+    public static MediaType forTransferSyntax(String ts) {
+        if (isLittleEndian(ts))
+            return APPLICATION_OCTET_STREAM_TYPE;
+
+        if (UID.JPEGLossless.equals(ts))
+            return IMAGE_DICOM_JPEG_TYPE;
+
+        if (UID.JPEGLSLossless.equals(ts))
+            return IMAGE_DICOM_JPEG_LS_TYPE;
+
+        if (UID.JPEG2000LosslessOnly.equals(ts))
+            return IMAGE_DICOM_JPEG_JP2_TYPE;
+
+        if (UID.JPEG2000Part2MultiComponentLosslessOnly.equals(ts))
+            return IMAGE_DICOM_JPEG_JPX_TYPE;
+
+        if (UID.RLELossless.equals(ts))
+            return IMAGE_DICOM_RLE_TYPE;
+
+        String s;
+        if (UID.JPEGBaseline1.equals(ts)
+                || UID.JPEGExtended24.equals(ts)
+                || UID.JPEGLosslessNonHierarchical14.equals(ts))
+            s = IMAGE_DICOM_JPEG;
+        else if (UID.JPEGLSLossyNearLossless.equals(ts))
+            s = IMAGE_DICOM_JPEG_LS;
+        else if (UID.JPEG2000.equals(ts))
+            s = IMAGE_DICOM_JPEG_JP2;
+        else if (UID.JPEG2000Part2MultiComponent.equals(ts))
+            s = IMAGE_DICOM_JPEG_JP2;
+        else if (UID.MPEG2.equals(ts)
+                || UID.MPEG2MainProfileHighLevel.equals(ts))
+            s = VIDEO_MPEG;
+        else if (UID.MPEG4AVCH264HighProfileLevel41.equals(ts)
+                || UID.MPEG4AVCH264BDCompatibleHighProfileLevel41.equals(ts))
+            s = VIDEO_MP4;
+        else
+            throw new IllegalArgumentException("ts: " + ts);
+
+        return MediaType.valueOf(s + ";transfer-syntax=" + ts);
+    }
+
+    public static boolean isLittleEndian(String ts) {
+        return UID.ExplicitVRLittleEndian.equals(ts)
+                || UID.ImplicitVRLittleEndian.equals(ts);
+    }
+
 }

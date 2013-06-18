@@ -54,7 +54,7 @@ import org.dcm4che.audit.AuditMessage;
 import org.dcm4che.audit.AuditMessages.EventOutcomeIndicator;
 import org.dcm4che.conf.api.ConfigurationNotFoundException;
 import org.dcm4che.data.Attributes;
-import org.dcm4che.data.BulkDataLocator;
+import org.dcm4che.data.BulkData;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
 import org.dcm4che.data.VR;
@@ -205,7 +205,7 @@ public class CStoreSCP extends BasicCStoreSCP {
 
     private static CompressionRule findCompressionRules(ArchiveAEExtension aeExt,
             String sourceAET, Attributes attrs) {
-        if (!(attrs.getValue(Tag.PixelData) instanceof BulkDataLocator))
+        if (!(attrs.getValue(Tag.PixelData) instanceof BulkData))
             return null;
 
         return aeExt.getCompressionRules().findCompressionRule(sourceAET, attrs);
@@ -347,7 +347,7 @@ public class CStoreSCP extends BasicCStoreSCP {
     private static Attributes parse(File file) throws IOException {
         DicomInputStream in = new DicomInputStream(file);
         try {
-            in.setIncludeBulkData(IncludeBulkData.LOCATOR);
+            in.setIncludeBulkData(IncludeBulkData.URI);
             return in.readDataset(-1, -1);
         } finally {
             SafeClose.close(in);

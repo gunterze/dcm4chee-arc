@@ -37,6 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 package org.dcm4chee.archive.wado.dao;
 
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.ejb.Stateless;
@@ -60,7 +62,7 @@ public class WadoService {
             String objectUID) {
         @SuppressWarnings("unchecked")
         List<InstanceFileRef> refs =
-                em.createNamedQuery(Instance.INSTANCE_FILE_REF)
+                em.createNamedQuery(Instance.INSTANCE_FILE_REF_BY_SOP_INSTANCE_UID)
                   .setParameter(1, objectUID)
                   .getResultList();
 
@@ -71,4 +73,37 @@ public class WadoService {
         return null;
     }
 
+    public List<InstanceFileRef> locate(String studyUID, String seriesUID) {
+        @SuppressWarnings("unchecked")
+        List<InstanceFileRef> refs =
+                em.createNamedQuery(Instance.INSTANCE_FILE_REF_BY_SERIES_INSTANCE_UID)
+                  .setParameter(1, seriesUID)
+                  .getResultList();
+
+        oneFileRefPerInstance(refs);
+        return refs;
+    }
+
+    public List<InstanceFileRef> locate(String studyUID) {
+        @SuppressWarnings("unchecked")
+        List<InstanceFileRef> refs =
+                em.createNamedQuery(Instance.INSTANCE_FILE_REF_BY_STUDY_INSTANCE_UID)
+                  .setParameter(1, studyUID)
+                  .getResultList();
+
+        oneFileRefPerInstance(refs);
+        return refs;
+    }
+
+    private void oneFileRefPerInstance(List<InstanceFileRef> refs) {
+        HashSet<String> iuids = new HashSet<String>(refs.size() * 4 / 3);
+        for (Iterator<InstanceFileRef> iter = refs.iterator(); iter.hasNext();) {
+            InstanceFileRef ref = iter.next();
+            if (!iuids.contains(ref.sopInstanceUID)
+                    && ref.instanceAvailability == ref.fileAvailability)
+                iuids.add(ref.sopInstanceUID);
+            else
+                iter.remove();
+        }
+    }
 }

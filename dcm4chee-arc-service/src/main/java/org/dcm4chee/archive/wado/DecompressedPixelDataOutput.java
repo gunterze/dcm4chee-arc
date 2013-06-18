@@ -35,60 +35,45 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-package org.dcm4chee.archive.entity;
+package org.dcm4chee.archive.wado;
 
-import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.io.IOException;
+import java.io.OutputStream;
 
-import org.dcm4che.data.Attributes;
+import javax.imageio.stream.ImageInputStream;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.StreamingOutput;
+
+import org.dcm4che.imageio.codec.Decompressor;
+import org.dcm4che.util.SafeClose;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-public class InstanceFileRef {
-    public final Long seriesPk;
-    public final String sopClassUID;
-    public final String sopInstanceUID;
-    public final Availability instanceAvailability;
-    public final String retrieveAETs;
-    public final String externalRetrieveAET;
-    public final String uri;
-    public final String transferSyntaxUID;
-    public final Availability fileAvailability;
-    private final byte[] instAttrs;
+public class DecompressedPixelDataOutput implements StreamingOutput {
 
-    public InstanceFileRef(Long seriesPk, String sopClassUID,
-            String sopInstanceUID, Availability instanceAvailability,
-            String retrieveAETs, String externalRetrieveAET,
-            String fsuri, String filePath, String transferSyntaxUID,
-            Availability fileAvailability, byte[] instAttrs) {
-        this.seriesPk = seriesPk;
-        this.sopClassUID = sopClassUID;
-        this.sopInstanceUID = sopInstanceUID;
-        this.instanceAvailability = instanceAvailability;
-        this.retrieveAETs = retrieveAETs;
-        this.externalRetrieveAET = externalRetrieveAET;
-        this.uri = fsuri != null ? fsuri + filePath : null;
-        this.transferSyntaxUID = transferSyntaxUID;
-        this.fileAvailability = fileAvailability;
-        this.instAttrs = instAttrs;
+    private final Decompressor decompressor;
+    private final int frameIndex;
+
+    public DecompressedPixelDataOutput(Decompressor decompressor, int frameIndex) {
+        this.decompressor = decompressor;
+        this.frameIndex = frameIndex;
     }
 
-    public File getFile() {
-        try {
-            return new File(new URI(uri));
-        } catch (URISyntaxException e) {
-            throw new IllegalStateException("uri: " + uri);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalStateException("uri: " + uri);
+    @Override
+    public void write(OutputStream output) throws IOException,
+            WebApplicationException {
+        if (frameIndex == -1)
+            decompressor.writeTo(output);
+        else {
+            ImageInputStream iis = decompressor.createImageInputStream();
+            try {
+                decompressor.writeFrameTo(iis, frameIndex, output);
+            } finally {
+                SafeClose.close(iis);
+            }
         }
     }
 
-    public Attributes getAttributes(Attributes seriesAttrs) {
-        Attributes attrs = new Attributes(seriesAttrs);
-        Utils.decodeAttributes(attrs, instAttrs);
-        return attrs;
-    }
 }

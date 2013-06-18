@@ -44,6 +44,7 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+import org.dcm4chee.archive.wado.WadoRS;
 import org.dcm4chee.archive.wado.WadoURI;
 
 /**
@@ -57,6 +58,7 @@ public class ArchiveApplication extends Application {
 
     public ArchiveApplication() {
         classes.add(WadoURI.class);
+        classes.add(WadoRS.class);
     }
 
     @Override

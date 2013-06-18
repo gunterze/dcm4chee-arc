@@ -35,60 +35,41 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-package org.dcm4chee.archive.entity;
+package org.dcm4chee.archive.wado;
 
-import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-import org.dcm4che.data.Attributes;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.StreamingOutput;
+
+import org.dcm4che.data.BulkData;
+import org.dcm4che.util.SafeClose;
+import org.dcm4che.util.StreamUtils;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-public class InstanceFileRef {
-    public final Long seriesPk;
-    public final String sopClassUID;
-    public final String sopInstanceUID;
-    public final Availability instanceAvailability;
-    public final String retrieveAETs;
-    public final String externalRetrieveAET;
-    public final String uri;
-    public final String transferSyntaxUID;
-    public final Availability fileAvailability;
-    private final byte[] instAttrs;
+public class BulkDataOutput implements StreamingOutput {
 
-    public InstanceFileRef(Long seriesPk, String sopClassUID,
-            String sopInstanceUID, Availability instanceAvailability,
-            String retrieveAETs, String externalRetrieveAET,
-            String fsuri, String filePath, String transferSyntaxUID,
-            Availability fileAvailability, byte[] instAttrs) {
-        this.seriesPk = seriesPk;
-        this.sopClassUID = sopClassUID;
-        this.sopInstanceUID = sopInstanceUID;
-        this.instanceAvailability = instanceAvailability;
-        this.retrieveAETs = retrieveAETs;
-        this.externalRetrieveAET = externalRetrieveAET;
-        this.uri = fsuri != null ? fsuri + filePath : null;
-        this.transferSyntaxUID = transferSyntaxUID;
-        this.fileAvailability = fileAvailability;
-        this.instAttrs = instAttrs;
+    private final BulkData bulkData;
+
+    public BulkDataOutput(BulkData bulkData) {
+        this.bulkData = bulkData;
     }
 
-    public File getFile() {
+    @Override
+    public void write(OutputStream out) throws IOException,
+            WebApplicationException {
+        InputStream in = bulkData.openStream();
         try {
-            return new File(new URI(uri));
-        } catch (URISyntaxException e) {
-            throw new IllegalStateException("uri: " + uri);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalStateException("uri: " + uri);
+            StreamUtils.skipFully(in, bulkData.offset);
+            StreamUtils.copy(in, out, bulkData.length);
+        } finally {
+            SafeClose.close(in);
         }
     }
 
-    public Attributes getAttributes(Attributes seriesAttrs) {
-        Attributes attrs = new Attributes(seriesAttrs);
-        Utils.decodeAttributes(attrs, instAttrs);
-        return attrs;
-    }
 }

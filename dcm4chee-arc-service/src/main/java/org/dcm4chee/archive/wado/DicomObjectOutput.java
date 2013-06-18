@@ -35,60 +35,58 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-package org.dcm4chee.archive.entity;
+package org.dcm4chee.archive.wado;
 
-import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.io.IOException;
+import java.io.OutputStream;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.StreamingOutput;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.UID;
+import org.dcm4che.imageio.codec.Decompressor;
+import org.dcm4che.io.DicomInputStream;
+import org.dcm4che.io.DicomInputStream.IncludeBulkData;
+import org.dcm4che.io.DicomOutputStream;
+import org.dcm4che.util.SafeClose;
+import org.dcm4chee.archive.entity.InstanceFileRef;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-public class InstanceFileRef {
-    public final Long seriesPk;
-    public final String sopClassUID;
-    public final String sopInstanceUID;
-    public final Availability instanceAvailability;
-    public final String retrieveAETs;
-    public final String externalRetrieveAET;
-    public final String uri;
-    public final String transferSyntaxUID;
-    public final Availability fileAvailability;
-    private final byte[] instAttrs;
+class DicomObjectOutput implements StreamingOutput {
 
-    public InstanceFileRef(Long seriesPk, String sopClassUID,
-            String sopInstanceUID, Availability instanceAvailability,
-            String retrieveAETs, String externalRetrieveAET,
-            String fsuri, String filePath, String transferSyntaxUID,
-            Availability fileAvailability, byte[] instAttrs) {
-        this.seriesPk = seriesPk;
-        this.sopClassUID = sopClassUID;
-        this.sopInstanceUID = sopInstanceUID;
-        this.instanceAvailability = instanceAvailability;
-        this.retrieveAETs = retrieveAETs;
-        this.externalRetrieveAET = externalRetrieveAET;
-        this.uri = fsuri != null ? fsuri + filePath : null;
-        this.transferSyntaxUID = transferSyntaxUID;
-        this.fileAvailability = fileAvailability;
-        this.instAttrs = instAttrs;
+    private final InstanceFileRef fileRef;
+    private final Attributes attrs;
+    private final String tsuid;
+
+    DicomObjectOutput(InstanceFileRef fileRef, Attributes attrs, String tsuid) {
+        this.fileRef = fileRef;
+        this.attrs = attrs;
+        this.tsuid = tsuid;
     }
 
-    public File getFile() {
+    @Override
+    public void write(OutputStream out) throws IOException,
+            WebApplicationException {
+        DicomInputStream dis = new DicomInputStream(fileRef.getFile());
         try {
-            return new File(new URI(uri));
-        } catch (URISyntaxException e) {
-            throw new IllegalStateException("uri: " + uri);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalStateException("uri: " + uri);
+            dis.setIncludeBulkData(IncludeBulkData.URI);
+            Attributes dataset = dis.readDataset(-1, -1);
+            dataset.addAll(attrs);
+            if (tsuid != fileRef.transferSyntaxUID) {
+                Decompressor.decompress(dataset, fileRef.transferSyntaxUID);
+            }
+            Attributes fmi = dataset.createFileMetaInformation(tsuid);
+            @SuppressWarnings("resource")
+            DicomOutputStream dos =
+                new DicomOutputStream(out, UID.ExplicitVRLittleEndian);
+            dos.writeDataset(fmi, dataset);
+        } finally {
+            SafeClose.close(dis);
         }
     }
 
-    public Attributes getAttributes(Attributes seriesAttrs) {
-        Attributes attrs = new Attributes(seriesAttrs);
-        Utils.decodeAttributes(attrs, instAttrs);
-        return attrs;
-    }
 }

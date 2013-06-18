@@ -97,7 +97,7 @@ import org.dcm4chee.archive.conf.AttributeFilter;
             + "FROM Instance i "
             + "WHERE i.series.seriesInstanceUID = ?1 AND i.replaced = FALSE"),
 @NamedQuery(
-    name="Instance.instanceFileRef",
+    name="Instance.instanceFileRefBySOPInstanceUID",
     query="SELECT NEW org.dcm4chee.archive.entity.InstanceFileRef("
             + "i.series.pk, "
             + "i.sopClassUID, "
@@ -113,6 +113,40 @@ import org.dcm4chee.archive.conf.AttributeFilter;
             + "FROM Instance i "
             + "LEFT JOIN i.fileRefs f "
             + "WHERE i.sopInstanceUID = ?1 AND i.replaced = FALSE"),
+@NamedQuery(
+    name="Instance.instanceFileRefByStudyInstanceUID",
+    query="SELECT NEW org.dcm4chee.archive.entity.InstanceFileRef("
+            + "i.series.pk, "
+            + "i.sopClassUID, "
+            + "i.sopInstanceUID, "
+            + "i.availability, "
+            + "i.retrieveAETs, "
+            + "i.externalRetrieveAET, "
+            + "f.fileSystem.uri, "
+            + "f.filePath, "
+            + "f.transferSyntaxUID, "
+            + "f.fileSystem.availability, "
+            + "i.encodedAttributes) "
+            + "FROM Instance i "
+            + "LEFT JOIN i.fileRefs f "
+            + "WHERE i.series.study.studyInstanceUID = ?1 AND i.replaced = FALSE"),
+@NamedQuery(
+    name="Instance.instanceFileRefBySeriesInstanceUID",
+    query="SELECT NEW org.dcm4chee.archive.entity.InstanceFileRef("
+            + "i.series.pk, "
+            + "i.sopClassUID, "
+            + "i.sopInstanceUID, "
+            + "i.availability, "
+            + "i.retrieveAETs, "
+            + "i.externalRetrieveAET, "
+            + "f.fileSystem.uri, "
+            + "f.filePath, "
+            + "f.transferSyntaxUID, "
+            + "f.fileSystem.availability, "
+            + "i.encodedAttributes) "
+            + "FROM Instance i "
+            + "LEFT JOIN i.fileRefs f "
+            + "WHERE i.series.seriesInstanceUID = ?1 AND i.replaced = FALSE"),
 @NamedQuery(
     name="Instance.numberOfStudyRelatedInstances",
     query="SELECT COUNT(i) FROM Instance i "
@@ -137,8 +171,12 @@ public class Instance implements Serializable {
             "Instance.sopInstanceReferenceBySeriesInstanceUID";
     public static final String SOP_INSTANCE_REFERENCE_BY_STUDY_INSTANCE_UID =
             "Instance.sopInstanceReferenceByStudyInstanceUID";
-    public static final String INSTANCE_FILE_REF =
-            "Instance.instanceFileRef";
+    public static final String INSTANCE_FILE_REF_BY_SOP_INSTANCE_UID =
+            "Instance.instanceFileRefBySOPInstanceUID";
+    public static final String INSTANCE_FILE_REF_BY_SERIES_INSTANCE_UID =
+            "Instance.instanceFileRefBySeriesInstanceUID";
+    public static final String INSTANCE_FILE_REF_BY_STUDY_INSTANCE_UID =
+            "Instance.instanceFileRefByStudyInstanceUID";
     public static final String NUMBER_OF_STUDY_RELATED_INSTANCES =
             "Instance.numberOfStudyRelatedInstances";
     public static final String NUMBER_OF_SERIES_RELATED_INSTANCES =

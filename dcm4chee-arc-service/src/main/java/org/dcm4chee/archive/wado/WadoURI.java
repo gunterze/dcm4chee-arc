@@ -41,10 +41,8 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URI;
 import java.util.Iterator;
 import java.util.List;
 
@@ -69,17 +67,13 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
 import org.dcm4che.image.PaletteColorModel;
 import org.dcm4che.image.PixelAspectRatio;
-import org.dcm4che.imageio.codec.Decompressor;
 import org.dcm4che.imageio.plugins.dcm.DicomImageReadParam;
 import org.dcm4che.imageio.plugins.dcm.DicomMetaData;
 import org.dcm4che.imageio.stream.OutputStreamAdapter;
 import org.dcm4che.io.DicomInputStream;
-import org.dcm4che.io.DicomInputStream.IncludeBulkData;
-import org.dcm4che.io.DicomOutputStream;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.dao.SeriesService;
@@ -234,10 +228,10 @@ public class WadoURI {
         AuditUtils.logWADORetrieve(ref, attrs, request);
 
         if (mediaType == MediaTypes.APPLICATION_DICOM_TYPE)
-            return retrieveNativeDicomObject(ref.uri, attrs);
+            return retrieveNativeDicomObject(ref, attrs);
 
         if (mediaType == MediaTypes.IMAGE_JPEG_TYPE)
-            return retrieveJPEG(ref.uri, attrs);
+            return retrieveJPEG(ref, attrs);
 
         throw new WebApplicationException(501);
 
@@ -254,7 +248,7 @@ public class WadoURI {
             for (MediaType mediaType : contentType.values) {
                 if (!isAccepted(mediaType))
                     throw new WebApplicationException(Status.BAD_REQUEST);
-                if (MediaTypes.isDicomApplicationType(mediaType))
+                if (mediaType.isCompatible(MediaTypes.APPLICATION_DICOM_TYPE))
                     applicationDicom = true;
             }
         }
@@ -279,49 +273,31 @@ public class WadoURI {
 
     private MediaType selectMediaType(List<MediaType> supported) {
         if (contentType != null)
-            for (MediaType desiredType : contentType.values)
+            for (MediaType requestedType : contentType.values)
                 for (MediaType supportedType : supported)
-                    if (MediaTypes.equalsIgnoreParams(supportedType, desiredType))
+                    if (requestedType.isCompatible(supportedType))
                         return supportedType;
         return supported.get(0);
     }
 
-    private Response retrieveNativeDicomObject(final String uri, final Attributes attrs) {
-        return Response.ok(new StreamingOutput() {
-            
-            @Override
-            public void write(OutputStream out) throws IOException,
-                    WebApplicationException {
-                DicomInputStream dis = new DicomInputStream(fileOf(uri));
-                try {
-                    String tsuid = dis.getFileMetaInformation()
-                            .getString(Tag.TransferSyntaxUID);
-                    dis.setIncludeBulkData(IncludeBulkData.LOCATOR);
-                    Attributes dataset = dis.readDataset(-1, -1);
-                    dataset.addAll(attrs);
-                    if (!transferSyntax.contains(tsuid)) {
-                        Decompressor.decompress(dataset, tsuid);
-                        tsuid = UID.ExplicitVRLittleEndian;
-                    }
-                    Attributes fmi = 
-                            dataset.createFileMetaInformation(tsuid);
-                    @SuppressWarnings("resource")
-                    DicomOutputStream dos = new DicomOutputStream(out, tsuid);
-                    dos.writeDataset(fmi, dataset);
-                } finally {
-                    SafeClose.close(dis);
-                }
-            }
-        }, MediaTypes.APPLICATION_DICOM_TYPE).build();
+    private Response retrieveNativeDicomObject(InstanceFileRef ref,
+            Attributes attrs) {
+        String tsuid = ref.transferSyntaxUID;
+        if (!transferSyntax.contains(tsuid))
+            tsuid = UID.ExplicitVRLittleEndian;
+        return Response.ok(new DicomObjectOutput(ref, attrs, tsuid),
+                MediaTypes.APPLICATION_DICOM_TYPE).build();
     }
 
-    private Response retrieveJPEG(final String uri, final Attributes attrs) {
+    private Response retrieveJPEG(final InstanceFileRef ref, 
+            final Attributes attrs) {
         return Response.ok(new StreamingOutput() {
             
             @Override
             public void write(OutputStream out) throws IOException,
                     WebApplicationException {
-                ImageInputStream iis = ImageIO.createImageInputStream(fileOf(uri));
+                ImageInputStream iis = ImageIO.createImageInputStream(
+                        ref.getFile());
                 BufferedImage bi;
                 try {
                     bi = readImage(iis, attrs);
@@ -331,14 +307,6 @@ public class WadoURI {
                 writeJPEG(bi, new OutputStreamAdapter(out));
             }
         }, MediaTypes.IMAGE_JPEG_TYPE).build();
-    }
-
-    private File fileOf(final String uri) throws WebApplicationException {
-        try {
-            return new File(new URI(uri));
-        } catch (Exception e) {
-            throw new WebApplicationException(e);
-        }
     }
 
     private BufferedImage readImage(ImageInputStream iis, Attributes attrs)
@@ -404,7 +372,7 @@ public class WadoURI {
             if (ref == null)
                 throw new WebApplicationException(Status.NOT_FOUND);
 
-            DicomInputStream dis = new DicomInputStream(fileOf(ref.uri));
+            DicomInputStream dis = new DicomInputStream(ref.getFile());
             try {
                 param.setPresentationState(dis.readDataset(-1, -1));
             } finally {
