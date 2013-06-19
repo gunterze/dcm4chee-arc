@@ -23,6 +23,8 @@
       <includes>
         <include>configuration/dcm4chee-arc/ldap.properties</include>
         <include>configuration/dcm4chee-arc/*.xsl</include>
+        <include>ldap/**</include>
+        <include>prefs/**</include>
       </includes>
       <lineEnding>dos</lineEnding>
     </fileSet>
