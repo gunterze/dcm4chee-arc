@@ -26,7 +26,18 @@
         <include>ldap/**</include>
         <include>prefs/**</include>
       </includes>
+      <excludes>
+        <exclude>ldap/unldif.sed</exclude>
+      </excludes>
       <lineEnding>dos</lineEnding>
+    </fileSet>
+    <fileSet>
+      <directory>../dcm4chee-arc-conf/src/main/config</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>ldap/unldif.sed</include>
+      </includes>
+      <lineEnding>unix</lineEnding>
     </fileSet>
     <fileSet>
       <directory>../dcm4chee-arc-conf/src/main/config</directory>
