@@ -1,0 +1,32 @@
+version: 1
+
+dn: dicomAETitle=AET_XYZ,cn=Unique AE Titles Registry,cn=DICOM Configuration,dc=example,dc=com
+objectClass: dicomUniqueAETitle
+dicomAETitle: AET_XYZ
+
+dn: dicomDeviceName=DEVICE_XYZ,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+objectClass: dicomDevice
+dicomDeviceName: DEVICE_XYZ
+dicomInstalled: TRUE
+
+dn: cn=dicom,dicomDeviceName=DEVICE_XYZ,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+objectClass: dicomNetworkConnection
+cn: dicom
+dicomHostname: localhost
+dicomPort: 11112
+
+dn: cn=dicom-tls,dicomDeviceName=DEVICE_XYZ,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+cn: dicom-tls
+objectClass: dicomNetworkConnection
+dicomHostname: localhost
+dicomPort: 2763
+dicomTLSCipherSuite: TLS_RSA_WITH_AES_128_CBC_SHA
+dicomTLSCipherSuite: SSL_RSA_WITH_3DES_EDE_CBC_SHA
+
+dn: dicomAETitle=AET_XYZ,dicomDeviceName=DEVICE_XYZ,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+objectClass: dicomNetworkAE
+dicomAETitle: AET_XYZ
+dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=DEVICE_XYZ,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dicomNetworkConnectionReference: cn=dicom-tls,dicomDeviceName=DEVICE_XYZ,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dicomAssociationInitiator: TRUE
+dicomAssociationAcceptor: TRUE
