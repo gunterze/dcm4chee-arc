@@ -131,33 +131,33 @@ provided by DCM4CHEE Archive 4.x final releases.
 
 1. Connect to Oracle and create a new tablespace
 
-	$ sqlplus / as sysdba
-	SQL> create bigfile tablespace <tablespace-name> datafile '<data-file-location>' SIZE <size>;
+        $ sqlplus / as sysdba
+        SQL> create bigfile tablespace <tablespace-name> datafile '<data-file-location>' SIZE <size>;
 
-	Tablespace created.
+        Tablespace created.
 
 2. Create a new user with privileges for the new tablespace
 
-	$ sqlplus / as sysdba
-	SQL> CREATE USER <user-name> 
-	2  IDENTIFIED BY <user-password>
-  	3  DEFAULT TABLESPACE <tablespace-name>
-  	4  QUOTA UNLIMITED ON <tablespace-name>
-  	5  QUOTA 50M ON SYSTEM;
+        $ sqlplus / as sysdba
+        SQL> CREATE USER <user-name> 
+        2  IDENTIFIED BY <user-password>
+        3  DEFAULT TABLESPACE <tablespace-name>
+        4  QUOTA UNLIMITED ON <tablespace-name>
+        5  QUOTA 50M ON SYSTEM;
 
-	User created.
-	
-	SQL> GRANT CREATE SESSION TO <user-name>;
-	SQL> GRANT CREATE TABLE TO <user-name>;
-	SQL> GRANT CREATE ANY INDEX TO <user-name>;
-	SQL> GRANT CREATE SEQUENCE TO <user-name>;
-	SQL> exit
+        User created.
+
+        SQL> GRANT CREATE SESSION TO <user-name>;
+        SQL> GRANT CREATE TABLE TO <user-name>;
+        SQL> GRANT CREATE ANY INDEX TO <user-name>;
+        SQL> GRANT CREATE SEQUENCE TO <user-name>;
+        SQL> exit
 
 2. Create tables and indexes
 
-	$ sqlplus <user-name>/<user-password>
-	SQL> @$DCM4CHEE_ARC/sql/create-table-oracle.ddl
-	SQL> @$DCM4CHEE_ARC/sql/create-index.ddl
+        $ sqlplus <user-name>/<user-password>
+        SQL> @$DCM4CHEE_ARC/sql/create-table-oracle.ddl
+        SQL> @$DCM4CHEE_ARC/sql/create-index.ddl
 
 Setup LDAP Server
 -----------------
