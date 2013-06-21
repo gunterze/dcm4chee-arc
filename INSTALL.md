@@ -132,7 +132,7 @@ provided by DCM4CHEE Archive 4.x final releases.
 1. Connect to Oracle and create a new tablespace
 
         $ sqlplus / as sysdba
-        SQL> create bigfile tablespace <tablespace-name> datafile '<data-file-location>' SIZE <size>;
+        SQL> CREATE BIGFILE TABLESPACE <tablespace-name> DATAFILE '<data-file-location>' SIZE <size>;
 
         Tablespace created.
 
@@ -153,7 +153,7 @@ provided by DCM4CHEE Archive 4.x final releases.
         SQL> GRANT CREATE SEQUENCE TO <user-name>;
         SQL> exit
 
-2. Create tables and indexes
+3. Create tables and indexes
 
         $ sqlplus <user-name>/<user-password>
         SQL> @$DCM4CHEE_ARC/sql/create-table-oracle.ddl
