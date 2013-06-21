@@ -40,7 +40,9 @@ package org.dcm4chee.archive.wado;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.dcm4che.data.Attributes;
@@ -51,6 +53,7 @@ import org.dcm4che.io.DicomInputStream.IncludeBulkData;
 import org.dcm4che.io.DicomOutputStream;
 import org.dcm4che.util.SafeClose;
 import org.dcm4chee.archive.entity.InstanceFileRef;
+import org.slf4j.Logger;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -61,16 +64,29 @@ class DicomObjectOutput implements StreamingOutput {
     private final InstanceFileRef fileRef;
     private final Attributes attrs;
     private final String tsuid;
+    private final MediaType mediaType;
+    private final HttpServletRequest request;
+    private final Logger log;
 
-    DicomObjectOutput(InstanceFileRef fileRef, Attributes attrs, String tsuid) {
+    DicomObjectOutput(InstanceFileRef fileRef, Attributes attrs, String tsuid,
+            MediaType mediaType, HttpServletRequest request, Logger log) {
         this.fileRef = fileRef;
         this.attrs = attrs;
         this.tsuid = tsuid;
+        this.mediaType = mediaType;
+        this.request = request;
+        this.log = log;
     }
 
-    @Override
     public void write(OutputStream out) throws IOException,
             WebApplicationException {
+        log.info("{}@{} << {}: Content-Type={}, iuid={}",
+                new Object[] {
+                    request.getRemoteUser(),
+                    request.getRemoteHost(),
+                    System.identityHashCode(request),
+                    mediaType,
+                    fileRef.sopInstanceUID});
         DicomInputStream dis = new DicomInputStream(fileRef.getFile());
         try {
             dis.setIncludeBulkData(IncludeBulkData.URI);

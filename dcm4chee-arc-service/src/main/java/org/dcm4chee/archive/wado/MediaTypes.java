@@ -77,18 +77,6 @@ public class MediaTypes {
             new MediaType("application", "dicom+xml");
 
     /**
-     * "application/octet-stream"
-     */
-    public final static String APPLICATION_OCTET_STREAM =
-            "application/octet-stream";
-
-    /**
-     * "application/octet-stream"
-     */
-    public final static MediaType APPLICATION_OCTET_STREAM_TYPE =
-            new MediaType("application", "octet-stream");
-
-    /**
      * "image/jpeg"
      */
     public final static String IMAGE_JPEG = "image/jpeg";
@@ -211,7 +199,7 @@ public class MediaTypes {
     }
 
     public static boolean isApplicationOctetStream(MediaType mediaType) {
-        return equalsIgnoreParameters(mediaType, APPLICATION_OCTET_STREAM_TYPE);
+        return equalsIgnoreParameters(mediaType, MediaType.APPLICATION_OCTET_STREAM_TYPE);
     }
 
     public static boolean isMultiframeMediaType(MediaType mediaType) {
@@ -259,7 +247,7 @@ public class MediaTypes {
 
     public static MediaType forTransferSyntax(String ts) {
         if (isLittleEndian(ts))
-            return APPLICATION_OCTET_STREAM_TYPE;
+            return MediaType.APPLICATION_OCTET_STREAM_TYPE;
 
         if (UID.JPEGLossless.equals(ts))
             return IMAGE_DICOM_JPEG_TYPE;

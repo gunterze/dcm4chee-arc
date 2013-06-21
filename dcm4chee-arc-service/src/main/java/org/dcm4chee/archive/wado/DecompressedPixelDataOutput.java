@@ -41,11 +41,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import javax.imageio.stream.ImageInputStream;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.dcm4che.imageio.codec.Decompressor;
 import org.dcm4che.util.SafeClose;
+import org.slf4j.Logger;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -55,15 +58,31 @@ public class DecompressedPixelDataOutput implements StreamingOutput {
 
     private final Decompressor decompressor;
     private final int frameIndex;
+    private final MediaType mediaType;
+    private final String contentLocation;
+    private final HttpServletRequest request;
+    private final Logger log;
 
-    public DecompressedPixelDataOutput(Decompressor decompressor, int frameIndex) {
+    public DecompressedPixelDataOutput(Decompressor decompressor, int frameIndex,
+            MediaType mediaType, String contentLocation,
+            HttpServletRequest request, Logger log) {
         this.decompressor = decompressor;
         this.frameIndex = frameIndex;
+        this.mediaType = mediaType;
+        this.contentLocation = contentLocation;
+        this.request = request;
+        this.log = log;
     }
 
     @Override
     public void write(OutputStream output) throws IOException,
             WebApplicationException {
+        log.info("{}@{} << {}: Content-Type={}, Content-Location={}",
+                new Object[] {
+                    request.getRemoteUser(),
+                    request.getRemoteHost(),
+                    System.identityHashCode(request),
+                    mediaType, contentLocation });
         if (frameIndex == -1)
             decompressor.writeTo(output);
         else {

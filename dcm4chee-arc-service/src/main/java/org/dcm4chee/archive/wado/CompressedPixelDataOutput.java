@@ -42,13 +42,16 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.dcm4che.data.BulkData;
 import org.dcm4che.data.Fragments;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.StreamUtils;
+import org.slf4j.Logger;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -57,14 +60,30 @@ import org.dcm4che.util.StreamUtils;
 public class CompressedPixelDataOutput implements StreamingOutput {
 
     private final Fragments fragments;
+    private final MediaType mediaType;
+    private final String contentLocation;
+    private final HttpServletRequest request;
+    private final Logger log;
 
-    public CompressedPixelDataOutput(Fragments fragments) {
+    public CompressedPixelDataOutput(Fragments fragments,
+            MediaType mediaType, String contentLocation,
+            HttpServletRequest request, Logger log) {
         this.fragments = fragments;
+        this.mediaType = mediaType;
+        this.contentLocation = contentLocation;
+        this.request = request;
+        this.log = log;
     }
 
     @Override
     public void write(OutputStream out) throws IOException,
             WebApplicationException {
+        log.info("{}@{} << {}: Content-Type={}, Content-Location={}",
+                new Object[] {
+                    request.getRemoteUser(),
+                    request.getRemoteHost(),
+                    System.identityHashCode(request),
+                    mediaType, contentLocation });
         Iterator<Object> iter = fragments.iterator();
         iter.next(); // skip frame offset table
         BulkData fragment = (BulkData) iter.next();

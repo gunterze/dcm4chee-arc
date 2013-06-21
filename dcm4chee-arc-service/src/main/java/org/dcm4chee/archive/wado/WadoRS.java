@@ -76,6 +76,8 @@ import org.dcm4chee.archive.entity.InstanceFileRef;
 import org.dcm4chee.archive.wado.dao.WadoService;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartRelatedOutput;
 import org.jboss.resteasy.plugins.providers.multipart.OutputPart;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -89,6 +91,7 @@ public class WadoRS {
     private static final int STATUS_NOT_ACCEPTABLE = 406;
     private static final String CONTENT_LOCATION = "Content-Location";
 
+    private static final Logger LOG = LoggerFactory.getLogger(WadoRS.class);
 
     public static final class FrameList {
         final int[] frames;
@@ -121,8 +124,14 @@ public class WadoRS {
 
     private List<MediaType> mediaTypes;
 
-    private void initMediaTypes() {
+    private void init() {
         List<MediaType> acceptableMediaTypes = headers.getAcceptableMediaTypes();
+        LOG.info("{}@{} >> {}: GET {},  Accept={}", new Object[] {
+                request.getRemoteUser(),
+                request.getRemoteHost(),
+                System.identityHashCode(request),
+                request.getRequestURL(),
+                acceptableMediaTypes});
         this.mediaTypes = new ArrayList<MediaType>(acceptableMediaTypes.size());
         for (MediaType mediaType : acceptableMediaTypes)
             try {
@@ -170,8 +179,8 @@ public class WadoRS {
             }
         }
         return (!MediaTypes.isMultiframeMediaType(requiredMediaType)
-                    && isAccepted(MediaTypes.APPLICATION_OCTET_STREAM_TYPE))
-                ? MediaTypes.APPLICATION_OCTET_STREAM_TYPE
+                    && isAccepted(MediaType.APPLICATION_OCTET_STREAM_TYPE))
+                ? MediaType.APPLICATION_OCTET_STREAM_TYPE
                 : null;
     }
 
@@ -192,6 +201,7 @@ public class WadoRS {
     @Produces("multipart/related")
     public Response retrieveStudy(
             @PathParam("StudyInstanceUID") String studyInstanceUID) {
+        init();
         return retrieve(wadoService.locate(studyInstanceUID));
     }
 
@@ -201,6 +211,7 @@ public class WadoRS {
     public Response retrieveSeries(
             @PathParam("StudyInstanceUID") String studyInstanceUID,
             @PathParam("SeriesInstanceUID") String seriesInstanceUID) {
+        init();
         return retrieve(wadoService.locate(studyInstanceUID, seriesInstanceUID));
     }
 
@@ -211,6 +222,7 @@ public class WadoRS {
             @PathParam("StudyInstanceUID") String studyInstanceUID,
             @PathParam("SeriesInstanceUID") String seriesInstanceUID,
             @PathParam("SOPInstanceUID") String sopInstanceUID) {
+        init();
         return retrieve(wadoService.locate(
                 studyInstanceUID, seriesInstanceUID, sopInstanceUID));
     }
@@ -223,6 +235,7 @@ public class WadoRS {
             @PathParam("SeriesInstanceUID") String seriesInstanceUID,
             @PathParam("SOPInstanceUID") String sopInstanceUID,
             @PathParam("FrameList") FrameList frameList) {
+        init();
         InstanceFileRef ref = wadoService.locate(
                         studyInstanceUID, seriesInstanceUID, sopInstanceUID);
         if (ref == null)
@@ -241,6 +254,7 @@ public class WadoRS {
             @QueryParam("offset") int offset,
             @QueryParam("length") int length) {
 
+        init();
         String requestURL = request.getRequestURL().toString();
         return (length <= 0)
                 ? retrievePixelData(bulkDataURI, requestURL)
@@ -255,14 +269,13 @@ public class WadoRS {
     @Produces("multipart/related")
     public Response retrieveMetadata(
             @PathParam("StudyInstanceUID") String studyInstanceUID) {
+        init();
         return retrieveMetadata(wadoService.locate(studyInstanceUID));
     }
 
     private Response retrieve(List<InstanceFileRef> refs) {
         if (refs.isEmpty())
             throw new WebApplicationException(Status.NOT_FOUND);
-
-        initMediaTypes();
 
         MultipartRelatedOutput output = new MultipartRelatedOutput();
         int failed = 0;
@@ -287,8 +300,6 @@ public class WadoRS {
         if (ref == null)
             throw new WebApplicationException(Status.NOT_FOUND);
 
-        initMediaTypes();
-
         MultipartRelatedOutput output = new MultipartRelatedOutput();
         int status = STATUS_OK;
         if (isApplicationDicomPreferred()) {
@@ -305,8 +316,6 @@ public class WadoRS {
 
     private Response retrievePixelData(String fileURI, String bulkDataURI,
             int... frames) {
-        initMediaTypes();
-
         MultipartRelatedOutput output = new MultipartRelatedOutput();
         
         int status = addPixelDataTo(fileURI, bulkDataURI, output, frames);
@@ -318,14 +327,14 @@ public class WadoRS {
     }
 
     private Response retrieveBulkData(BulkData bulkData, String requestURL) {
-        initMediaTypes();
-
-        if (!isAccepted(MediaTypes.APPLICATION_OCTET_STREAM_TYPE))
+        if (!isAccepted(MediaType.APPLICATION_OCTET_STREAM_TYPE))
             throw new WebApplicationException(Status.NOT_ACCEPTABLE);
 
         MultipartRelatedOutput output = new MultipartRelatedOutput();
-        OutputPart part = output.addPart(new BulkDataOutput(bulkData),
-                MediaTypes.APPLICATION_OCTET_STREAM_TYPE);
+        OutputPart part = output.addPart(new BulkDataOutput(bulkData,
+                    MediaType.APPLICATION_OCTET_STREAM_TYPE, requestURL,
+                    request, LOG),
+                MediaType.APPLICATION_OCTET_STREAM_TYPE);
         part.getHeaders().add(CONTENT_LOCATION, requestURL);
 
         return Response.ok(output).build();
@@ -335,8 +344,6 @@ public class WadoRS {
     private Response retrieveMetadata(List<InstanceFileRef> refs) {
         if (refs.isEmpty())
             throw new WebApplicationException(Status.NOT_FOUND);
-
-        initMediaTypes();
 
         if (!isAccepted(MediaTypes.APPLICATION_DICOM_XML_TYPE))
             throw new WebApplicationException(Status.NOT_ACCEPTABLE);
@@ -356,8 +363,11 @@ public class WadoRS {
         }
         Attributes attrs = ref.getAttributes(WadoAttributesCache.INSTANCE
                 .getAttributes(seriesService, ref.seriesPk));
-        output.addPart(new DicomObjectOutput(ref, attrs, tsuid),
-            MediaType.valueOf("application/dicom;transfer-syntax=" + tsuid));
+        MediaType mediaType = MediaType.valueOf(
+                "application/dicom;transfer-syntax=" + tsuid);
+        output.addPart(
+                new DicomObjectOutput(ref, attrs, tsuid, mediaType, request, LOG),
+                mediaType);
         return true;
     }
 
@@ -367,25 +377,36 @@ public class WadoRS {
         try {
             dis = new DicomInputStream(new File(new URI(fileURI)));
             dis.setIncludeBulkData(IncludeBulkData.URI);
-            dis.readFileMetaInformation();
-            MediaType mediaType = selectBulkdataMediaTypeForTransferSyntax(dis.getTransferSyntax());
-            if (mediaType == null)
+            Attributes fmi = dis.readFileMetaInformation();
+            String iuid = fmi.getString(Tag.MediaStorageSOPInstanceUID);
+            MediaType mediaType = selectBulkdataMediaTypeForTransferSyntax(
+                    dis.getTransferSyntax());
+            if (mediaType == null) {
+                LOG.info("Failed to retrieve Pixel Data of Instance[uid={}]: Requested Transfer Syntax not supported",
+                        iuid);
                 return STATUS_NOT_ACCEPTABLE;
+            }
 
-            if (MediaTypes.isMultiframeMediaType(mediaType) && frameList.length > 0)
+            if (MediaTypes.isMultiframeMediaType(mediaType) && frameList.length > 0) {
+                LOG.info("Failed to retrieve Frame Pixel Data of Instance[uid={}]: Not supported for Content-Type={}",
+                        iuid, mediaType);
                 return STATUS_NOT_ACCEPTABLE;
+            }
 
             Attributes ds = dis.readDataset(-1, -1);
             Object pixeldata = ds.getValue(Tag.PixelData);
-            if (pixeldata == null)
+            if (pixeldata == null) {
+                LOG.info("Failed to retrieve Pixel Data of Instance[uid={}]: Not an image",
+                        iuid);
                 return STATUS_NOT_ACCEPTABLE;
+            }
 
             int frames = ds.getInt(Tag.NumberOfFrames, 1);
-            int[] adjustedFrameList = adjustFrameList(frameList, frames);
+            int[] adjustedFrameList = adjustFrameList(iuid, frameList, frames);
 
             if (pixeldata instanceof Fragments) {
                 Fragments bulkData = (Fragments) pixeldata;
-                if (mediaType == MediaTypes.APPLICATION_OCTET_STREAM_TYPE) {
+                if (mediaType == MediaType.APPLICATION_OCTET_STREAM_TYPE) {
                     addDecompressedPixelDataTo(new Decompressor(ds, dis.getTransferSyntax()),
                             adjustedFrameList, output, bulkDataURI);
                 } else {
@@ -417,34 +438,50 @@ public class WadoRS {
         return sb.toString();
     }
 
-    private int[] adjustFrameList(int[] frameList, int frames) {
+    private int[] adjustFrameList(String iuid, int[] frameList, int frames) {
         int n = 0;
         for (int i = 0; i < frameList.length; i++) {
             if (frameList[i] <= frames)
-                frameList[n++] = frameList[i];
+                swap(frameList, n++, i);
         }
         if (n == frameList.length)
             return frameList;
         
+        int[] skipped = new int[frameList.length - n];
+        System.arraycopy(frameList, n, skipped, 0, skipped.length);
+        LOG.info("Failed to retrieve Frames {} of Pixel Data of Instance[uid={}]: NumberOfFrames={}",
+                new Object[] { Arrays.toString(skipped), iuid, frames });
         if (n == 0)
             throw new WebApplicationException(Status.NOT_FOUND);
 
         return Arrays.copyOf(frameList, n);
     }
 
+    private static void swap(int[] a, int i, int j) {
+        if (i != j) {
+            int tmp = a[i];
+            a[i] = a[j];
+            a[j] = tmp;
+        }
+    }
+
     private void addDecompressedPixelDataTo(Decompressor decompressor,
             int[] frameList, MultipartRelatedOutput output, String bulkDataURI) {
         if (frameList.length == 0) {
             OutputPart part = output.addPart(
-                new DecompressedPixelDataOutput(decompressor, -1),
-                MediaTypes.APPLICATION_OCTET_STREAM_TYPE);
+                new DecompressedPixelDataOutput(decompressor, -1,
+                        MediaType.APPLICATION_OCTET_STREAM_TYPE,
+                        bulkDataURI, request, LOG),
+                MediaType.APPLICATION_OCTET_STREAM_TYPE);
             part.getHeaders().add(CONTENT_LOCATION, bulkDataURI);
         } else for (int frame : frameList) {
+            String contentLocation = bulkDataURI + "/frames/" + frame;
             OutputPart part = output.addPart(
-                new DecompressedPixelDataOutput(decompressor, frame-1),
-                MediaTypes.APPLICATION_OCTET_STREAM_TYPE);
-            part.getHeaders().add(CONTENT_LOCATION,
-                    bulkDataURI + "/frames/" + frame);
+                new DecompressedPixelDataOutput(decompressor, frame-1, 
+                        MediaType.APPLICATION_OCTET_STREAM_TYPE,
+                        contentLocation, request, LOG),
+                MediaType.APPLICATION_OCTET_STREAM_TYPE);
+            part.getHeaders().add(CONTENT_LOCATION, contentLocation);
         }
     }
 
@@ -453,26 +490,30 @@ public class WadoRS {
             MediaType mediaType, String bulkDataURI) {
         if (frames == 1 || MediaTypes.isMultiframeMediaType(mediaType)) {
             OutputPart part = output.addPart(
-                    new CompressedPixelDataOutput(fragments),
+                    new CompressedPixelDataOutput(
+                            fragments, mediaType, bulkDataURI, request, LOG),
                     mediaType);
             part.getHeaders().add(CONTENT_LOCATION, bulkDataURI);
         } else if (adjustedFrameList.length == 0) {
             for (int frame = 1; frame <= frames; frame++) {
+                String contentLocation = bulkDataURI + "/frames/" + frame;
                 OutputPart part = output.addPart(
                         new BulkDataOutput(
-                                (BulkData) fragments.get(frame)),
+                                (BulkData) fragments.get(frame),
+                                mediaType, contentLocation, request, LOG),
                         mediaType);
-                part.getHeaders().add(CONTENT_LOCATION,
-                        bulkDataURI + "/frames/" + frame);
+                part.getHeaders().add(CONTENT_LOCATION, contentLocation);
             }
         } else {
             for (int frame : adjustedFrameList) {
+                String contentLocation = bulkDataURI + "/frames/" + frame;
                 OutputPart part = output.addPart(
                         new BulkDataOutput(
-                                (BulkData) fragments.get(frame)),
+                                (BulkData) fragments.get(frame),
+                                mediaType, contentLocation, request, LOG),
                         mediaType);
                 part.getHeaders().add(CONTENT_LOCATION,
-                        bulkDataURI + "/frames/" + frame);
+                        contentLocation);
             }
         }
     }
@@ -482,8 +523,10 @@ public class WadoRS {
             String bulkDataURI) {
         if (adjustedFrameList.length == 0) {
             OutputPart part = output.addPart(
-                    new BulkDataOutput(bulkData),
-                    MediaTypes.APPLICATION_OCTET_STREAM_TYPE);
+                    new BulkDataOutput(bulkData,
+                            MediaType.APPLICATION_OCTET_STREAM_TYPE,
+                            bulkDataURI, request, LOG),
+                    MediaType.APPLICATION_OCTET_STREAM_TYPE);
             part.getHeaders().add(CONTENT_LOCATION, bulkDataURI);
         } else {
             int rows = ds.getInt(Tag.Rows, 0);
@@ -492,15 +535,17 @@ public class WadoRS {
             int bitsAllocated = ds.getInt(Tag.BitsAllocated, 8);
             int frameLength = rows * cols * samples * (bitsAllocated>>>3);
             for (int frame : adjustedFrameList) {
+                String contentLocation = bulkDataURI + "/frames/" + frame;
                 OutputPart part = output.addPart(
                     new BulkDataOutput(new BulkData(
-                            bulkData.uri,
-                            bulkData.transferSyntax,
-                            bulkData.offset + (frame-1) * frameLength,
-                            frameLength)),
-                    MediaTypes.APPLICATION_OCTET_STREAM_TYPE);
-                part.getHeaders().add(CONTENT_LOCATION,
-                        bulkDataURI + "/frames/" + frame);
+                                bulkData.uri,
+                                bulkData.transferSyntax,
+                                bulkData.offset + (frame-1) * frameLength,
+                                frameLength),
+                            MediaType.APPLICATION_OCTET_STREAM_TYPE,
+                            contentLocation, request, LOG),
+                    MediaType.APPLICATION_OCTET_STREAM_TYPE);
+                part.getHeaders().add(CONTENT_LOCATION, contentLocation);
             }
         }
     }
@@ -509,7 +554,8 @@ public class WadoRS {
             MultipartRelatedOutput output) {
         Attributes attrs = ref.getAttributes(WadoAttributesCache.INSTANCE
                 .getAttributes(seriesService, ref.seriesPk));
-        output.addPart(new DicomXMLOutput(ref, toBulkDataURI(ref.uri), attrs),
+        output.addPart(new DicomXMLOutput(ref, toBulkDataURI(ref.uri), attrs,
+                MediaTypes.APPLICATION_DICOM_XML_TYPE, request, LOG),
                 MediaTypes.APPLICATION_DICOM_XML_TYPE);
     }
 
