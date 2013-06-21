@@ -165,10 +165,12 @@ public class AuditUtils {
         SOPClass sc = getOrCreateSOPClass(
                 poid.getParticipantObjectDescription(),
                 attrs.getString(Tag.SOPClassUID));
-        Instance instance = new Instance();
-        instance.setUID(attrs.getString(Tag.SOPInstanceUID));
-        sc.getInstance().add(instance);
-        sc.setNumberOfInstances(sc.getInstance().size());
+        if (logger.isIncludeInstanceUID()) {
+            Instance instance = new Instance();
+            instance.setUID(attrs.getString(Tag.SOPInstanceUID));
+            sc.getInstance().add(instance);
+            sc.setNumberOfInstances(sc.getInstance().size());
+        }
     }
 
     private static SOPClass getOrCreateSOPClass(
@@ -291,7 +293,7 @@ public class AuditUtils {
                 AuditMessages.NetworkAccessPointTypeCode.MachineName, 
                 null, 
                 AuditMessages.RoleIDCode.Destination));
-        ParticipantObjectDescription pod = createRetrieveObjectPOD(ref);
+        ParticipantObjectDescription pod = createRetrieveObjectPOD(logger, ref);
         msg.getParticipantObjectIdentification().add(AuditMessages.createParticipantObjectIdentification(
                 attrs.getString(Tag.StudyInstanceUID), 
                 AuditMessages.ParticipantObjectIDTypeCode.StudyInstanceUID, 
@@ -317,14 +319,16 @@ public class AuditUtils {
     }
 
     private static ParticipantObjectDescription createRetrieveObjectPOD(
-            InstanceFileRef ref) {
+            AuditLogger logger, InstanceFileRef ref) {
         ParticipantObjectDescription pod = new ParticipantObjectDescription();
         SOPClass sc = new SOPClass();
         sc.setUID(ref.sopClassUID);
-        sc.setNumberOfInstances(1);
-        Instance inst = new Instance();
-        inst.setUID(ref.sopInstanceUID);
-        sc.getInstance().add(inst);
+        if (logger.isIncludeInstanceUID()) {
+            Instance instance = new Instance();
+            instance.setUID(ref.sopInstanceUID);
+            sc.getInstance().add(instance);
+            sc.setNumberOfInstances(1);
+        }
         pod.getSOPClass().add(sc);
         return pod;
     }
@@ -352,20 +356,22 @@ public class AuditUtils {
         AuditMessage msg = createRetrieveLogMessage(logger, as, 
                 getPatientID((Attributes) insts.get(0).getObject()),
                 timeStamp, eventOutcomeIndicator);
-        for (InstanceLocator inst : insts) {
-            if (failed.contains(inst.iuid) == logSuccess)
+        for (InstanceLocator instLoc : insts) {
+            if (failed.contains(instLoc.iuid) == logSuccess)
                 continue;
 
-            String studyUID = ((Attributes) inst.getObject())
+            String studyUID = ((Attributes) instLoc.getObject())
                     .getString(Tag.StudyInstanceUID);
-            ParticipantObjectIdentification poid = getOrCreatePOID(msg, inst, studyUID);
+            ParticipantObjectIdentification poid = getOrCreatePOID(msg, instLoc, studyUID);
             SOPClass sc = getOrCreateSOPClass(
                     poid.getParticipantObjectDescription(),
-                    inst.cuid);
-            Instance instance = new Instance();
-            instance.setUID(inst.iuid);
-            sc.getInstance().add(instance);
-            sc.setNumberOfInstances(sc.getInstance().size());
+                    instLoc.cuid);
+            if (logger.isIncludeInstanceUID()) {
+                Instance instance = new Instance();
+                instance.setUID(instLoc.iuid);
+                sc.getInstance().add(instance);
+                sc.setNumberOfInstances(sc.getInstance().size());
+            }
         }
         sendAuditMessage(logger, msg, timeStamp);
     }
