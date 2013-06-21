@@ -90,7 +90,7 @@ import org.slf4j.LoggerFactory;
 @Path("/wado")
 public class WadoURI {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(WadoURI.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WadoURI.class);
 
     public enum Anonymize { yes }
 
@@ -239,6 +239,14 @@ public class WadoURI {
 
     private void checkRequest()
             throws WebApplicationException {
+        List<MediaType> acceptableMediaTypes = headers.getAcceptableMediaTypes();
+        LOG.info("{}@{} >> {}: GET {}, Accept={}", new Object[] {
+                request.getRemoteUser(),
+                request.getRemoteHost(),
+                System.identityHashCode(request),
+                request.getRequestURL(),
+                acceptableMediaTypes});
+
         if (!"WADO".equals(requestType))
             throw new WebApplicationException(Status.BAD_REQUEST);
         if (studyUID == null || seriesUID == null || objectUID == null)
@@ -252,7 +260,7 @@ public class WadoURI {
                     applicationDicom = true;
             }
         }
-        if (applicationDicom 
+        if (applicationDicom
                 ? (annotation != null || rows != 0 || columns != 0
                     || region != null || windowCenter != 0 || windowWidth != 0
                     || frameNumber != 0 || imageQuality != 0
@@ -285,8 +293,11 @@ public class WadoURI {
         String tsuid = ref.transferSyntaxUID;
         if (!transferSyntax.contains(tsuid))
             tsuid = UID.ExplicitVRLittleEndian;
-        return Response.ok(new DicomObjectOutput(ref, attrs, tsuid),
-                MediaTypes.APPLICATION_DICOM_TYPE).build();
+        MediaType mediaType = MediaType.valueOf(
+                "application/dicom;transfer-syntax=" + tsuid);
+        return Response.ok(new DicomObjectOutput(ref, attrs, tsuid,
+                    mediaType, request, LOG),
+                mediaType).build();
     }
 
     private Response retrieveJPEG(final InstanceFileRef ref, 
@@ -296,6 +307,12 @@ public class WadoURI {
             @Override
             public void write(OutputStream out) throws IOException,
                     WebApplicationException {
+                LOG.info("{}@{} << {}: {}, iuid={}", new Object[] {
+                        request.getRemoteUser(),
+                        request.getRemoteHost(),
+                        System.identityHashCode(request),
+                        MediaTypes.IMAGE_JPEG_TYPE,
+                        ref.sopInstanceUID});
                 ImageInputStream iis = ImageIO.createImageInputStream(
                         ref.getFile());
                 BufferedImage bi;
