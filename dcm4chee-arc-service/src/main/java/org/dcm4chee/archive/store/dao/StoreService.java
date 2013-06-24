@@ -53,6 +53,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceContextType;
+import javax.persistence.PersistenceException;
+import javax.persistence.TypedQuery;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
@@ -361,12 +363,12 @@ public class StoreService {
 
     public FileSystem selectFileSystem(String groupID, String initFileSystemURI)
             throws DicomServiceException {
+        TypedQuery<FileSystem> selectCurFileSystem =
+                em.createNamedQuery(FileSystem.FIND_BY_GROUP_ID_AND_STATUS, FileSystem.class)
+                .setParameter(1, groupID)
+                .setParameter(2, FileSystemStatus.RW);
         try {
-            return curFileSystem =
-                    em.createNamedQuery(FileSystem.FIND_BY_GROUP_ID_AND_STATUS, FileSystem.class)
-                        .setParameter(1, groupID)
-                        .setParameter(2, FileSystemStatus.RW)
-                        .getSingleResult();
+            return curFileSystem = selectCurFileSystem.getSingleResult();
         } catch (NoResultException e) {
             List<FileSystem> resultList = 
                     em.createNamedQuery(FileSystem.FIND_BY_GROUP_ID, FileSystem.class)
@@ -374,21 +376,41 @@ public class StoreService {
                         .getResultList();
             for (FileSystem fs : resultList) {
                 if (fs.getStatus() == FileSystemStatus.Rw) {
+                    LOG.info("Update status of {} to RW", fs);
                     fs.setStatus(FileSystemStatus.RW);
                     em.flush();
-                    return curFileSystem;
+                    return curFileSystem = fs;
                 }
             }
-            if (initFileSystemURI == null || !resultList.isEmpty())
-                throw new DicomServiceException(Status.OutOfResources,
-                        "No writeable File System in File System Group " + groupID);
-            FileSystem fs = new FileSystem();
-            fs.setGroupID(groupID);
-            fs.setURI(StringUtils.replaceSystemProperties(initFileSystemURI));
-            fs.setAvailability(Availability.ONLINE);
-            fs.setStatus(FileSystemStatus.RW);
+            if (resultList.isEmpty() && initFileSystemURI != null) {
+                return curFileSystem = initFileSystem(groupID, 
+                            initFileSystemURI, selectCurFileSystem);
+            }
+            throw new DicomServiceException(Status.OutOfResources,
+                    "No writeable File System in File System Group " + groupID);
+        }
+    }
+
+    private FileSystem initFileSystem(String groupID, String initFileSystemURI,
+            TypedQuery<FileSystem> selectCurFileSystem) {
+        FileSystem fs = new FileSystem();
+        fs.setGroupID(groupID);
+        fs.setURI(StringUtils.replaceSystemProperties(initFileSystemURI));
+        fs.setAvailability(Availability.ONLINE);
+        fs.setStatus(FileSystemStatus.RW);
+        try {
             em.persist(fs);
-            return curFileSystem = fs;
+            em.flush();
+            LOG.info("Initialize {}", fs);
+            return fs;
+        } catch (PersistenceException e) {
+            // check if file system entry was initialized concurrently
+            try {
+                return selectCurFileSystem.getSingleResult();
+            } catch (NoResultException e2) {
+                LOG.error("Failed to initialize " + fs, e);
+                throw e;
+            }
         }
     }
 

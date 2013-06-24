@@ -91,7 +91,7 @@ public class FileSystem implements Serializable {
     private String groupID;
 
     @Basic(optional = false)
-    @Column(name = "fs_uri")
+    @Column(name = "fs_uri", unique = true)
     private String uri;
 
     @Basic(optional = false)
