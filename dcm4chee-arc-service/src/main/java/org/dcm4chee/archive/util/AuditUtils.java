@@ -170,6 +170,9 @@ public class AuditUtils {
             instance.setUID(attrs.getString(Tag.SOPInstanceUID));
             sc.getInstance().add(instance);
             sc.setNumberOfInstances(sc.getInstance().size());
+        } else {
+            Integer numberOfInstances = sc.getNumberOfInstances();
+            sc.setNumberOfInstances(numberOfInstances == null ? 1 : ++numberOfInstances);
         }
     }
 
@@ -327,8 +330,8 @@ public class AuditUtils {
             Instance instance = new Instance();
             instance.setUID(ref.sopInstanceUID);
             sc.getInstance().add(instance);
-            sc.setNumberOfInstances(1);
         }
+        sc.setNumberOfInstances(1);
         pod.getSOPClass().add(sc);
         return pod;
     }
@@ -371,6 +374,9 @@ public class AuditUtils {
                 instance.setUID(instLoc.iuid);
                 sc.getInstance().add(instance);
                 sc.setNumberOfInstances(sc.getInstance().size());
+            } else {
+                Integer numberOfInstances = sc.getNumberOfInstances();
+                sc.setNumberOfInstances(numberOfInstances == null ? 1 : ++numberOfInstances);
             }
         }
         sendAuditMessage(logger, msg, timeStamp);
