@@ -35,43 +35,25 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-package org.dcm4chee.archive;
+package org.dcm4chee.archive.util;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
-
-import org.dcm4chee.archive.stow.StowRS;
-import org.dcm4chee.archive.wado.WadoRS;
-import org.dcm4chee.archive.wado.WadoURI;
+import java.io.File;
+import java.security.SecureRandom;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-@ApplicationPath("/archive")
-public class ArchiveApplication extends Application {
+public class FileUtils {
 
-    private final Set<Class<?>> classes = new HashSet<Class<?>>(4);
-
-    public ArchiveApplication() {
-        classes.add(WadoURI.class);
-        classes.add(WadoRS.class);
-        classes.add(StowRS.class);
+    private static final SecureRandom random = new SecureRandom();
+    
+    public static File ensureNotExists(File file) {
+        while (file.exists()) {
+            int n = random.nextInt();
+            file = new File(file.getParent(),
+                    Integer.toString(n < 0 ? -(n+1) : n));
+        }
+        return file;
     }
-
-    @Override
-    public Set<Object> getSingletons() {
-        return Collections.singleton((Object) Archive.getInstance());
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Override
-    public Set getClasses() {
-        return classes;
-    }
-
 }

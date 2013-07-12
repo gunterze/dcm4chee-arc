@@ -171,7 +171,7 @@ public class LdapArchiveConfiguration extends LdapDicomConfigurationExtension
         attrs.get("objectclass").add("dcmArchiveNetworkAE");
         LdapUtils.storeNotNull(attrs, "dcmFileSystemGroupID", arcAE.getFileSystemGroupID());
         LdapUtils.storeNotNull(attrs, "dcmInitFileSystemURI", arcAE.getInitFileSystemURI());
-        LdapUtils.storeNotNull(attrs, "dcmSpoolFilePathFormat", arcAE.getSpoolFilePathFormat());
+        LdapUtils.storeNotNull(attrs, "dcmSpoolDirectoryPath", arcAE.getSpoolDirectoryPath());
         LdapUtils.storeNotNull(attrs, "dcmStorageFilePathFormat", arcAE.getStorageFilePathFormat());
         LdapUtils.storeNotNull(attrs, "dcmDigestAlgorithm", arcAE.getDigestAlgorithm());
         LdapUtils.storeNotNull(attrs, "dcmExternalRetrieveAET", arcAE.getExternalRetrieveAET());
@@ -297,7 +297,7 @@ public class LdapArchiveConfiguration extends LdapDicomConfigurationExtension
        ae.addAEExtension(arcae);
        arcae.setFileSystemGroupID(LdapUtils.stringValue(attrs.get("dcmFileSystemGroupID"), null));
        arcae.setInitFileSystemURI(LdapUtils.stringValue(attrs.get("dcmInitFileSystemURI"), null));
-       arcae.setSpoolFilePathFormat(attributesFormat(attrs.get("dcmSpoolFilePathFormat")));
+       arcae.setSpoolDirectoryPath(LdapUtils.stringValue(attrs.get("dcmSpoolDirectoryPath"), null));
        arcae.setStorageFilePathFormat(attributesFormat(attrs.get("dcmStorageFilePathFormat")));
        arcae.setDigestAlgorithm(LdapUtils.stringValue(attrs.get("dcmDigestAlgorithm"), null));
        arcae.setExternalRetrieveAET(LdapUtils.stringValue(attrs.get("dcmExternalRetrieveAET"), null));
@@ -426,9 +426,9 @@ public class LdapArchiveConfiguration extends LdapDicomConfigurationExtension
         LdapUtils.storeDiff(mods, "dcmInitFileSystemURI",
                 aa.getInitFileSystemURI(),
                 bb.getInitFileSystemURI());
-        LdapUtils.storeDiff(mods, "dcmSpoolFilePathFormat",
-                aa.getSpoolFilePathFormat(),
-                bb.getSpoolFilePathFormat());
+        LdapUtils.storeDiff(mods, "dcmSpoolDirectoryPath",
+                aa.getSpoolDirectoryPath(),
+                bb.getSpoolDirectoryPath());
         LdapUtils.storeDiff(mods, "dcmStorageFilePathFormat",
                 aa.getStorageFilePathFormat(),
                 bb.getStorageFilePathFormat());

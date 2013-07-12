@@ -61,6 +61,7 @@ import org.dcm4chee.archive.mpps.dao.PPSWithIAN;
 import org.dcm4chee.archive.test.util.Deployments;
 import org.dcm4chee.archive.test.util.ParamFactory;
 import org.dcm4chee.archive.util.BeanLocator;
+import org.dcm4chee.archive.util.FileUtils;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
@@ -92,6 +93,7 @@ public class StoreServiceTest {
         WebArchive arc = Deployments.createWebArchive()
                 .addClass(ParamFactory.class)
                 .addClass(BeanLocator.class)
+                .addClass(FileUtils.class)
                 .addPackage("org.dcm4chee.archive.common")
                 .addPackage("org.dcm4chee.archive.dao")
                 .addPackage("org.dcm4chee.archive.exception")

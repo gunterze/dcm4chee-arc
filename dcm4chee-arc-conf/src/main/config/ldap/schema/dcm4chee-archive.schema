@@ -203,8 +203,8 @@ attributetype ( 1.2.40.0.13.1.15.10.3.34 NAME 'dcmReturnOtherPatientNames'
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 
   SINGLE-VALUE )
 
-attributetype ( 1.2.40.0.13.1.15.10.3.35 NAME 'dcmSpoolFilePathFormat'
-  DESC 'Specifies File Path of spool file for received objects'
+attributetype ( 1.2.40.0.13.1.15.10.3.35 NAME 'dcmSpoolDirectoryPath'
+  DESC 'Specifies path of directory for spooling received objects'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
@@ -282,7 +282,7 @@ objectclass ( 1.2.40.0.13.1.15.10.4.5 NAME 'dcmArchiveNetworkAE'
   MAY (
     dcmInitFileSystemURI $
     dcmFileSystemGroupID $
-    dcmSpoolFilePathFormat $
+    dcmSpoolDirectoryPath $
     dcmStorageFilePathFormat $
     dcmDigestAlgorithm $
     dcmRetrieveAET $

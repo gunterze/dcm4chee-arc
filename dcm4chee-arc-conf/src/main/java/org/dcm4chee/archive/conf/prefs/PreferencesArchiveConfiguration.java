@@ -159,7 +159,7 @@ public class PreferencesArchiveConfiguration
         prefs.putBoolean("dcmArchiveNetworkAE", true);
         PreferencesUtils.storeNotNull(prefs, "dcmFileSystemGroupID", arcAE.getFileSystemGroupID());
         PreferencesUtils.storeNotNull(prefs, "dcmInitFileSystemURI", arcAE.getInitFileSystemURI());
-        PreferencesUtils.storeNotNull(prefs, "dcmSpoolFilePathFormat", arcAE.getSpoolFilePathFormat());
+        PreferencesUtils.storeNotNull(prefs, "dcmSpoolDirectoryPath", arcAE.getSpoolDirectoryPath());
         PreferencesUtils.storeNotNull(prefs, "dcmStorageFilePathFormat", arcAE.getStorageFilePathFormat());
         PreferencesUtils.storeNotNull(prefs, "dcmDigestAlgorithm", arcAE.getDigestAlgorithm());
         PreferencesUtils.storeNotNull(prefs, "dcmExternalRetrieveAET", arcAE.getExternalRetrieveAET());
@@ -250,9 +250,7 @@ public class PreferencesArchiveConfiguration
         ae.addAEExtension(arcae);
         arcae.setFileSystemGroupID(prefs.get("dcmFileSystemGroupID", null));
         arcae.setInitFileSystemURI(prefs.get("dcmInitFileSystemURI", null));
-        arcae.setSpoolFilePathFormat(
-                AttributesFormat.valueOf(
-                        prefs.get("dcmSpoolFilePathFormat", null)));
+        arcae.setSpoolDirectoryPath(prefs.get("dcmSpoolDirectoryPath", null));
         arcae.setStorageFilePathFormat(
                 AttributesFormat.valueOf(
                         prefs.get("dcmStorageFilePathFormat", null)));
@@ -402,9 +400,9 @@ public class PreferencesArchiveConfiguration
          PreferencesUtils.storeDiff(prefs, "dcmInitFileSystemURI",
                  aa.getInitFileSystemURI(),
                  bb.getInitFileSystemURI());
-         PreferencesUtils.storeDiff(prefs, "dcmSpoolFilePathFormat",
-                 aa.getSpoolFilePathFormat(),
-                 bb.getSpoolFilePathFormat());
+         PreferencesUtils.storeDiff(prefs, "dcmSpoolDirectoryPath",
+                 aa.getSpoolDirectoryPath(),
+                 bb.getSpoolDirectoryPath());
          PreferencesUtils.storeDiff(prefs, "dcmStorageFilePathFormat",
                  aa.getStorageFilePathFormat(),
                  bb.getStorageFilePathFormat());

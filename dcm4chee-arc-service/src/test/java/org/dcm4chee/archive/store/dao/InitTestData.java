@@ -50,6 +50,7 @@ import org.dcm4chee.archive.entity.Patient;
 import org.dcm4chee.archive.test.util.Deployments;
 import org.dcm4chee.archive.test.util.ParamFactory;
 import org.dcm4chee.archive.util.BeanLocator;
+import org.dcm4chee.archive.util.FileUtils;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
@@ -129,6 +130,7 @@ public class InitTestData {
     public static WebArchive createDeployment() {
         WebArchive arc = Deployments.createWebArchive()
                 .addClass(BeanLocator.class)
+                .addClass(FileUtils.class)
                 .addClass(ParamFactory.class)
                 .addPackage("org.dcm4chee.archive.common")
                 .addPackage("org.dcm4chee.archive.dao")

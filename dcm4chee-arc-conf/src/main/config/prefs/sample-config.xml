@@ -20,6 +20,7 @@
             <entry key="dcmKeyStoreURL" value="${jboss.server.config.url}/dcm4chee-arc/key.jks"/>
             <entry key="dcmRejectedForPatientSafetyReasonsCode" value="(113037, DCM, &quot;Rejected for Patient Safety Reasons&quot;)"/>
             <entry key="dcmRejectedForQualityReasonsCode" value="(113001, DCM, &quot;Rejected for Quality Reasons&quot;)"/>
+            <entry key="dcmStowAETitle" value="DCM4CHEE"/>
             <entry key="dcmWadoAttributesStaleTimeout" value="60"/>
             <entry key="dicomAuthorizedNodeCertificateReference.#" value="11"/>
             <entry key="dicomAuthorizedNodeCertificateReference.1" value="dicomConfigurationRoot/dicomDevicesRoot/dcmqrscp"/>
@@ -37,7 +38,7 @@
             <entry key="dicomManufacturer" value="dcm4che.org"/>
             <entry key="dicomManufacturerModelName" value="dcm4chee-arc"/>
             <entry key="dicomSoftwareVersion.#" value="1"/>
-            <entry key="dicomSoftwareVersion.1" value="4.2.0.Alpha2"/>
+            <entry key="dicomSoftwareVersion.1" value="4.2.0.Alpha3"/>
             <entry key="dicomThisNodeCertificateReference.#" value="1"/>
             <entry key="dicomThisNodeCertificateReference.1" value="dicomConfigurationRoot/dicomDevicesRoot/dcm4chee-arc"/>
             <entry key="userCertificate.#" value="1"/>
@@ -467,7 +468,7 @@
                 <entry key="dcmReturnOtherPatientNames" value="true"/>
                 <entry key="dcmSendPendingCGet" value="true"/>
                 <entry key="dcmSendPendingCMoveInterval" value="5000"/>
-                <entry key="dcmSpoolFilePathFormat" value="archive/spool/{00020016,urlencoded}/{00020002}/{00020003}"/>
+                <entry key="dcmSpoolDirectoryPath" value="archive/spool"/>
                 <entry key="dcmStorageFilePathFormat" value="archive/{now,date,yyyy/MM/dd}/{0020000D,hash}/{0020000E,hash}/{00080018,hash}"/>
                 <entry key="dcmStoreOriginalAttributes" value="true"/>
                 <entry key="dicomAssociationAcceptor" value="true"/>

@@ -460,7 +460,7 @@ dicomAETitle: DCM4CHEE_ADMIN
 
 dn: dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmWadoAttributesStaleTimeout: 60
-dicomSoftwareVersion: 4.2.0.Alpha2
+dicomSoftwareVersion: 4.2.0.Alpha3
 objectClass: dicomDevice
 objectClass: dcmDevice
 objectClass: dcmArchiveDevice
@@ -488,6 +488,7 @@ dcmKeyStoreURL: ${jboss.server.config.url}/dcm4chee-arc/key.jks
 dicomThisNodeCertificateReference: dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmRejectedForPatientSafetyReasonsCode: (113037, DCM, "Rejected for Patient Safety Reasons")
 dcmIncorrectWorklistEntrySelectedCode: (110514, DCM, "Incorrect worklist entry selected")
+dcmStowAETitle: DCM4CHEE
 dcmKeyStorePin: secret
 dcmDataRetentionPeriodExpiredCode: (113038, DCM, "Data Retention Policy Expired")
 dicomManufacturerModelName: dcm4chee-arc
@@ -962,9 +963,9 @@ objectClass: dcmArchiveNetworkAE
 dcmStorageFilePathFormat: archive/{now,date,yyyy/MM/dd}/{0020000D,hash}/{0020000E,hash}/{00080018,hash}
 dcmRetrieveAET: DCM4CHEE
 dcmSendPendingCMoveInterval: 5000
+dcmSpoolDirectoryPath: archive/spool
 hl7PIXManagerApplication: HL7RCV^DCM4CHEE
 dcmReturnOtherPatientNames: TRUE
-dcmSpoolFilePathFormat: archive/spool/{00020016,urlencoded}/{00020002}/{00020003}
 dcmStoreOriginalAttributes: TRUE
 dcmMatchUnknown: TRUE
 dcmSendPendingCGet: TRUE

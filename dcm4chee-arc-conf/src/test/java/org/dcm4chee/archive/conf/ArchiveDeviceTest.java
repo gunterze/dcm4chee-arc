@@ -813,7 +813,7 @@ public class ArchiveDeviceTest {
         setAttributeFilters(arcDevExt);
         device.setManufacturer("dcm4che.org");
         device.setManufacturerModelName("dcm4chee-arc");
-        device.setSoftwareVersions("4.2.0.Alpha2");
+        device.setSoftwareVersions("4.2.0.Alpha3");
         device.setKeyStoreURL("${jboss.server.config.url}/dcm4chee-arc/key.jks");
         device.setKeyStoreType("JKS");
         device.setKeyStorePin("secret");
@@ -912,8 +912,7 @@ public class ArchiveDeviceTest {
         ae.setAssociationInitiator(true);
         aeExt.setFileSystemGroupID("DEFAULT");
         aeExt.setInitFileSystemURI("${jboss.server.data.url}");
-        aeExt.setSpoolFilePathFormat(new AttributesFormat(
-                "archive/spool/{00020016,urlencoded}/{00020002}/{00020003}") );
+        aeExt.setSpoolDirectoryPath("archive/spool");
         aeExt.setStorageFilePathFormat(new AttributesFormat(
                 "archive/{now,date,yyyy/MM/dd}/{0020000D,hash}/{0020000E,hash}/{00080018,hash}") );
         aeExt.setDigestAlgorithm("MD5");

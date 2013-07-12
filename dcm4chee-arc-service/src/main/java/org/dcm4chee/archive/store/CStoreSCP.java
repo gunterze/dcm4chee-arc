@@ -42,10 +42,11 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 
 import javax.ejb.EJB;
 import javax.xml.transform.Templates;
@@ -86,6 +87,7 @@ import org.dcm4chee.archive.mpps.dao.IANQueryService;
 import org.dcm4chee.archive.store.dao.StoreService;
 import org.dcm4chee.archive.util.AuditUtils;
 import org.dcm4chee.archive.util.BeanLocator;
+import org.dcm4chee.archive.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,15 +111,6 @@ public class CStoreSCP extends BasicCStoreSCP {
         super("*");
     }
 
-    private static class LazyInitialization {
-        static final SecureRandom random = new SecureRandom();
-
-        static int nextInt() {
-            int n = random.nextInt();
-            return n < 0 ? -(n+1) : n;
-        }
-    }
-
     @Override
     protected void store(Association as, PresentationContext pc,
             Attributes rq, PDVInputStream data, Attributes rsp)
@@ -137,39 +130,47 @@ public class CStoreSCP extends BasicCStoreSCP {
             MessageDigest digest = createMessageDigest(
                     aeExt.getDigestAlgorithm());
 
+            AttributesFormat filePathFormat = aeExt.getStorageFilePathFormat();
+            if (filePathFormat == null)
+                throw new DicomServiceException(org.dcm4che.net.Status.ProcessingFailure,
+                        "No Storage File Path Format configured for "
+                                + ae.getAETitle());
+
             StoreService store = initStoreService(as, ae, aeExt);
 
             FileSystem storeDir = store.getCurrentFileSystem();
-            destFile = spoolFile =
-                    newFile(storeDir, aeExt.getSpoolFilePathFormat(), fmi);
+            
+            destFile = spoolFile = File.createTempFile("dcm", ".dcm",
+                    spoolDir(storeDir, aeExt, sourceAET, cuid));
             storeTo(as, fmi, data, spoolFile, digest);
             attrs = parse(spoolFile);
             if (attrs.bigEndian())
                 attrs = new Attributes(attrs, false);
-            AttributesFormat filePathFormat = aeExt.getStorageFilePathFormat();
-            if (filePathFormat != null) {
-                File f = newFile(storeDir, filePathFormat, attrs);
-                CompressionRule compressionRule =
-                        findCompressionRules(aeExt, sourceAET, attrs);
-                if (compressionRule != null) {
-                    try {
-                        MessageDigest digest2 = createMessageDigest(
-                                aeExt.getDigestAlgorithm());
-                        CStoreSCP.compress(as, fmi, attrs, tsuid,
-                                compressionRule, spoolFile, f, digest2);
-                        tsuid = compressionRule.getTransferSyntax();
-                        digest = digest2;
-                        CStoreSCP.deleteFile(as, spoolFile);
-                    } catch (IOException e) {
-                        LOG.info("Compression failed:", e);
-                        deleteFile(as, f);
-                        CStoreSCP.renameTo(as, spoolFile, f);
-                    }
-                } else {
+            File f;
+            synchronized (filePathFormat) {
+                f = new File(storeDir.getDirectory(), filePathFormat.format(attrs));
+            }
+            f = FileUtils.ensureNotExists(f);
+            CompressionRule compressionRule =
+                    findCompressionRules(aeExt, sourceAET, attrs);
+            if (compressionRule != null) {
+                try {
+                    MessageDigest digest2 = createMessageDigest(
+                            aeExt.getDigestAlgorithm());
+                    CStoreSCP.compress(as, fmi, attrs, tsuid,
+                            compressionRule, spoolFile, f, digest2);
+                    tsuid = compressionRule.getTransferSyntax();
+                    digest = digest2;
+                    CStoreSCP.deleteFile(as, spoolFile);
+                } catch (IOException e) {
+                    LOG.info("Compression failed:", e);
+                    deleteFile(as, f);
                     CStoreSCP.renameTo(as, spoolFile, f);
                 }
-                destFile = f;
+            } else {
+                CStoreSCP.renameTo(as, spoolFile, f);
             }
+            destFile = f;
             Attributes modified = coerceAttributes(aeExt, sourceAET, cuid, attrs);
             FileRef fileRef = store.addFileRef(sourceAET, attrs, modified, destFile, 
                     digest(digest), tsuid);
@@ -201,6 +202,27 @@ public class CStoreSCP extends BasicCStoreSCP {
                 throw new DicomServiceException(Status.ProcessingFailure, e);
             }
         }
+    }
+
+    private File spoolDir(FileSystem storeDir, ArchiveAEExtension aeExt,
+            String sourceAET, String cuid) {
+        String spoolDirectoryPath = aeExt.getSpoolDirectoryPath(); 
+        if (spoolDirectoryPath == null)
+            return null;
+        
+        File spoolDir;
+        try {
+            spoolDir = new File(storeDir.getDirectory(), 
+                    spoolDirectoryPath
+                    + File.separatorChar
+                    + URLEncoder.encode(sourceAET, "UTF-8")
+                    + File.separatorChar
+                    + cuid);
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError(e);
+        }
+        spoolDir.mkdirs();
+        return spoolDir;
     }
 
     private static CompressionRule findCompressionRules(ArchiveAEExtension aeExt,
@@ -300,19 +322,6 @@ public class CStoreSCP extends BasicCStoreSCP {
                 : null;
     }
 
-    private static File newFile(FileSystem fs, AttributesFormat filePathFormat,
-            Attributes fmi) {
-        File file;
-        synchronized (filePathFormat) {
-            file = new File(fs.getDirectory(), filePathFormat.format(fmi));
-        }
-        while (file.exists()) {
-            file = new File(file.getParentFile(),
-                    Integer.toString(LazyInitialization.nextInt()));
-        }
-        return file;
-    }
-
     private void storeTo(Association as, Attributes fmi, 
             PDVInputStream data, File file, MessageDigest digest)
                     throws IOException  {
@@ -381,7 +390,7 @@ public class CStoreSCP extends BasicCStoreSCP {
         if (store == null) {
             String fsGroupID = aeExt.getFileSystemGroupID();
             if (fsGroupID == null)
-                throw new DicomServiceException(Status.OutOfResources,
+                throw new DicomServiceException(Status.ProcessingFailure,
                         "No File System Group ID configured for "
                                 + ae.getAETitle());
             store = BeanLocator.lookup(StoreService.class);

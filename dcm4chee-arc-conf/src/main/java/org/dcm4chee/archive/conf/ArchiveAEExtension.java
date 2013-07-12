@@ -73,7 +73,7 @@ public class ArchiveAEExtension extends AEExtension {
     private String fileSystemGroupID;
     private String initFileSystemURI;
     private String digestAlgorithm;
-    private AttributesFormat spoolFilePathFormat;
+    private String spoolDirectoryPath;
     private AttributesFormat storageFilePathFormat;
     private boolean storeOriginalAttributes;
     private boolean suppressWarningCoercionOfDataElements;
@@ -209,12 +209,12 @@ public class ArchiveAEExtension extends AEExtension {
         this.digestAlgorithm = digestAlgorithm;
     }
 
-    public AttributesFormat getSpoolFilePathFormat() {
-        return spoolFilePathFormat;
+    public String getSpoolDirectoryPath() {
+        return spoolDirectoryPath;
     }
 
-    public void setSpoolFilePathFormat(AttributesFormat spoolFilePathFormat) {
-        this.spoolFilePathFormat = spoolFilePathFormat;
+    public void setSpoolDirectoryPath(String spoolDirectoryPath) {
+        this.spoolDirectoryPath = spoolDirectoryPath;
     }
 
     public AttributesFormat getStorageFilePathFormat() {
@@ -409,7 +409,7 @@ public class ArchiveAEExtension extends AEExtension {
         setFileSystemGroupID(arcae.fileSystemGroupID);
         setInitFileSystemURI(arcae.initFileSystemURI);
         setDigestAlgorithm(arcae.digestAlgorithm);
-        setSpoolFilePathFormat(arcae.spoolFilePathFormat);
+        setSpoolDirectoryPath(arcae.spoolDirectoryPath);
         setStorageFilePathFormat(arcae.storageFilePathFormat);
         setStoreOriginalAttributes(arcae.storeOriginalAttributes);
         setPreserveSpoolFileOnFailure(arcae.preserveSpoolFileOnFailure);
