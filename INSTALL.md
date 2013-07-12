@@ -789,7 +789,7 @@ Use DCM4CHE 3.x's `dcmdump` utility to determine `Study`, `Series` and
 
 Invoke
 
-    GET http://localhost:8080/service/archive/wado?requestType=WADO
+    GET http://localhost:8080/service/archive/wado/DCM4CHEE?requestType=WADO
       &studyUID=1.2.840.113674.514.212.200
       &seriesUID=1.2.840.113674.514.212.81.300
       &objectUID=1.2.840.113674.950809132354242.100
