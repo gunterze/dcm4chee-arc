@@ -40,8 +40,6 @@ package org.dcm4chee.archive.wado;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
@@ -65,28 +63,35 @@ class DicomObjectOutput implements StreamingOutput {
     private final Attributes attrs;
     private final String tsuid;
     private final MediaType mediaType;
-    private final HttpServletRequest request;
     private final Logger log;
+    private final Object service;
+    private final int partNumber;
 
     DicomObjectOutput(InstanceFileRef fileRef, Attributes attrs, String tsuid,
-            MediaType mediaType, HttpServletRequest request, Logger log) {
+            MediaType mediaType, Logger log, Object service, int partNumber) {
         this.fileRef = fileRef;
         this.attrs = attrs;
         this.tsuid = tsuid;
         this.mediaType = mediaType;
-        this.request = request;
         this.log = log;
+        this.service = service;
+        this.partNumber = partNumber;
     }
 
-    public void write(OutputStream out) throws IOException,
-            WebApplicationException {
-        log.info("{}@{} << {}: Content-Type={}, iuid={}",
-                new Object[] {
-                    request.getRemoteUser(),
-                    request.getRemoteHost(),
-                    System.identityHashCode(request),
+    public void write(OutputStream out) throws IOException {
+        if (partNumber > 0)
+            log.info("{} << {}:WADO-RS[Content-Type={}, iuid={}]",
+                    new Object[] {
+                    service,
+                    partNumber,
                     mediaType,
-                    fileRef.sopInstanceUID});
+                    fileRef.sopInstanceUID });
+        else
+            log.info("{} << WADO-URI[Content-Type={}, iuid={}]",
+                    new Object[] {
+                    service,
+                    mediaType,
+                    fileRef.sopInstanceUID });
         DicomInputStream dis = new DicomInputStream(fileRef.getFile());
         try {
             dis.setIncludeBulkData(IncludeBulkData.URI);

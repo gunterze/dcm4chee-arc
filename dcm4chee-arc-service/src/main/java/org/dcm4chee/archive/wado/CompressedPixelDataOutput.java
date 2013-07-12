@@ -42,7 +42,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
@@ -62,28 +61,30 @@ public class CompressedPixelDataOutput implements StreamingOutput {
     private final Fragments fragments;
     private final MediaType mediaType;
     private final String contentLocation;
-    private final HttpServletRequest request;
     private final Logger log;
+    private final Object service;
+    private final int partNumber;
 
     public CompressedPixelDataOutput(Fragments fragments,
             MediaType mediaType, String contentLocation,
-            HttpServletRequest request, Logger log) {
+            Logger log, Object service, int partNumber) {
         this.fragments = fragments;
         this.mediaType = mediaType;
         this.contentLocation = contentLocation;
-        this.request = request;
         this.log = log;
+        this.service = service;
+        this.partNumber = partNumber;
     }
 
     @Override
     public void write(OutputStream out) throws IOException,
             WebApplicationException {
-        log.info("{}@{} << {}: Content-Type={}, Content-Location={}",
+        log.info("{} << {}:WADO-RS[Content-Type={}, Content-Location={}]",
                 new Object[] {
-                    request.getRemoteUser(),
-                    request.getRemoteHost(),
-                    System.identityHashCode(request),
-                    mediaType, contentLocation });
+                partNumber,
+                service,
+                mediaType,
+                contentLocation });
         Iterator<Object> iter = fragments.iterator();
         iter.next(); // skip frame offset table
         BulkData fragment = (BulkData) iter.next();

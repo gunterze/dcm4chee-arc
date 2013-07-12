@@ -84,6 +84,12 @@
       </dependency>
       <dependency>
         <groupId>org.dcm4che</groupId>
+        <artifactId>dcm4che-mime</artifactId>
+        <version>${dcm4che.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.dcm4che</groupId>
         <artifactId>dcm4che-net</artifactId>
         <version>${dcm4che.version}</version>
         <scope>provided</scope>

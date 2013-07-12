@@ -41,7 +41,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
@@ -60,27 +59,29 @@ public class BulkDataOutput implements StreamingOutput {
     private final BulkData bulkData;
     private final MediaType mediaType;
     private final String contentLocation;
-    private final HttpServletRequest request;
     private final Logger log;
+    private final Object service;
+    private final int partNumber;
 
     public BulkDataOutput(BulkData bulkData, MediaType mediaType,
-            String contentLocation, HttpServletRequest request, Logger log) {
+            String contentLocation, Logger log, Object service, int partNumber) {
         this.bulkData = bulkData;
         this.mediaType = mediaType;
         this.contentLocation = contentLocation;
-        this.request = request;
         this.log = log;
+        this.service = service;
+        this.partNumber = partNumber;
     }
 
     @Override
     public void write(OutputStream out) throws IOException,
             WebApplicationException {
-        log.info("{}@{} << {}: Content-Type={}, Content-Location={}",
+        log.info("{} << {}:WADO-RS[Content-Type={}, Content-Location={}]",
                 new Object[] {
-                    request.getRemoteUser(),
-                    request.getRemoteHost(),
-                    System.identityHashCode(request),
-                    mediaType, contentLocation });
+                service,
+                partNumber,
+                mediaType,
+                contentLocation });
         InputStream in = bulkData.openStream();
         try {
             StreamUtils.skipFully(in, bulkData.offset);

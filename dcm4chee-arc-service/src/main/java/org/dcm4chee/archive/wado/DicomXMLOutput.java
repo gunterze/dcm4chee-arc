@@ -40,7 +40,6 @@ package org.dcm4chee.archive.wado;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
@@ -69,37 +68,38 @@ public class DicomXMLOutput implements StreamingOutput {
     private final Attributes attrs;
     private final String bulkDataURI;
     private final MediaType mediaType;
-    private final HttpServletRequest request;
     private final Logger log;
+    private final Object service;
+    private final int partNumber;
 
     public DicomXMLOutput(InstanceFileRef fileRef, String bulkDataURI,
-            Attributes attrs, MediaType mediaType, HttpServletRequest request,
-            Logger log) {
+            Attributes attrs, MediaType mediaType, Logger log,
+            Object service, int partNumber) {
         this.fileRef = fileRef;
         this.bulkDataURI = bulkDataURI;
         this.attrs = attrs;
         this.mediaType = mediaType;
-        this.request = request;
         this.log = log;
+        this.service = service;
+        this.partNumber = partNumber;
     }
 
     @Override
     public void write(OutputStream out) throws IOException,
             WebApplicationException {
-        log.info("{}@{} << {}: Content-Type={}, iuid={}",
+        log.info("{} << {}:WADO-RS[Content-Type={}, iuid={}]",
                 new Object[] {
-                    request.getRemoteUser(),
-                    request.getRemoteHost(),
-                    System.identityHashCode(request),
-                    mediaType,
-                    fileRef.sopInstanceUID});
+                service,
+                partNumber,
+                mediaType,
+                fileRef.sopInstanceUID });
         DicomInputStream dis = new DicomInputStream(fileRef.getFile());
         dis.setURI(bulkDataURI);
         try {
             dis.setIncludeBulkData(IncludeBulkData.URI);
             Attributes dataset = dis.readDataset(-1, -1);
             dataset.addAll(attrs);
-            Object pixelData = dataset.getValue(Tag.PixelAspectRatio);
+            Object pixelData = dataset.getValue(Tag.PixelData);
             if (pixelData instanceof Fragments) {
                 Fragments frags = (Fragments) pixelData;
                 Object frag0 = frags.get(0);

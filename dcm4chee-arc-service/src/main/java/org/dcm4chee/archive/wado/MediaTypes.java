@@ -186,13 +186,6 @@ public class MediaTypes {
     public final static MediaType MULTIPART_RELATED_TYPE =
             new MediaType("multipart", "related");
 
-    public static MediaType bodyPartMediaType(MediaType mediaType) {
-        if (mediaType.isWildcardType())
-            return mediaType;
-
-        return MediaType.valueOf(mediaType.getParameters().get("type"));
-    }
-
     public static boolean equalsIgnoreParameters(MediaType a, MediaType b) {
        return a.getType().equalsIgnoreCase(b.getType())
            && a.getSubtype().equalsIgnoreCase(b.getSubtype());
@@ -285,6 +278,33 @@ public class MediaTypes {
             throw new IllegalArgumentException("ts: " + ts);
 
         return MediaType.valueOf(s + ";transfer-syntax=" + ts);
+    }
+
+    public static String transferSyntaxOf(MediaType bulkdataMediaType) {
+        String tsuid = bulkdataMediaType.getParameters().get("transfer-syntax");
+        if (tsuid != null)
+            return tsuid;
+        
+        String type = bulkdataMediaType.getType().toLowerCase();
+        String subtype = bulkdataMediaType.getSubtype().toLowerCase();
+        if (type.equals("application")) {
+            if (subtype.equals("octet-stream"))
+                return UID.ExplicitVRLittleEndian;
+        } else if (type.equals("image")) {
+            if (subtype.equals("dicom+jpeg")) {
+                if (subtype.equals("dicom+jpeg"))
+                    return UID.JPEGLossless;
+                else if (subtype.equals("dicom+jpeg-ls"))
+                    return UID.JPEGLSLossless;
+                else if (subtype.equals("dicom+jpeg-jp2"))
+                    return UID.JPEG2000LosslessOnly;
+                else if (subtype.equals("dicom+jpeg-jpx"))
+                    return UID.JPEG2000Part2MultiComponentLosslessOnly;
+                else if (subtype.equals("dicom+rle"))
+                    return UID.RLELossless;
+            }
+        }
+        throw new IllegalArgumentException(bulkdataMediaType.toString());
     }
 
     public static boolean isLittleEndian(String ts) {

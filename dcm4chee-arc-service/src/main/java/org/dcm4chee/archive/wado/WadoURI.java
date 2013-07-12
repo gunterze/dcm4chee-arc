@@ -57,6 +57,7 @@ import javax.imageio.stream.ImageOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
@@ -74,8 +75,11 @@ import org.dcm4che.imageio.plugins.dcm.DicomImageReadParam;
 import org.dcm4che.imageio.plugins.dcm.DicomMetaData;
 import org.dcm4che.imageio.stream.OutputStreamAdapter;
 import org.dcm4che.io.DicomInputStream;
+import org.dcm4che.net.ApplicationEntity;
+import org.dcm4che.net.Device;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.StringUtils;
+import org.dcm4chee.archive.Archive;
 import org.dcm4chee.archive.dao.SeriesService;
 import org.dcm4chee.archive.entity.InstanceFileRef;
 import org.dcm4chee.archive.util.AuditUtils;
@@ -87,8 +91,8 @@ import org.slf4j.LoggerFactory;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
-@Path("/wado")
-public class WadoURI {
+@Path("/wado/{AETitle}")
+public class WadoURI extends Object  {
 
     private static final Logger LOG = LoggerFactory.getLogger(WadoURI.class);
 
@@ -154,6 +158,9 @@ public class WadoURI {
     @Context
     private HttpHeaders headers;
 
+    @PathParam("AETitle")
+    private String aet;
+
     @QueryParam("requestType")
     private String requestType;
 
@@ -208,6 +215,19 @@ public class WadoURI {
     @QueryParam("transferSyntax")
     private List<String> transferSyntax;
 
+    private String name;
+
+    @Override
+    public String toString() {
+        if (name == null) {
+            if (request == null)
+                return super.toString();
+
+            name = request.getRemoteHost() + ':' + request.getRemotePort();
+        }
+        return name;
+    }
+
     @GET
     public Response retrieve() throws WebApplicationException {
         checkRequest();
@@ -240,12 +260,15 @@ public class WadoURI {
     private void checkRequest()
             throws WebApplicationException {
         List<MediaType> acceptableMediaTypes = headers.getAcceptableMediaTypes();
-        LOG.info("{}@{} >> {}: GET {}, Accept={}", new Object[] {
-                request.getRemoteUser(),
-                request.getRemoteHost(),
-                System.identityHashCode(request),
+        LOG.info("{} >> WADO-URI[{}, Accept={}]", new Object[] {
+                this,
                 request.getRequestURL(),
                 acceptableMediaTypes});
+
+        Device device = Archive.getInstance().getDevice();
+        ApplicationEntity ae = device.getApplicationEntity(aet);
+        if (ae == null || !ae.isInstalled())
+            throw new WebApplicationException(Status.SERVICE_UNAVAILABLE);
 
         if (!"WADO".equals(requestType))
             throw new WebApplicationException(Status.BAD_REQUEST);
@@ -296,34 +319,35 @@ public class WadoURI {
         MediaType mediaType = MediaType.valueOf(
                 "application/dicom;transfer-syntax=" + tsuid);
         return Response.ok(new DicomObjectOutput(ref, attrs, tsuid,
-                    mediaType, request, LOG),
+                    mediaType, LOG, this, 0),
                 mediaType).build();
     }
 
     private Response retrieveJPEG(final InstanceFileRef ref, 
             final Attributes attrs) {
+        final MediaType mediaType = MediaTypes.IMAGE_JPEG_TYPE;
         return Response.ok(new StreamingOutput() {
             
             @Override
             public void write(OutputStream out) throws IOException,
                     WebApplicationException {
-                LOG.info("{}@{} << {}: {}, iuid={}", new Object[] {
-                        request.getRemoteUser(),
-                        request.getRemoteHost(),
-                        System.identityHashCode(request),
-                        MediaTypes.IMAGE_JPEG_TYPE,
-                        ref.sopInstanceUID});
-                ImageInputStream iis = ImageIO.createImageInputStream(
-                        ref.getFile());
+                ImageInputStream iis = ImageIO.createImageInputStream(ref.getFile());
                 BufferedImage bi;
                 try {
                     bi = readImage(iis, attrs);
                 } finally {
                     SafeClose.close(iis);
                 }
+                LOG.info("{}@{} << {}: Content-Type={}, iuid=",
+                        new Object[] {
+                        request.getRemoteUser(),
+                        request.getRemoteHost(),
+                        this,
+                        mediaType,
+                        ref.sopInstanceUID });
                 writeJPEG(bi, new OutputStreamAdapter(out));
             }
-        }, MediaTypes.IMAGE_JPEG_TYPE).build();
+        }, mediaType).build();
     }
 
     private BufferedImage readImage(ImageInputStream iis, Attributes attrs)
