@@ -44,6 +44,7 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+import org.dcm4chee.archive.qido.QidoRS;
 import org.dcm4chee.archive.stow.StowRS;
 import org.dcm4chee.archive.wado.WadoRS;
 import org.dcm4chee.archive.wado.WadoURI;
@@ -61,6 +62,7 @@ public class ArchiveApplication extends Application {
         classes.add(WadoURI.class);
         classes.add(WadoRS.class);
         classes.add(StowRS.class);
+        classes.add(QidoRS.class);
     }
 
     @Override

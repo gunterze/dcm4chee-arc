@@ -141,8 +141,6 @@ public class CMoveSCP extends BasicCMoveSCP {
         } catch (ConfigurationNotFoundException e) {
             throw new DicomServiceException(Status.MoveDestinationUnknown,
                     "Unknown Move Destination: " + dest);
-        } catch (DicomServiceException e) {
-            throw e;
         } catch (Exception e) {
             throw new DicomServiceException(Status.UnableToCalculateNumberOfMatches, e);
         }

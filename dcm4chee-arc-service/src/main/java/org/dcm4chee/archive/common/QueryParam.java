@@ -156,8 +156,7 @@ public class QueryParam {
     }
 
     public static QueryParam valueOf(ApplicationEntity ae,
-            EnumSet<QueryOption> queryOpts, String[] accessControlIDs)
-                    throws Exception {
+            EnumSet<QueryOption> queryOpts, String[] accessControlIDs) {
         ArchiveDeviceExtension devExt = ae.getDevice()
                 .getDeviceExtension(ArchiveDeviceExtension.class);
         ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);

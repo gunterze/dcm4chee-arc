@@ -122,8 +122,6 @@ public class CGetSCP extends BasicCGetSCP {
             retrieveTask.setReturnOtherPatientIDs(aeExt.isReturnOtherPatientIDs());
             retrieveTask.setReturnOtherPatientNames(aeExt.isReturnOtherPatientNames());
             return retrieveTask;
-        } catch (DicomServiceException e) {
-            throw e;
         } catch (Exception e) {
             throw new DicomServiceException(Status.UnableToCalculateNumberOfMatches, e);
         }

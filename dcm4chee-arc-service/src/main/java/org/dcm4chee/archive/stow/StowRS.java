@@ -112,7 +112,7 @@ import org.slf4j.LoggerFactory;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-@Path("/stow/{AETitle}")
+@Path("/stow-rs/{AETitle}")
 public class StowRS implements MultipartParser.Handler, StreamingOutput {
 
     private static final int TRANSFER_SYNTAX_NOT_SUPPORTED = 0xC122;
@@ -282,7 +282,7 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
     }
 
     public void initResponse() {
-        wadoURL = uriInfo.getBaseUri() + "wado/" + aet + "/studies/";
+        wadoURL = uriInfo.getBaseUri() + "wado-rs/" + aet + "/studies/";
         if (studyInstanceUID != null)
             response.setString(Tag.RetrieveURI, VR.UT, wadoURL + studyInstanceUID);
         else

@@ -91,7 +91,7 @@ import org.slf4j.LoggerFactory;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
-@Path("/wado/{AETitle}")
+@Path("/wado-uri/{AETitle}")
 public class WadoURI extends Object  {
 
     private static final Logger LOG = LoggerFactory.getLogger(WadoURI.class);
@@ -260,9 +260,10 @@ public class WadoURI extends Object  {
     private void checkRequest()
             throws WebApplicationException {
         List<MediaType> acceptableMediaTypes = headers.getAcceptableMediaTypes();
-        LOG.info("{} >> WADO-URI[{}, Accept={}]", new Object[] {
+        LOG.info("{} >> WADO-URI[{}?{}, Accept={}]", new Object[] {
                 this,
                 request.getRequestURL(),
+                request.getQueryString(),
                 acceptableMediaTypes});
 
         Device device = Archive.getInstance().getDevice();
