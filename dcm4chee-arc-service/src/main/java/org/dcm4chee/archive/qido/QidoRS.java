@@ -226,7 +226,7 @@ public class QidoRS {
     }
 
     private Response search(QueryRetrieveLevel qrlevel, Output output) {
-        init();
+        init(qrlevel);
         try {
             queryService.createQuery(qrlevel, pids, keys, queryParam);
             int status = STATUS_OK;
@@ -262,7 +262,7 @@ public class QidoRS {
         }
     }
 
-    private void init() {
+    private void init(QueryRetrieveLevel qrlevel) {
         List<MediaType> acceptableMediaTypes = headers.getAcceptableMediaTypes();
         LOG.info("{} >> QIDO-RS[{}?{}, Accept={}]", new Object[] {
                 this,
@@ -276,16 +276,21 @@ public class QidoRS {
                 || (aeExt = ae.getAEExtension(ArchiveAEExtension.class)) == null)
             throw new WebApplicationException(Status.SERVICE_UNAVAILABLE);
 
-        parseIncludefield();
-
-        for (Map.Entry<String, List<String>> qParam
-                : uriInfo.getQueryParameters().entrySet()) {
-            String name = qParam.getKey();
-            if (isDicomAttribute(name))
-                parseDicomAttribute(name, qParam.getValue());
+        try {
+            parseIncludefield();
+    
+            for (Map.Entry<String, List<String>> qParam
+                    : uriInfo.getQueryParameters().entrySet()) {
+                String name = qParam.getKey();
+                if (isDicomAttribute(name))
+                    parseDicomAttribute(name, qParam.getValue());
+            }
+    
+            parseOrderby(qrlevel);
+        } catch (IllegalArgumentException e) {
+            throw new WebApplicationException(e, Status.BAD_REQUEST);
+            
         }
-
-        parseOrderby();
 
         queryService = BeanLocator.lookup(QueryService.class);
         queryParam = org.dcm4chee.archive.common.QueryParam.valueOf(
@@ -337,35 +342,47 @@ public class QidoRS {
                     for (int tag : include.tags)
                         keys.setNull(tag, DICT.vrOf(tag));
                 } catch (IllegalArgumentException e) {
-                    int[] tagPath = parseTagPath(field);
-                    int tag = tagPath[tagPath.length-1];
-                    nestedKeys(tagPath).setNull(tag, DICT.vrOf(tag));
+                    try {
+                        int[] tagPath = parseTagPath(field);
+                        int tag = tagPath[tagPath.length-1];
+                        nestedKeys(tagPath).setNull(tag, DICT.vrOf(tag));
+                    } catch (IllegalArgumentException e2) {
+                        throw new IllegalArgumentException("includefield=" + s);
+                    }
                 }
             }
         }
     }
 
-    private void parseOrderby() {
+    private void parseOrderby(QueryRetrieveLevel qrLevel) {
         if (orderby.isEmpty())
             return;
 
         ArrayList<OrderSpecifier<?>> list = new ArrayList<OrderSpecifier<?>>();
         for (String s : orderby) {
-            for (String field : StringUtils.split(s, ',')) {
-                boolean desc = s.charAt(0) == '-';
-                int tag = parseTag(desc ? field.substring(1) : field);
-                StringPath stringPath = Builder.stringPathOf(tag);
-                list.add(desc ? stringPath.desc() : stringPath.asc());
+            try {
+                for (String field : StringUtils.split(s, ',')) {
+                    boolean desc = field.charAt(0) == '-';
+                    int tag = parseTag(desc ? field.substring(1) : field);
+                    StringPath stringPath = Builder.stringPathOf(tag, qrLevel);
+                    list.add(desc ? stringPath.desc() : stringPath.asc());
+                }
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("orderby=" + s);
             }
         }
         orderSpecifiers = list.toArray(new OrderSpecifier<?>[list.size()]);
     }
 
     private void parseDicomAttribute(String attrPath, List<String> values) {
-        int[] tagPath = parseTagPath(attrPath);
-        int tag = tagPath[tagPath.length-1];
-        nestedKeys(tagPath).setString(tag, DICT.vrOf(tag),
-                values.toArray(new String[values.size()]));
+        try {
+            int[] tagPath = parseTagPath(attrPath);
+            int tag = tagPath[tagPath.length-1];
+            nestedKeys(tagPath).setString(tag, DICT.vrOf(tag),
+                    values.toArray(new String[values.size()]));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(attrPath + "=" + values.get(0));
+        } 
     }
 
     private Attributes nestedKeys(int[] tags) {
