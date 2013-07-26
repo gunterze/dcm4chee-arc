@@ -47,7 +47,6 @@ import org.dcm4chee.archive.entity.QSeries;
 import org.dcm4chee.archive.entity.QStudy;
 import org.dcm4chee.archive.entity.Utils;
 import org.dcm4chee.archive.util.query.Builder;
-import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;
 
@@ -64,21 +63,8 @@ class SeriesQuery extends AbstractQuery {
 
     public SeriesQuery(QueryService queryService, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {
-        super(queryService, query(queryService.session(), pids, keys, queryParam), queryParam, false);
-    }
-
-    private static ScrollableResults query(StatelessSession session, IDWithIssuer[] pids,
-            Attributes keys, QueryParam queryParam) {
-        BooleanBuilder builder = new BooleanBuilder();
-        Builder.addPatientLevelPredicates(builder, pids, keys, queryParam);
-        Builder.addStudyLevelPredicates(builder, keys, queryParam);
-        Builder.addSeriesLevelPredicates(builder, keys, queryParam);
-        return new HibernateQuery(session)
-            .from(QSeries.series)
-            .innerJoin(QSeries.series.study, QStudy.study)
-            .innerJoin(QStudy.study.patient, QPatient.patient)
-            .where(builder)
-            .scroll(ScrollMode.FORWARD_ONLY,
+        super(queryService, query(queryService.session(), pids, keys, queryParam),
+                queryParam, false,
                 QStudy.study.pk,                         // (0)
                 QSeries.series.pk,                       // (1)
                 QStudy.study.numberOfSeries,             // (2)
@@ -95,6 +81,19 @@ class SeriesQuery extends AbstractQuery {
                 QSeries.series.encodedAttributes,        // (13)
                 QStudy.study.encodedAttributes,          // (14)
                 QPatient.patient.encodedAttributes);     // (15)
+    }
+
+    private static HibernateQuery query(StatelessSession session, IDWithIssuer[] pids,
+            Attributes keys, QueryParam queryParam) {
+        BooleanBuilder builder = new BooleanBuilder();
+        Builder.addPatientLevelPredicates(builder, pids, keys, queryParam);
+        Builder.addStudyLevelPredicates(builder, keys, queryParam);
+        Builder.addSeriesLevelPredicates(builder, keys, queryParam);
+        return new HibernateQuery(session)
+            .from(QSeries.series)
+            .innerJoin(QSeries.series.study, QStudy.study)
+            .innerJoin(QStudy.study.patient, QPatient.patient)
+            .where(builder);
     }
 
     @Override

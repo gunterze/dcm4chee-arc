@@ -42,6 +42,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -61,12 +62,14 @@ import org.dcm4chee.archive.dao.SeriesService;
 import org.dcm4chee.archive.entity.QPatient;
 import org.dcm4chee.archive.entity.Utils;
 import org.dcm4chee.archive.util.query.Builder;
+import org.hibernate.ScrollableResults;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 
 import com.mysema.query.BooleanBuilder;
 import com.mysema.query.jpa.hibernate.HibernateQuery;
+import com.mysema.query.types.OrderSpecifier;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -86,8 +89,12 @@ public class QueryService {
 
     private AbstractQuery query;
 
+    private ScrollableResults results;
+
     @EJB
     private SeriesService seriesService;
+
+    private boolean hasMoreMatches;
 
     final StatelessSession session() {
         return session;
@@ -109,73 +116,101 @@ public class QueryService {
         session = sessionFactory.openStatelessSession(connection);
     }
 
-    public void find(QueryRetrieveLevel qrlevel, IDWithIssuer[] pids,
-            Attributes keys, QueryParam queryParam) throws Exception {
+    public void createQuery(QueryRetrieveLevel qrlevel, IDWithIssuer[] pids,
+            Attributes keys, QueryParam queryParam) {
         switch (qrlevel) {
         case PATIENT:
-            findPatients(pids, keys, queryParam);
+            createPatientQuery(pids, keys, queryParam);
             break;
         case STUDY:
-            findStudies(pids, keys, queryParam);
+            createStudyQuery(pids, keys, queryParam);
             break;
         case SERIES:
-            findSeries(pids, keys, queryParam);
+            createSeriesQuery(pids, keys, queryParam);
             break;
         case IMAGE:
-            findInstances(pids, keys, queryParam);
+            createInstanceQuery(pids, keys, queryParam);
             break;
         default:
             assert true;
         }
     }
 
-    public void findPatients(IDWithIssuer[] pids, Attributes keys,
+    public void executeQuery() {
+        checkQuery();
+        results = query.execute();
+        hasMoreMatches = results.next();
+    }
+
+    public long count() {
+        checkQuery();
+        return query.getQuery().count();
+    }
+
+    public void limit(long limit) {
+        checkQuery();
+        query.getQuery().limit(limit);
+    }
+
+    public void offset(long offset) {
+        checkQuery();
+        query.getQuery().offset(offset);
+    }
+
+    public void orderBy(OrderSpecifier<?>... orderSpecifiers) {
+        checkQuery();
+        query.getQuery().orderBy(orderSpecifiers);
+    }
+
+    public void createPatientQuery(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        checkNoResults();
+        checkNoQuery();
         query = new PatientQuery(this, pids, keys, queryParam);
     }
 
-    public void findStudies(IDWithIssuer[] pids, Attributes keys,
+    public void createStudyQuery(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        checkNoResults();
+        checkNoQuery();
         query = new StudyQuery(this, pids, keys, queryParam);
     }
 
-    public void findSeries(IDWithIssuer[] pids, Attributes keys,
+    public void createSeriesQuery(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        checkNoResults();
+        checkNoQuery();
         query = new SeriesQuery(this, pids, keys, queryParam);
     }
 
-    public void findInstances(IDWithIssuer[] pids, Attributes keys,
+    public void createInstanceQuery(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam) {
-        checkNoResults();
+        checkNoQuery();
         query = new InstanceQuery(this, pids, keys, queryParam);
     }
 
     public boolean optionalKeyNotSupported() {
-        checkResults();
+        checkQuery();
         return query.optionalKeyNotSupported();
     }
 
     public boolean hasMoreMatches() {
-        checkResults();
-        return query.hasMoreMatches();
+        return hasMoreMatches;
     }
 
     public Attributes nextMatch() {
-        checkResults();
-        return query.nextMatch();
+        if (!hasMoreMatches)
+            throw new NoSuchElementException();
+        Attributes attrs = query.toAttributes(results);
+        hasMoreMatches = results.next();
+        return attrs;
     }
 
-    private void checkNoResults() {
+    private void checkNoQuery() {
         if (query != null)
-            throw new IllegalStateException("results already initalized");
+            throw new IllegalStateException("query already initalized");
     }
 
-    private void checkResults() {
+    private void checkQuery() {
         if (query == null)
-            throw new IllegalStateException("results not initalized");
+            throw new IllegalStateException("query not initalized");
     }
 
     public String[] patientNamesOf(IDWithIssuer[] pids) {
@@ -203,6 +238,7 @@ public class QueryService {
         connection = null;
         session = null;
         query = null;
+        results = null;
         s.close();
         try {
             c.close();

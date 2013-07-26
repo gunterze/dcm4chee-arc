@@ -203,6 +203,7 @@ public class LdapArchiveConfiguration extends LdapDicomConfigurationExtension
         LdapUtils.storeNotDef(attrs, "dcmShowRejectedInstances", arcAE.isShowRejectedInstances(), false);
         LdapUtils.storeNotNull(attrs, "hl7PIXConsumerApplication", arcAE.getLocalPIXConsumerApplication());
         LdapUtils.storeNotNull(attrs, "hl7PIXManagerApplication", arcAE.getRemotePIXManagerApplication());
+        LdapUtils.storeNotDef(attrs, "dcmQidoMaxNumberOfResults", arcAE.getQIDOMaxNumberOfResults(), 0);
     }
 
     @Override
@@ -332,6 +333,7 @@ public class LdapArchiveConfiguration extends LdapDicomConfigurationExtension
                LdapUtils.booleanValue(attrs.get("dcmShowRejectedInstances"), false));
        arcae.setLocalPIXConsumerApplication(LdapUtils.stringValue(attrs.get("hl7PIXConsumerApplication"), null));
        arcae.setRemotePIXManagerApplication(LdapUtils.stringValue(attrs.get("hl7PIXManagerApplication"), null));
+       arcae.setQIDOMaxNumberOfResults(LdapUtils.intValue(attrs.get("dcmQidoMaxNumberOfResults"), 0));
     }
 
     @Override
@@ -520,6 +522,10 @@ public class LdapArchiveConfiguration extends LdapDicomConfigurationExtension
         LdapUtils.storeDiff(mods, "hl7PIXManagerApplication",
                 aa.getRemotePIXManagerApplication(),
                 bb.getRemotePIXManagerApplication());
+        LdapUtils.storeDiff(mods, "dcmQidoMaxNumberOfResults",
+                aa.getQIDOMaxNumberOfResults(),
+                bb.getQIDOMaxNumberOfResults(),
+                0);
     }
 
     @Override

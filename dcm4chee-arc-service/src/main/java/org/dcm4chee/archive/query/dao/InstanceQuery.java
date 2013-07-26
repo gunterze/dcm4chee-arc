@@ -48,7 +48,6 @@ import org.dcm4chee.archive.entity.QSeries;
 import org.dcm4chee.archive.entity.QStudy;
 import org.dcm4chee.archive.entity.Utils;
 import org.dcm4chee.archive.util.query.Builder;
-import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;
 
@@ -65,10 +64,17 @@ class InstanceQuery extends AbstractQuery {
 
     public InstanceQuery(QueryService queryService, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {
-        super(queryService, query(queryService.session(), pids, keys, queryParam), queryParam, false);
+        super(queryService, 
+                query(queryService.session(), pids, keys, queryParam),
+                queryParam, false,
+                QSeries.series.pk,
+                QInstance.instance.retrieveAETs,
+                QInstance.instance.externalRetrieveAET,
+                QInstance.instance.availability,
+                QInstance.instance.encodedAttributes);
     }
 
-    private static ScrollableResults query(StatelessSession session, IDWithIssuer[] pids,
+    private static HibernateQuery query(StatelessSession session, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {
         BooleanBuilder builder = new BooleanBuilder();
         Builder.addPatientLevelPredicates(builder, pids, keys, queryParam);
@@ -80,13 +86,7 @@ class InstanceQuery extends AbstractQuery {
             .innerJoin(QInstance.instance.series, QSeries.series)
             .innerJoin(QSeries.series.study, QStudy.study)
             .innerJoin(QStudy.study.patient, QPatient.patient)
-            .where(builder)
-            .scroll(ScrollMode.FORWARD_ONLY,
-                QSeries.series.pk,
-                QInstance.instance.retrieveAETs,
-                QInstance.instance.externalRetrieveAET,
-                QInstance.instance.availability,
-                QInstance.instance.encodedAttributes);
+            .where(builder);
     }
 
     @Override

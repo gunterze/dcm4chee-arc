@@ -46,6 +46,7 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import org.dcm4che.conf.api.ConfigurationException;
+import org.dcm4che.conf.ldap.LdapUtils;
 import org.dcm4che.conf.prefs.PreferencesDicomConfigurationExtension;
 import org.dcm4che.conf.prefs.PreferencesUtils;
 import org.dcm4che.conf.prefs.hl7.PreferencesHL7ConfigurationExtension;
@@ -191,6 +192,7 @@ public class PreferencesArchiveConfiguration
         PreferencesUtils.storeNotDef(prefs, "dcmShowRejectedInstances", arcAE.isShowRejectedInstances(), false);
         PreferencesUtils.storeNotNull(prefs, "hl7PIXConsumerApplication", arcAE.getLocalPIXConsumerApplication());
         PreferencesUtils.storeNotNull(prefs, "hl7PIXManagerApplication", arcAE.getRemotePIXManagerApplication());
+        PreferencesUtils.storeNotDef(prefs, "dcmQidoMaxNumberOfResults", arcAE.getQIDOMaxNumberOfResults(), 0);
     }
 
     @Override
@@ -287,6 +289,7 @@ public class PreferencesArchiveConfiguration
                 prefs.getBoolean("dcmShowRejectedInstances", false));
         arcae.setLocalPIXConsumerApplication(prefs.get("hl7PIXConsumerApplication", null));
         arcae.setRemotePIXManagerApplication(prefs.get("hl7PIXManagerApplication", null));
+        arcae.setQIDOMaxNumberOfResults(prefs.getInt("dcmQidoMaxNumberOfResults", 0));
     }
 
     @Override
@@ -494,6 +497,10 @@ public class PreferencesArchiveConfiguration
          PreferencesUtils.storeDiff(prefs, "hl7PIXManagerApplication",
                  aa.getRemotePIXManagerApplication(),
                  bb.getRemotePIXManagerApplication());
+         PreferencesUtils.storeDiff(prefs, "dcmQidoMaxNumberOfResults",
+                 aa.getQIDOMaxNumberOfResults(),
+                 bb.getQIDOMaxNumberOfResults(),
+                 0);
     }
 
     @Override

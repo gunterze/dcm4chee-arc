@@ -488,7 +488,6 @@ dcmKeyStoreURL: ${jboss.server.config.url}/dcm4chee-arc/key.jks
 dicomThisNodeCertificateReference: dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dcmRejectedForPatientSafetyReasonsCode: (113037, DCM, "Rejected for Patient Safety Reasons")
 dcmIncorrectWorklistEntrySelectedCode: (110514, DCM, "Incorrect worklist entry selected")
-dcmStowAETitle: DCM4CHEE
 dcmKeyStorePin: secret
 dcmDataRetentionPeriodExpiredCode: (113038, DCM, "Data Retention Policy Expired")
 dicomManufacturerModelName: dcm4chee-arc
@@ -964,6 +963,7 @@ dcmStorageFilePathFormat: archive/{now,date,yyyy/MM/dd}/{0020000D,hash}/{0020000
 dcmRetrieveAET: DCM4CHEE
 dcmSendPendingCMoveInterval: 5000
 dcmSpoolDirectoryPath: archive/spool
+dcmQidoMaxNumberOfResults: 1000
 hl7PIXManagerApplication: HL7RCV^DCM4CHEE
 dcmReturnOtherPatientNames: TRUE
 dcmStoreOriginalAttributes: TRUE
@@ -4409,6 +4409,7 @@ dcmStoreDuplicateCondition: NE_CHECKSUM
 dn: dicomAETitle=DCM4CHEE_ADMIN,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
 dicomNetworkConnectionReference: cn=dicom-tls,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=example,dc=com
+dcmQidoMaxNumberOfResults: 1000
 dcmReturnOtherPatientNames: TRUE
 dcmReturnOtherPatientIDs: TRUE
 dcmSendPendingCGet: TRUE

@@ -44,6 +44,7 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Issuer;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
+import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.common.QueryParam;
 import org.dcm4chee.archive.conf.AttributeFilter;
@@ -78,6 +79,72 @@ import com.mysema.query.types.path.StringPath;
  * @author Michael Backhaus <michael.backhaus@gmail.com>
  */
 public abstract class Builder {
+
+    public static StringPath stringPathOf(int tag) {
+        switch (tag) {
+        case Tag.PatientName:
+            return QPatient.patient.patientName;
+        case Tag.PatientSex:
+            return QPatient.patient.patientSex;
+        case Tag.PatientBirthDate:
+            return QPatient.patient.patientBirthDate;
+        case Tag.StudyInstanceUID:
+            return QStudy.study.studyInstanceUID;
+        case Tag.StudyID:
+            return QStudy.study.studyID;
+        case Tag.StudyDate:
+            return QStudy.study.studyDate;
+        case Tag.StudyTime:
+            return QStudy.study.studyTime;
+        case Tag.ReferringPhysicianName:
+            return QStudy.study.referringPhysicianName;
+        case Tag.StudyDescription:
+            return QStudy.study.studyDescription;
+        case Tag.AccessionNumber:
+            return QStudy.study.accessionNumber;
+        case Tag.ModalitiesInStudy:
+            return QStudy.study.modalitiesInStudy;
+        case Tag.SeriesInstanceUID:
+            return QSeries.series.seriesInstanceUID;
+        case Tag.SeriesNumber:
+            return QSeries.series.seriesNumber;
+        case Tag.Modality:
+            return QSeries.series.modality;
+        case Tag.BodyPartExamined:
+            return QSeries.series.bodyPartExamined;
+        case Tag.Laterality:
+            return QSeries.series.seriesInstanceUID;
+        case Tag.PerformedProcedureStepStartDate:
+            return QSeries.series.performedProcedureStepStartDate;
+        case Tag.PerformedProcedureStepStartTime:
+            return QSeries.series.performedProcedureStepStartTime;
+        case Tag.PerformingPhysicianName:
+            return QSeries.series.performingPhysicianName;
+        case Tag.SeriesDescription:
+            return QSeries.series.seriesInstanceUID;
+        case Tag.StationName:
+            return QSeries.series.stationName;
+        case Tag.InstitutionalDepartmentName:
+            return QSeries.series.institutionName;
+        case Tag.InstitutionName:
+            return QSeries.series.institutionalDepartmentName;
+        case Tag.SOPInstanceUID:
+            return QInstance.instance.sopInstanceUID;
+        case Tag.SOPClassUID:
+            return QInstance.instance.sopClassUID;
+        case Tag.InstanceNumber:
+            return QInstance.instance.instanceNumber;
+        case Tag.VerificationFlag:
+            return QInstance.instance.verificationFlag;
+        case Tag.CompletionFlag:
+            return QInstance.instance.completionFlag;
+        case Tag.ContentDate:
+            return QInstance.instance.contentDate;
+        case Tag.ContentTime:
+            return QInstance.instance.contentTime;
+        }
+        throw new IllegalArgumentException("tag: " + TagUtils.toString(tag));
+    }
 
     public static void addPatientLevelPredicates(BooleanBuilder builder,
             IDWithIssuer[] pids, Attributes keys, QueryParam queryParam) {

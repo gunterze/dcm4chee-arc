@@ -97,9 +97,10 @@ import org.junit.Test;
 public class ArchiveDeviceTest {
 
     private static final String PIX_MANAGER = "HL7RCV^DCM4CHEE";
-    private static int PENDING_CMOVE_INTERVAL = 5000;
+    private static final int PENDING_CMOVE_INTERVAL = 5000;
     private static final int CONFIGURATION_STALE_TIMEOUT = 60;
     private static final int WADO_ATTRIBUTES_STALE_TIMEOUT = 60;
+    private static final int QIDO_MAX_NUMBER_OF_RESULTS = 1000;
     private static final int[] PATIENT_ATTRS = {
         Tag.SpecificCharacterSet,
         Tag.PatientName,
@@ -922,7 +923,8 @@ public class ArchiveDeviceTest {
         aeExt.setSuppressWarningCoercionOfDataElements(false);
         aeExt.setMatchUnknown(true);
         aeExt.setSendPendingCGet(true);
-        aeExt.setSendPendingCMoveInterval(5000);
+        aeExt.setSendPendingCMoveInterval(PENDING_CMOVE_INTERVAL);
+        aeExt.setQIDOMaxNumberOfResults(QIDO_MAX_NUMBER_OF_RESULTS);
         aeExt.addStoreDuplicate(
                 new StoreDuplicate(
                         StoreDuplicate.Condition.NO_FILE,
@@ -1062,6 +1064,7 @@ public class ArchiveDeviceTest {
         aeExt.setSendPendingCGet(true);
         aeExt.setSendPendingCMoveInterval(PENDING_CMOVE_INTERVAL);
         aeExt.setShowRejectedInstances(true);
+        aeExt.setQIDOMaxNumberOfResults(QIDO_MAX_NUMBER_OF_RESULTS);
         addTCs(ae, null, SCU, IMAGE_CUIDS, image_tsuids);
         addTCs(ae, null, SCU, VIDEO_CUIDS, video_tsuids);
         addTCs(ae, null, SCU, OTHER_CUIDS, other_tsuids);

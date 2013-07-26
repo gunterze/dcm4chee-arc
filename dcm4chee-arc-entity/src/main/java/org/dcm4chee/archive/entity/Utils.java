@@ -50,6 +50,7 @@ import org.dcm4che.data.VR;
 import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.io.DicomOutputStream;
 import org.dcm4che.soundex.FuzzyStr;
+import org.dcm4che.util.StringUtils;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -106,9 +107,9 @@ public class Utils {
         attrs.setInt(Tag.NumberOfStudyRelatedInstances, VR.IS,
                 numberOfStudyRelatedInstances);
         attrs.setString(Tag.ModalitiesInStudy, VR.CS,
-                modalitiesInStudy);
+                StringUtils.split(modalitiesInStudy, '\\'));
         attrs.setString(Tag.SOPClassesInStudy, VR.CS,
-                sopClassesInStudy);
+                StringUtils.split(sopClassesInStudy, '\\'));
     }
 
     public static void setSeriesQueryAttributes(Attributes attrs,
@@ -120,12 +121,14 @@ public class Utils {
     public static void setRetrieveAET(Attributes attrs, String retrieveAETs,
             String externalRetrieveAET) {
         if (retrieveAETs != null)
-            if (externalRetrieveAET != null)
+            if (externalRetrieveAET != null) {
+                String[] ss = StringUtils.split(retrieveAETs, '\\');
+                String[] ss2 = new String[ss.length + 1];
+                ss2[ss.length] = externalRetrieveAET;
+                attrs.setString(Tag.RetrieveAETitle, VR.AE, ss2);
+            } else
                 attrs.setString(Tag.RetrieveAETitle, VR.AE,
-                        retrieveAETs, externalRetrieveAET);
-            else
-                attrs.setString(Tag.RetrieveAETitle, VR.AE,
-                        retrieveAETs);
+                        StringUtils.split(retrieveAETs, '\\'));
         else
             if (externalRetrieveAET != null)
                 attrs.setString(Tag.RetrieveAETitle, VR.AE,

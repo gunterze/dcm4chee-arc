@@ -44,7 +44,6 @@ import org.dcm4chee.archive.common.QueryParam;
 import org.dcm4chee.archive.entity.QPatient;
 import org.dcm4chee.archive.entity.Utils;
 import org.dcm4chee.archive.util.query.Builder;
-import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;
 
@@ -59,19 +58,18 @@ class PatientQuery extends AbstractQuery {
     public PatientQuery(QueryService queryService, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {
         super(queryService, query(queryService.session(), pids, keys, queryParam),
-                queryParam, false);
+                queryParam, false,
+                QPatient.patient.pk,
+                QPatient.patient.encodedAttributes);
     }
 
-    private static ScrollableResults query(StatelessSession session, IDWithIssuer[] pids,
+    private static HibernateQuery query(StatelessSession session, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {
         BooleanBuilder builder = new BooleanBuilder();
         Builder.addPatientLevelPredicates(builder, pids, keys, queryParam);
         return new HibernateQuery(session)
             .from(QPatient.patient)
-            .where(builder)
-            .scroll(ScrollMode.FORWARD_ONLY,
-                QPatient.patient.pk,
-                QPatient.patient.encodedAttributes);
+            .where(builder);
     }
 
     @Override

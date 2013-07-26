@@ -46,7 +46,6 @@ import org.dcm4chee.archive.entity.QPatient;
 import org.dcm4chee.archive.entity.QStudy;
 import org.dcm4chee.archive.entity.Utils;
 import org.dcm4chee.archive.util.query.Builder;
-import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;
 
@@ -61,19 +60,7 @@ class StudyQuery extends AbstractQuery {
     public StudyQuery(QueryService queryService, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {
         super(queryService, query(queryService.session(), pids, keys, queryParam),
-                queryParam, false);
-    }
-
-    private static ScrollableResults query(StatelessSession session, IDWithIssuer[] pids,
-            Attributes keys, QueryParam queryParam) {
-        BooleanBuilder builder = new BooleanBuilder();
-        Builder.addPatientLevelPredicates(builder, pids, keys, queryParam);
-        Builder.addStudyLevelPredicates(builder, keys, queryParam);
-        return new HibernateQuery(session)
-            .from(QStudy.study)
-            .innerJoin(QStudy.study.patient, QPatient.patient)
-            .where(builder)
-            .scroll(ScrollMode.FORWARD_ONLY,
+                queryParam, false,
                 QStudy.study.pk,                        // (0)
                 QStudy.study.numberOfSeries,            // (1)
                 QStudy.study.numberOfSeriesA,           // (2)
@@ -86,6 +73,17 @@ class StudyQuery extends AbstractQuery {
                 QStudy.study.availability,              // (9)
                 QStudy.study.encodedAttributes,         // (10)
                 QPatient.patient.encodedAttributes);    // (11)
+    }
+
+    private static HibernateQuery query(StatelessSession session, IDWithIssuer[] pids,
+            Attributes keys, QueryParam queryParam) {
+        BooleanBuilder builder = new BooleanBuilder();
+        Builder.addPatientLevelPredicates(builder, pids, keys, queryParam);
+        Builder.addStudyLevelPredicates(builder, keys, queryParam);
+        return new HibernateQuery(session)
+            .from(QStudy.study)
+            .innerJoin(QStudy.study.patient, QPatient.patient)
+            .where(builder);
     }
 
     @Override

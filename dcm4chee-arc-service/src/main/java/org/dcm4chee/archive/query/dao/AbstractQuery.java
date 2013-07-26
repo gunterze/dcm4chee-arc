@@ -38,11 +38,13 @@
 
 package org.dcm4chee.archive.query.dao;
 
-import java.util.NoSuchElementException;
-
 import org.dcm4che.data.Attributes;
 import org.dcm4chee.archive.common.QueryParam;
+import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+
+import com.mysema.query.jpa.hibernate.HibernateQuery;
+import com.mysema.query.types.Expression;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -51,35 +53,30 @@ abstract class AbstractQuery {
 
     protected final QueryService queryService;
     protected final QueryParam queryParam;
-    private final ScrollableResults results;
+    private final HibernateQuery query;
+    private final Expression<?>[] select;
     private final boolean optionalKeyNotSupported;
 
-    private boolean hasNext;
-
-
-    protected AbstractQuery(QueryService queryService, ScrollableResults results,
-            QueryParam queryParam, boolean optionalKeyNotSupported) {
+    protected AbstractQuery(QueryService queryService, HibernateQuery query,
+            QueryParam queryParam, boolean optionalKeyNotSupported, 
+            Expression<?>... select) {
         this.queryService = queryService;
-        this.results = results;
+        this.query = query;
+        this.select = select;
         this.queryParam = queryParam;
         this.optionalKeyNotSupported = optionalKeyNotSupported;
-        hasNext = results.next();
+    }
+
+    public ScrollableResults execute() {
+        return query.scroll(ScrollMode.FORWARD_ONLY, select);
+    }
+
+    public final HibernateQuery getQuery() {
+        return query;
     }
 
     public final boolean optionalKeyNotSupported() {
         return optionalKeyNotSupported;
-    }
-
-    public boolean hasMoreMatches() {
-        return hasNext;
-    }
-
-    public Attributes nextMatch() {
-        if (!hasNext)
-            throw new NoSuchElementException();
-        Attributes attrs = toAttributes(results);
-        hasNext = results.next();
-        return attrs;
     }
 
     protected abstract  Attributes toAttributes(ScrollableResults results);

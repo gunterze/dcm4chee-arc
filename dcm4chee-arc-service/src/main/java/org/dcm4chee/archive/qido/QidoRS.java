@@ -71,16 +71,21 @@ import org.dcm4che.io.SAXTransformer;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.QueryOption;
+import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.Archive;
 import org.dcm4chee.archive.common.IDWithIssuer;
 import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.query.dao.QueryService;
 import org.dcm4chee.archive.util.BeanLocator;
+import org.dcm4chee.archive.util.query.Builder;
 import org.dcm4chee.archive.wado.MediaTypes;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartRelatedOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.mysema.query.types.OrderSpecifier;
+import com.mysema.query.types.path.StringPath;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -89,10 +94,36 @@ import org.slf4j.LoggerFactory;
 @Path("/qido-rs/{AETitle}")
 public class QidoRS {
 
+    private static final int STATUS_OK = 200;
+    private static final int STATUS_PARTIAL_CONTENT = 206;
+
     private static final Logger LOG = LoggerFactory.getLogger(QidoRS.class);
 
     private static ElementDictionary DICT =
             ElementDictionary.getStandardElementDictionary();
+
+    private enum IncludeField {
+        all,
+        study(Tag.StudyDate, Tag.StudyTime, Tag.AccessionNumber,
+                Tag.ModalitiesInStudy, Tag.ReferringPhysicianName,
+                Tag.PatientName, Tag.PatientID, Tag.PatientBirthDate,
+                Tag.PatientSex, Tag.StudyID, Tag.StudyInstanceUID,
+                Tag.NumberOfStudyRelatedSeries,
+                Tag.NumberOfStudyRelatedInstances),
+        series(Tag.Modality, Tag.SeriesDescription, Tag.SeriesNumber,
+                Tag.SeriesInstanceUID, Tag.NumberOfSeriesRelatedInstances,
+                Tag.PerformedProcedureStepStartDate,
+                Tag.PerformedProcedureStepStartTime,
+                Tag.RequestAttributesSequence),
+        instance(Tag.SOPClassUID, Tag.SOPInstanceUID, Tag.InstanceNumber,
+                Tag.Rows, Tag.Columns, Tag.BitsAllocated, Tag.NumberOfFrames);
+        
+        final int[] tags;
+
+        IncludeField(int... tags) {
+            this.tags = tags;
+        }
+    }
 
     private volatile static Templates jsonTpls;
 
@@ -112,17 +143,26 @@ public class QidoRS {
     private boolean fuzzymatching;
 
     @QueryParam("offset")
-    private int skipResults;
+    private int offset;
 
     @QueryParam("limit")
-    private int maximumResults;
+    private int limit;
 
     @QueryParam("includefield")
     private List<String> includefield;
 
+    @QueryParam("orderby")
+    private List<String> orderby;
+
+    private OrderSpecifier<?>[] orderSpecifiers;
+
     private final Attributes keys = new Attributes(64);
 
     private boolean includeAll;
+
+    private ApplicationEntity ae;
+
+    private ArchiveAEExtension aeExt;
 
     private org.dcm4chee.archive.common.QueryParam queryParam;
 
@@ -147,115 +187,79 @@ public class QidoRS {
     @Path("/studies")
     @Produces("multipart/related")
     public Response searchForStudiesXML() {
-        return searchForStudies(Result.DICOM_XML);
+        return search(QueryRetrieveLevel.STUDY, Output.DICOM_XML);
     }
 
     @GET
     @Path("/studies")
     @Produces("application/json")
     public Response searchForStudiesJSON() {
-        return searchForStudies(Result.JSON);
+        return search(QueryRetrieveLevel.STUDY, Output.JSON);
     }
 
     @GET
     @Path("/series")
     @Produces("multipart/related")
     public Response searchForSeriesXML() {
-        return searchForSeries(Result.DICOM_XML);
+        return search(QueryRetrieveLevel.SERIES, Output.DICOM_XML);
     }
 
     @GET
     @Path("/series")
     @Produces("application/json")
     public Response searchForSeriesJSON() {
-        return searchForSeries(Result.JSON);
+        return search(QueryRetrieveLevel.SERIES, Output.JSON);
     }
 
     @GET
     @Path("/instances")
     @Produces("multipart/related")
     public Response searchForInstancesXML() {
-        return searchForInstances(Result.DICOM_XML);
+        return search(QueryRetrieveLevel.IMAGE, Output.DICOM_XML);
     }
 
     @GET
     @Path("/instances")
     @Produces("application/json")
     public Response searchForInstancesJSON() {
-        return searchForInstances(Result.JSON);
+        return search(QueryRetrieveLevel.IMAGE, Output.JSON);
     }
 
-    private Response searchForStudies(Result result) {
-        addStudyIncludeFields();
+    private Response search(QueryRetrieveLevel qrlevel, Output output) {
         init();
         try {
-            queryService.findStudies(pids, keys, queryParam);
-            return result.response(this);
+            queryService.createQuery(qrlevel, pids, keys, queryParam);
+            int status = STATUS_OK;
+            int maxResults = aeExt.getQIDOMaxNumberOfResults();
+            int offset = Math.max(this.offset, 0);
+            int limit = Math.max(this.limit, 0);
+            if (maxResults > 0 && (limit == 0 || limit >  maxResults)) {
+                int numResults = (int) (queryService.count() - offset);
+                if (numResults == 0)
+                    return Response.ok().build();
+    
+                if (numResults > maxResults) {
+                    limit = maxResults;
+                    status = STATUS_PARTIAL_CONTENT;
+                }
+            }
+            if (offset > 0)
+                queryService.offset(offset);
+            
+            if (limit > 0)
+                queryService.limit(limit);
+    
+            if (orderSpecifiers != null)
+                queryService.orderBy(orderSpecifiers);
+    
+            queryService.executeQuery();
+            if (!queryService.hasMoreMatches())
+                return Response.ok().build();
+    
+            return Response.status(status).entity(output.entity(this, qrlevel)).build();
         } finally {
             cleanup();
         }
-    }
-
-    private Response searchForSeries(Result result) {
-        addStudyIncludeFields();
-        addSeriesIncludeFields();
-        init();
-        try {
-            queryService.findSeries(pids, keys, queryParam);
-            return result.response(this);
-        } finally {
-            cleanup();
-        }
-    }
-
-    private Response searchForInstances(Result result) {
-        addStudyIncludeFields();
-        addSeriesIncludeFields();
-        addInstanceIncludeFields();
-        init();
-        try {
-            queryService.findInstances(pids, keys, queryParam);
-            return result.response(this);
-        } finally {
-            cleanup();
-        }
-    }
-
-    private void addStudyIncludeFields() {
-        keys.setNull(Tag.StudyDate, VR.DA);
-        keys.setNull(Tag.StudyTime, VR.TM);
-        keys.setNull(Tag.AccessionNumber, VR.SH);
-        keys.setNull(Tag.ModalitiesInStudy, VR.CS);
-        keys.setNull(Tag.ReferringPhysicianName, VR.PN);
-        keys.setNull(Tag.PatientName, VR.PN);
-        keys.setNull(Tag.PatientID, VR.LO);
-        keys.setNull(Tag.PatientBirthDate, VR.DA);
-        keys.setNull(Tag.PatientSex, VR.CS);
-        keys.setNull(Tag.StudyID, VR.SH);
-        keys.setNull(Tag.StudyInstanceUID, VR.UI);
-        keys.setNull(Tag.NumberOfStudyRelatedSeries, VR.IS);
-        keys.setNull(Tag.NumberOfStudyRelatedInstances, VR.IS);
-    }
-
-    private void addSeriesIncludeFields() {
-        keys.setNull(Tag.Modality, VR.CS);
-        keys.setNull(Tag.SeriesDescription, VR.LO);
-        keys.setNull(Tag.SeriesNumber, VR.IS);
-        keys.setNull(Tag.SeriesInstanceUID, VR.UI);
-        keys.setNull(Tag.NumberOfSeriesRelatedInstances, VR.IS);
-        keys.setNull(Tag.PerformedProcedureStepStartDate, VR.DA);
-        keys.setNull(Tag.PerformedProcedureStepStartTime, VR.TM);
-        keys.setNull(Tag.RequestAttributesSequence, VR.SQ);
-    }
-
-    private void addInstanceIncludeFields() {
-        keys.setNull(Tag.SOPClassUID, VR.UI);
-        keys.setNull(Tag.SOPInstanceUID, VR.UI);
-        keys.setNull(Tag.InstanceNumber, VR.IS);
-        keys.setNull(Tag.Rows, VR.US);
-        keys.setNull(Tag.Columns, VR.US);
-        keys.setNull(Tag.BitsAllocated, VR.US);
-        keys.setNull(Tag.NumberOfFrames, VR.IS);
     }
 
     private void init() {
@@ -267,19 +271,21 @@ public class QidoRS {
                 acceptableMediaTypes});
 
         Device device = Archive.getInstance().getDevice();
-        ApplicationEntity ae = device.getApplicationEntity(aet);
+        ae = device.getApplicationEntity(aet);
         if (ae == null || !ae.isInstalled()
-                || (ae.getAEExtension(ArchiveAEExtension.class)) == null)
+                || (aeExt = ae.getAEExtension(ArchiveAEExtension.class)) == null)
             throw new WebApplicationException(Status.SERVICE_UNAVAILABLE);
 
-        includefield();
+        parseIncludefield();
 
         for (Map.Entry<String, List<String>> qParam
                 : uriInfo.getQueryParameters().entrySet()) {
             String name = qParam.getKey();
             if (isDicomAttribute(name))
-                dicomAttribute(name, qParam.getValue());
+                parseDicomAttribute(name, qParam.getValue());
         }
+
+        parseOrderby();
 
         queryService = BeanLocator.lookup(QueryService.class);
         queryParam = org.dcm4chee.archive.common.QueryParam.valueOf(
@@ -296,7 +302,8 @@ public class QidoRS {
         case 'l':
             return !name.equals("limit");
         case 'o':
-            return !name.equals("offset");
+            return !name.equals("offset")
+                && !name.equals("orderby");
         case 'i':
             return !name.equals("includefield");
         }
@@ -318,19 +325,43 @@ public class QidoRS {
         return null;
     }
 
-    private void includefield() {
-        for (String attrPath : includefield) {
-            if (attrPath.equals("all")) {
-                includeAll = true;
-                return;
+    private void parseIncludefield() {
+        for (String s : includefield) {
+            for (String field : StringUtils.split(s, ',')) {
+                try {
+                    IncludeField include = IncludeField.valueOf(field);
+                    if (include == IncludeField.all) {
+                        includeAll = true;
+                        return;
+                    }
+                    for (int tag : include.tags)
+                        keys.setNull(tag, DICT.vrOf(tag));
+                } catch (IllegalArgumentException e) {
+                    int[] tagPath = parseTagPath(field);
+                    int tag = tagPath[tagPath.length-1];
+                    nestedKeys(tagPath).setNull(tag, DICT.vrOf(tag));
+                }
             }
-            int[] tagPath = parseTagPath(attrPath);
-            int tag = tagPath[tagPath.length-1];
-            nestedKeys(tagPath).setNull(tag, DICT.vrOf(tag));
         }
     }
 
-    private void dicomAttribute(String attrPath, List<String> values) {
+    private void parseOrderby() {
+        if (orderby.isEmpty())
+            return;
+
+        ArrayList<OrderSpecifier<?>> list = new ArrayList<OrderSpecifier<?>>();
+        for (String s : orderby) {
+            for (String field : StringUtils.split(s, ',')) {
+                boolean desc = s.charAt(0) == '-';
+                int tag = parseTag(desc ? field.substring(1) : field);
+                StringPath stringPath = Builder.stringPathOf(tag);
+                list.add(desc ? stringPath.desc() : stringPath.asc());
+            }
+        }
+        orderSpecifiers = list.toArray(new OrderSpecifier<?>[list.size()]);
+    }
+
+    private void parseDicomAttribute(String attrPath, List<String> values) {
         int[] tagPath = parseTagPath(attrPath);
         int tag = tagPath[tagPath.length-1];
         nestedKeys(tagPath).setString(tag, DICT.vrOf(tag),
@@ -378,29 +409,29 @@ public class QidoRS {
             queryService.close();
     }
 
-    private enum Result {
+    private enum Output {
         DICOM_XML {
             @Override
-            Response response(QidoRS service) {
-                return service.writeXML();
+            Object entity(QidoRS service, QueryRetrieveLevel qrlevel) {
+                return service.writeXML(qrlevel);
             }
         },
         JSON {
             @Override
-            Response response(QidoRS service) {
-                return service.writeJSON();
+            Object entity(QidoRS service, QueryRetrieveLevel qrlevel) {
+                return service.writeJSON(qrlevel);
             }
         };
         
-        abstract Response response(QidoRS service);
+        abstract Object entity(QidoRS service, QueryRetrieveLevel qrlevel);
     }
 
-    private Response writeXML() {
+    private Object writeXML(QueryRetrieveLevel qrlevel) {
         MultipartRelatedOutput output = new MultipartRelatedOutput();
         int count = 0;
         while (queryService.hasMoreMatches()) {
-            final Attributes match = filter(queryService.nextMatch());
             final int partNumber = ++count;
+            final Attributes match = filter(addRetrieveURI(queryService.nextMatch(), qrlevel));
             output.addPart(new StreamingOutput() {
 
                 @Override
@@ -416,13 +447,13 @@ public class QidoRS {
                 }},
                 MediaTypes.APPLICATION_DICOM_XML_TYPE);
         }
-        return Response.ok().entity(output).build();
+        return output;
     }
 
-    private Response writeJSON() {
+    private Object writeJSON(QueryRetrieveLevel qrlevel) {
         final ArrayList<Attributes> matches = new ArrayList<Attributes>();
         while (queryService.hasMoreMatches()) {
-            matches.add(filter(queryService.nextMatch()));
+            matches.add(filter(addRetrieveURI(queryService.nextMatch(), qrlevel)));
         }
         StreamingOutput output = new StreamingOutput(){
 
@@ -442,7 +473,7 @@ public class QidoRS {
                 out.write(']');
             }
         };
-        return Response.ok().entity(output).build();
+        return output;
     }
 
     private static Templates jsonTpls() throws Exception {
@@ -453,13 +484,40 @@ public class QidoRS {
         return jsonTpls0;
     }
 
+    private Attributes addRetrieveURI(Attributes match, QueryRetrieveLevel qrlevel) {
+        match.setString(Tag.RetrieveURI, VR.UT, retrieveURI(match, qrlevel));
+        return match;
+    }
+
+    private String retrieveURI(Attributes match, QueryRetrieveLevel qrlevel) {
+        StringBuilder sb = new StringBuilder(256);
+        sb.append(uriInfo.getBaseUri())
+          .append("wado-rs/")
+          .append(aet)
+          .append("/studies/")
+          .append(match.getString(Tag.StudyInstanceUID));
+
+        if (qrlevel == QueryRetrieveLevel.STUDY)
+            return sb.toString();
+
+        sb.append("/series/")
+          .append(match.getString(Tag.SeriesInstanceUID));
+
+        if (qrlevel == QueryRetrieveLevel.SERIES)
+            return sb.toString();
+
+        sb.append("/instances/")
+          .append(match.getString(Tag.SOPInstanceUID));
+        return sb.toString();
+    }
+
     private Attributes filter(Attributes match) {
         if (includeAll)
             return match;
 
         Attributes filtered = new Attributes(match.size());
         filtered.addSelected(match, Tag.SpecificCharacterSet,
-                Tag.RetrieveAETitle, Tag.InstanceAvailability);
+                Tag.RetrieveAETitle, Tag.InstanceAvailability, Tag.RetrieveURI);
         filtered.addSelected(match, keys);
         return filtered;
     }

@@ -77,7 +77,8 @@ class QueryTaskImpl extends BasicQueryTask {
         super(as, pc, rq, keys);
         this.query = BeanLocator.lookup(QueryService.class);
         try {
-            query.find(qrlevel, pids, keys, queryParam);
+            query.createQuery(qrlevel, pids, keys, queryParam);
+            query.executeQuery();
         } catch (Exception e) {
             query.close();
             throw e;

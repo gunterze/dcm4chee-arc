@@ -20,7 +20,6 @@
             <entry key="dcmKeyStoreURL" value="${jboss.server.config.url}/dcm4chee-arc/key.jks"/>
             <entry key="dcmRejectedForPatientSafetyReasonsCode" value="(113037, DCM, &quot;Rejected for Patient Safety Reasons&quot;)"/>
             <entry key="dcmRejectedForQualityReasonsCode" value="(113001, DCM, &quot;Rejected for Quality Reasons&quot;)"/>
-            <entry key="dcmStowAETitle" value="DCM4CHEE"/>
             <entry key="dcmWadoAttributesStaleTimeout" value="60"/>
             <entry key="dicomAuthorizedNodeCertificateReference.#" value="11"/>
             <entry key="dicomAuthorizedNodeCertificateReference.1" value="dicomConfigurationRoot/dicomDevicesRoot/dcmqrscp"/>
@@ -462,6 +461,7 @@
                 <entry key="dcmInitFileSystemURI" value="${jboss.server.data.url}"/>
                 <entry key="dcmMatchUnknown" value="true"/>
                 <entry key="dcmPreserveSpoolFileOnFailure" value="true"/>
+                <entry key="dcmQidoMaxNumberOfResults" value="1000"/>
                 <entry key="dcmRetrieveAET.#" value="1"/>
                 <entry key="dcmRetrieveAET.1" value="DCM4CHEE"/>
                 <entry key="dcmReturnOtherPatientIDs" value="true"/>
@@ -3732,6 +3732,7 @@
               <map>
                 <entry key="dcmArchiveNetworkAE" value="true"/>
                 <entry key="dcmMatchUnknown" value="true"/>
+                <entry key="dcmQidoMaxNumberOfResults" value="1000"/>
                 <entry key="dcmReturnOtherPatientIDs" value="true"/>
                 <entry key="dcmReturnOtherPatientNames" value="true"/>
                 <entry key="dcmSendPendingCGet" value="true"/>

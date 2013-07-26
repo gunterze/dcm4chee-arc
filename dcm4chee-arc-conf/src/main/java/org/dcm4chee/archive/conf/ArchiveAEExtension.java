@@ -98,6 +98,7 @@ public class ArchiveAEExtension extends AEExtension {
     private boolean showRejectedInstances;
     private String pixManagerApplication;
     private String pixConsumerApplication;
+    private int qidoMaxNumberOfResults;
 
     public AttributeCoercion getAttributeCoercion(String sopClass,
             Dimse dimse, Role role, String aeTitle) {
@@ -400,6 +401,14 @@ public class ArchiveAEExtension extends AEExtension {
         this.pixConsumerApplication = appName;
     }
 
+    public int getQIDOMaxNumberOfResults() {
+        return qidoMaxNumberOfResults;
+    }
+
+    public void setQIDOMaxNumberOfResults(int qidoMaxNumberOfResults) {
+        this.qidoMaxNumberOfResults = qidoMaxNumberOfResults;
+    }
+
     @Override
     public void reconfigure(AEExtension from) {
         ArchiveAEExtension arcae = (ArchiveAEExtension) from;
@@ -431,6 +440,7 @@ public class ArchiveAEExtension extends AEExtension {
         setShowRejectedInstances(arcae.showRejectedInstances);
         setRemotePIXManagerApplication(arcae.pixManagerApplication);
         setLocalPIXConsumerApplication(arcae.pixConsumerApplication);
+        setQIDOMaxNumberOfResults(arcae.qidoMaxNumberOfResults);
         setStoreDuplicates(arcae.getStoreDuplicates());
         setAttributeCoercions(arcae.getAttributeCoercions());
         setCompressionRules(arcae.getCompressionRules());
