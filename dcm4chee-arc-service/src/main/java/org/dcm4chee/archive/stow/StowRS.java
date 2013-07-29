@@ -52,6 +52,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -205,7 +207,7 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
             try {
                 parser.parse(in, this);
             } catch (IOException e) {
-                throw new WebApplicationException(Status.BAD_REQUEST);
+                throw new WebApplicationException(e, Status.BAD_REQUEST);
             }
             initResponse();
             creatorType.storeInstances(this);
@@ -307,27 +309,15 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
                     ? MediaType.valueOf(mediaTypeStr)
                    : MediaType.TEXT_PLAIN_TYPE;
             if (creatorType.accept(mediaType, bulkdataURI)) {
-                File file = File.createTempFile("dcm",
-                        creatorType.fileSuffix(mediaType),
-                        spoolDir);
-                LOG.info("{}: M-WRITE {}", this, file);
-                OutputStream out = new FileOutputStream(file);
-                try {
-                    MessageDigest digest = creatorType.digest(this.digest); 
-                    if (digest != null)
-                        out = new BufferedOutputStream(
-                                new DigestOutputStream(out, digest));
-                    StreamUtils.copy(in, out);
-                } finally {
-                    SafeClose.close(out);
-                }
-                FileInfo fileInfo = new FileInfo(file, mediaType);
-                if (creatorType.isBulkdata(mediaType))
-                    bulkdata.put(bulkdataURI, fileInfo);
-                else {
-                    if (digest != null)
-                        fileInfo.digest = digest.digest();
-                    files.add(fileInfo);
+                if (in.isZIP()) {
+                    ZipInputStream zip = new ZipInputStream(in);
+                    ZipEntry zipEntry;
+                    while ((zipEntry = zip.getNextEntry()) != null) {
+                        if (!zipEntry.isDirectory())
+                            storeFile(zip, mediaType, bulkdataURI);
+                    }
+                } else {
+                    storeFile(in, mediaType, bulkdataURI);
                 }
             } else {
                 LOG.info("{}: Ignore Part with Content-Type={}", this, mediaType);
@@ -337,6 +327,32 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
             LOG.info("{}: Ignore Part with illegal Content-Type={}", this,
                     mediaTypeStr);
             in.skipAll();
+        }
+    }
+
+    private void storeFile(InputStream in, MediaType mediaType,
+            String bulkdataURI) throws IOException {
+        File file = File.createTempFile("dcm",
+                creatorType.fileSuffix(mediaType),
+                spoolDir);
+        LOG.info("{}: M-WRITE {}", this, file);
+        OutputStream out = new FileOutputStream(file);
+        try {
+            MessageDigest digest = creatorType.digest(this.digest); 
+            if (digest != null)
+                out = new BufferedOutputStream(
+                        new DigestOutputStream(out, digest));
+            StreamUtils.copy(in, out);
+        } finally {
+            SafeClose.close(out);
+        }
+        FileInfo fileInfo = new FileInfo(file, mediaType);
+        if (creatorType.isBulkdata(mediaType))
+            bulkdata.put(bulkdataURI, fileInfo);
+        else {
+            if (digest != null)
+                fileInfo.digest = digest.digest();
+            files.add(fileInfo);
         }
     }
 
@@ -372,7 +388,9 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
                 String subtype = mediaType.getSubtype();
                 return type.equalsIgnoreCase("application")
                         && (subtype.equalsIgnoreCase("dicom")
-                         || subtype.equalsIgnoreCase("octet-stream"));
+                         || subtype.equalsIgnoreCase("octet-stream")
+                         || subtype.equalsIgnoreCase("zip")
+                         || subtype.equalsIgnoreCase("x-zip"));
             }
 
             @Override
@@ -470,7 +488,7 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
             try {
                 fileInfo.attrs = readFileMetaInformation(fileInfo.file);
             } catch (IOException e) {
-                throw new WebApplicationException(Status.BAD_REQUEST);
+                throw new WebApplicationException(e, Status.BAD_REQUEST);
             }
         }
 
@@ -584,7 +602,7 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
             try {
                 fileInfo.attrs = SAXReader.parse(fileInfo.file.toURI().toString());
             } catch (Exception e) {
-                throw new WebApplicationException(Status.BAD_REQUEST);
+                throw new WebApplicationException(e, Status.BAD_REQUEST);
             }
         }
         for (FileInfo fileInfo : files) {
