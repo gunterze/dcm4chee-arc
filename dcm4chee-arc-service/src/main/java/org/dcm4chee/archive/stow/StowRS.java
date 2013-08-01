@@ -222,7 +222,7 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
             throw new WebApplicationException(Status.CONFLICT);
 
         return Response.status(
-                failedSOPSequence.isEmpty() ? Status.OK : Status.ACCEPTED)
+                failedSOPSequence == null ? Status.OK : Status.ACCEPTED)
                 .entity(this)
                 .type(MediaTypes.APPLICATION_DICOM_XML_TYPE)
                 .build();
@@ -290,7 +290,6 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
         else
             response.setNull(Tag.RetrieveURI, VR.UT);
         sopSequence = response.newSequence(Tag.ReferencedSOPSequence, files.size());
-        failedSOPSequence = response.newSequence(Tag.FailedSOPSequence, files.size());
     }
 
     @Override
@@ -359,6 +358,7 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
     private void writeDicomInstance(File file, Attributes fmi,
             Attributes dataset) throws IOException {
         LOG.info("{}: M-WRITE {}", this, file);
+        file.getParentFile().mkdirs();
         OutputStream out = new FileOutputStream(file);
         try {
             MessageDigest digest = creatorType.digest(this.digest); 
@@ -558,6 +558,8 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
         sopRef.setString(Tag.ReferencedSOPInstanceUID, VR.UI,
                 fmi.getString(Tag.MediaStorageSOPInstanceUID));
         sopRef.setInt(Tag.FailureReason, VR.US, failureReason);
+        if (failedSOPSequence == null)
+            failedSOPSequence = response.newSequence(Tag.FailedSOPSequence, files.size());
         failedSOPSequence.add(sopRef);
     }
 
@@ -606,8 +608,8 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
             }
         }
         for (FileInfo fileInfo : files) {
-            resolveBulkdata(fileInfo.attrs);
-            Attributes fmi = createFileMetaInformation(fileInfo.attrs);
+            String tsuid = resolveBulkdata(fileInfo.attrs);
+            Attributes fmi = fileInfo.attrs.createFileMetaInformation(tsuid);
             if (!checkTransferCapability(fmi))
                 continue;
 
@@ -632,7 +634,8 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
         }
     }
 
-    private void resolveBulkdata(final Attributes attrs) {
+    private String resolveBulkdata(final Attributes attrs) {
+        final String[] tsuids = { UID.ExplicitVRLittleEndian };
         attrs.accept(new Visitor() {
             @Override
             public void visit(Attributes attrs, int tag, VR vr, Object value) {
@@ -641,36 +644,26 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
                     for (Attributes item : sq)
                         resolveBulkdata(item);
                 } else if (value instanceof BulkData) {
-                    FileInfo fileInfo = bulkdata.get(((BulkData) value).toURI());
+                    FileInfo fileInfo = bulkdata.get(((BulkData) value).uri);
                     if (fileInfo != null) {
                         String tsuid = MediaTypes.transferSyntaxOf(fileInfo.mediaType);
                         BulkData bd = new BulkData(
                                 fileInfo.file.toURI().toString(),
-                                tsuid,
-                                0,
-                                (int) fileInfo.file.length());
+                                0, (int) fileInfo.file.length(),
+                                attrs.bigEndian());
                         if (tsuid.equals(UID.ExplicitVRLittleEndian)) {
                             attrs.setValue(tag, vr, bd);
                         } else {
                             Fragments frags = attrs.newFragments(tag, vr, 2);
                             frags.add(null);
                             frags.add(bd);
+                            tsuids[0] = tsuid;
                         }
                     }
                 }
             }
         });
-    }
-
-    private Attributes createFileMetaInformation(Attributes attrs) {
-        String tsuid = UID.ExplicitVRLittleEndian;
-        Object value = attrs.getValue(Tag.PixelData);
-        if (value instanceof Fragments) {
-            Fragments frags = (Fragments) value;
-            BulkData bd = (BulkData) frags.get(1);
-            tsuid = bd.transferSyntax;
-        }
-        return attrs.createFileMetaInformation(tsuid);
+        return tsuids[0];
     }
 
     private File destinationFile(Attributes attrs) {
