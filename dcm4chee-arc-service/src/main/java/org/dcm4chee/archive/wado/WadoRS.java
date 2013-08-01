@@ -48,6 +48,7 @@ import java.util.List;
 
 import javax.ejb.EJB;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -288,15 +289,14 @@ public class WadoRS {
     @Produces("multipart/related")
     public Response retrieveBulkdata(
             @PathParam("BulkDataURI") String bulkDataURI,
-            @QueryParam("transferSyntax") String transferSyntax,
-            @QueryParam("offset") int offset,
-            @QueryParam("length") int length) {
+            @QueryParam("offset") @DefaultValue("0") int offset,
+            @QueryParam("length") @DefaultValue("-1") int length) {
 
         init();
         return (length <= 0)
                 ? retrievePixelData(bulkDataURI)
                 : retrieveBulkData(
-                        new BulkData(bulkDataURI, transferSyntax, offset, length));
+                        new BulkData(bulkDataURI, offset, length, false));
         
     }
 
@@ -573,10 +573,10 @@ public class WadoRS {
                 String contentLocation = bulkDataURI + "/frames/" + frame;
                 OutputPart part = output.addPart(
                     new BulkDataOutput(new BulkData(
-                                bulkData.uri,
-                                bulkData.transferSyntax,
+                                bulkData.uriWithoutOffsetAndLength(),
                                 bulkData.offset + (frame-1) * frameLength,
-                                frameLength),
+                                frameLength,
+                                ds.bigEndian()),
                             MediaType.APPLICATION_OCTET_STREAM_TYPE,
                             contentLocation, LOG, this,
                             output.getParts().size()+1),

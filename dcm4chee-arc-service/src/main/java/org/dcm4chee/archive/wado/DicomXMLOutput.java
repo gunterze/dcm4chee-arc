@@ -50,7 +50,6 @@ import org.dcm4che.data.BulkData;
 import org.dcm4che.data.Fragments;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
-import org.dcm4che.data.Value;
 import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.io.DicomInputStream.IncludeBulkData;
 import org.dcm4che.io.SAXTransformer;
@@ -102,14 +101,10 @@ public class DicomXMLOutput implements StreamingOutput {
             Object pixelData = dataset.getValue(Tag.PixelData);
             if (pixelData instanceof Fragments) {
                 Fragments frags = (Fragments) pixelData;
-                Object frag0 = frags.get(0);
-                BulkData frag1 = (BulkData) frags.get(1);
                 dataset.setValue(Tag.PixelData, VR.OB,
-                        new BulkData(frag1.uri, frag1.transferSyntax,
-                            frag0 == Value.NULL
-                                ? frag1.offset - 16
-                                : ((BulkData) frag0).offset - 8,
-                            -1));
+                        new BulkData(((BulkData) frags.get(1))
+                                .uriWithoutOffsetAndLength(), 0, -1,
+                                dataset.bigEndian()));
             }
             SAXTransformer.getSAXWriter(new StreamResult(out)).write(dataset);
         } catch (IOException e) {
