@@ -66,11 +66,14 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.ElementDictionary;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
+import org.dcm4che.data.UID;
 import org.dcm4che.data.VR;
 import org.dcm4che.io.SAXTransformer;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.QueryOption;
+import org.dcm4che.net.TransferCapability;
+import org.dcm4che.net.TransferCapability.Role;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.Archive;
@@ -142,6 +145,12 @@ public class QidoRS {
     @QueryParam("fuzzymatching")
     private boolean fuzzymatching;
 
+    @QueryParam("datetimematching")
+    private boolean datetimematching;
+
+    @QueryParam("timezoneadjustment")
+    private boolean timezoneadjustment;
+
     @QueryParam("offset")
     private int offset;
 
@@ -161,8 +170,6 @@ public class QidoRS {
     private boolean includeAll;
 
     private ApplicationEntity ae;
-
-    private ArchiveAEExtension aeExt;
 
     private org.dcm4chee.archive.common.QueryParam queryParam;
 
@@ -187,50 +194,98 @@ public class QidoRS {
     @Path("/studies")
     @Produces("multipart/related")
     public Response searchForStudiesXML() {
-        return search(QueryRetrieveLevel.STUDY, Output.DICOM_XML);
+        return search(QueryRetrieveLevel.STUDY, false, null, null,
+                Output.DICOM_XML);
     }
 
     @GET
     @Path("/studies")
     @Produces("application/json")
     public Response searchForStudiesJSON() {
-        return search(QueryRetrieveLevel.STUDY, Output.JSON);
+        return search(QueryRetrieveLevel.STUDY, false, null, null,
+                Output.JSON);
     }
 
     @GET
     @Path("/series")
     @Produces("multipart/related")
     public Response searchForSeriesXML() {
-        return search(QueryRetrieveLevel.SERIES, Output.DICOM_XML);
+        return search(QueryRetrieveLevel.SERIES, true, null, null,
+                Output.DICOM_XML);
     }
 
     @GET
     @Path("/series")
     @Produces("application/json")
     public Response searchForSeriesJSON() {
-        return search(QueryRetrieveLevel.SERIES, Output.JSON);
+        return search(QueryRetrieveLevel.SERIES, true, null, null,
+                Output.JSON);
+    }
+
+    @GET
+    @Path("/studies/{StudyInstanceUID}/series")
+    @Produces("multipart/related")
+    public Response searchForSeriesXML(
+            @PathParam("StudyInstanceUID") String studyInstanceUID) {
+        return search(QueryRetrieveLevel.SERIES, false, studyInstanceUID, null,
+                Output.DICOM_XML);
+    }
+
+    @GET
+    @Path("/studies/{StudyInstanceUID}/series")
+    @Produces("application/json")
+    public Response searchForSeriesJSON(
+            @PathParam("StudyInstanceUID") String studyInstanceUID) {
+        return search(QueryRetrieveLevel.SERIES, false, studyInstanceUID, null,
+                Output.JSON);
     }
 
     @GET
     @Path("/instances")
     @Produces("multipart/related")
     public Response searchForInstancesXML() {
-        return search(QueryRetrieveLevel.IMAGE, Output.DICOM_XML);
+        return search(QueryRetrieveLevel.IMAGE, true, null, null,
+                Output.DICOM_XML);
     }
 
     @GET
     @Path("/instances")
     @Produces("application/json")
     public Response searchForInstancesJSON() {
-        return search(QueryRetrieveLevel.IMAGE, Output.JSON);
+        return search(QueryRetrieveLevel.IMAGE, true, null, null,
+                Output.JSON);
     }
 
-    private Response search(QueryRetrieveLevel qrlevel, Output output) {
-        init(qrlevel);
+    @GET
+    @Path("/studies/{StudyInstanceUID}/series/{SeriesInstanceUID}/instances")
+    @Produces("multipart/related")
+    public Response searchForInstancesXML(
+            @PathParam("StudyInstanceUID") String studyInstanceUID,
+            @PathParam("SeriesInstanceUID") String seriesInstanceUID) {
+        return search(QueryRetrieveLevel.IMAGE, false, 
+                studyInstanceUID, seriesInstanceUID, Output.DICOM_XML);
+    }
+
+    @GET
+    @Path("/studies/{StudyInstanceUID}/series/{SeriesInstanceUID}/instances")
+    @Produces("application/json")
+    public Response searchForInstancesJSON(
+            @PathParam("StudyInstanceUID") String studyInstanceUID,
+            @PathParam("SeriesInstanceUID") String seriesInstanceUID) {
+        return search(QueryRetrieveLevel.IMAGE, false, 
+                studyInstanceUID, seriesInstanceUID, Output.JSON);
+    }
+
+    private Response search(QueryRetrieveLevel qrlevel, boolean relational,
+            String studyInstanceUID, String seriesInstanceUID, Output output) {
+        init(qrlevel, relational, studyInstanceUID, seriesInstanceUID);
         try {
             queryService.createQuery(qrlevel, pids, keys, queryParam);
             int status = STATUS_OK;
-            int maxResults = aeExt.getQIDOMaxNumberOfResults();
+            ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
+            int maxResults = aeExt != null
+                    ? aeExt.getQIDOMaxNumberOfResults()
+                    : 0;
             int offset = Math.max(this.offset, 0);
             int limit = Math.max(this.limit, 0);
             if (maxResults > 0 && (limit == 0 || limit >  maxResults)) {
@@ -256,13 +311,15 @@ public class QidoRS {
             if (!queryService.hasMoreMatches())
                 return Response.ok().build();
     
-            return Response.status(status).entity(output.entity(this, qrlevel)).build();
+            return Response.status(status).entity(
+                    output.entity(this, qrlevel)).build();
         } finally {
             cleanup();
         }
     }
 
-    private void init(QueryRetrieveLevel qrlevel) {
+    private void init(QueryRetrieveLevel qrlevel, boolean relational,
+            String studyInstanceUID, String seriesInstanceUID) {
         List<MediaType> acceptableMediaTypes = headers.getAcceptableMediaTypes();
         LOG.info("{} >> QIDO-RS[{}?{}, Accept={}]", new Object[] {
                 this,
@@ -272,9 +329,30 @@ public class QidoRS {
 
         Device device = Archive.getInstance().getDevice();
         ae = device.getApplicationEntity(aet);
-        if (ae == null || !ae.isInstalled()
-                || (aeExt = ae.getAEExtension(ArchiveAEExtension.class)) == null)
-            throw new WebApplicationException(Status.SERVICE_UNAVAILABLE);
+        if (ae == null || !ae.isInstalled())
+            throw new WebApplicationException(Status.FORBIDDEN);
+
+        TransferCapability tc = ae.getTransferCapabilityFor(
+                    UID.StudyRootQueryRetrieveInformationModelFIND, Role.SCP);
+        if (tc == null)
+            throw new WebApplicationException(Status.FORBIDDEN);
+
+        EnumSet<QueryOption> queryOpts = EnumSet.noneOf(QueryOption.class);
+        if (relational)
+            queryOpts.add(QueryOption.RELATIONAL);
+        if (datetimematching)
+            queryOpts.add(QueryOption.DATETIME);
+        if (fuzzymatching)
+            queryOpts.add(QueryOption.FUZZY);
+        if (timezoneadjustment)
+            queryOpts.add(QueryOption.TIMEZONE);
+
+        if (!queryOpts.isEmpty()) {
+            EnumSet<QueryOption> supportedQueryOpts = tc.getQueryOptions();
+            if (supportedQueryOpts == null
+                    || !supportedQueryOpts.containsAll(queryOpts))
+                throw new WebApplicationException(Status.FORBIDDEN);
+        }
 
         try {
             parseIncludefield();
@@ -285,16 +363,19 @@ public class QidoRS {
                 if (isDicomAttribute(name))
                     parseDicomAttribute(name, qParam.getValue());
             }
-    
+            if (studyInstanceUID != null)
+                keys.setString(Tag.StudyInstanceUID, VR.UI, studyInstanceUID);
+            if (seriesInstanceUID != null)
+                keys.setString(Tag.SeriesInstanceUID, VR.UI, seriesInstanceUID);
+
             parseOrderby(qrlevel);
         } catch (IllegalArgumentException e) {
             throw new WebApplicationException(e, Status.BAD_REQUEST);
-            
         }
 
         queryService = BeanLocator.lookup(QueryService.class);
         queryParam = org.dcm4chee.archive.common.QueryParam.valueOf(
-                ae, queryOpts(), accessControlIDs());
+                ae, queryOpts, accessControlIDs());
         IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys,
                 queryParam.getDefaultIssuerOfPatientID());
         this.pids = Archive.getInstance().pixQuery(ae, pid);
@@ -302,27 +383,21 @@ public class QidoRS {
 
     private static boolean isDicomAttribute(String name) {
         switch (name.charAt(0)) {
+        case 'd':
+            return !name.equals("datetimematching");
         case 'f':
             return !name.equals("fuzzymatching");
+        case 'i':
+            return !name.equals("includefield");
         case 'l':
             return !name.equals("limit");
         case 'o':
             return !name.equals("offset")
                 && !name.equals("orderby");
-        case 'i':
-            return !name.equals("includefield");
+        case 't':
+            return !name.equals("timezoneadjustment");
         }
         return true;
-    }
-
-    private EnumSet<QueryOption> queryOpts() {
-        EnumSet<QueryOption> queryOpts = EnumSet.of(
-                QueryOption.RELATIONAL,
-                QueryOption.DATETIME,
-                QueryOption.TIMEZONE);
-        if (fuzzymatching)
-            queryOpts.add(QueryOption.FUZZY);
-        return queryOpts ;
     }
 
     private String[] accessControlIDs() {
