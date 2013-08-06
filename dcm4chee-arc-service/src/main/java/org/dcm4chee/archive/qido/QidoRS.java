@@ -171,6 +171,8 @@ public class QidoRS {
 
     private ApplicationEntity ae;
 
+    private ArchiveAEExtension aeExt;
+
     private org.dcm4chee.archive.common.QueryParam queryParam;
 
     private QueryService queryService;
@@ -282,10 +284,7 @@ public class QidoRS {
         try {
             queryService.createQuery(qrlevel, pids, keys, queryParam);
             int status = STATUS_OK;
-            ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
-            int maxResults = aeExt != null
-                    ? aeExt.getQIDOMaxNumberOfResults()
-                    : 0;
+            int maxResults = aeExt.getQIDOMaxNumberOfResults();
             int offset = Math.max(this.offset, 0);
             int limit = Math.max(this.limit, 0);
             if (maxResults > 0 && (limit == 0 || limit >  maxResults)) {
@@ -329,7 +328,8 @@ public class QidoRS {
 
         Device device = Archive.getInstance().getDevice();
         ae = device.getApplicationEntity(aet);
-        if (ae == null || !ae.isInstalled())
+        if (ae == null || !ae.isInstalled() ||
+                (aeExt = ae.getAEExtension(ArchiveAEExtension.class)) == null)
             throw new WebApplicationException(Status.FORBIDDEN);
 
         TransferCapability tc = ae.getTransferCapabilityFor(
