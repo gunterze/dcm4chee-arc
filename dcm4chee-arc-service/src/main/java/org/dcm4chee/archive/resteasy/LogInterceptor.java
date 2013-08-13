@@ -77,7 +77,7 @@ public class LogInterceptor implements PreProcessInterceptor, PostProcessInterce
                 servletRequest.getRemoteUser(),
                 servletRequest.getRemoteHost(),
                 servletRequest.getRemotePort(),
-                method.getClass().getName(),
+                method.getResourceClass().getName(),
                 method.getMethod().getName(),
                 request.getHttpMethod(),
                 request.getUri().getRequestUri(),

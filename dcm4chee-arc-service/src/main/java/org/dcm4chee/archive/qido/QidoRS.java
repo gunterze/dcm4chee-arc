@@ -348,6 +348,7 @@ public class QidoRS {
             if (seriesInstanceUID != null)
                 keys.setString(Tag.SeriesInstanceUID, VR.UI, seriesInstanceUID);
 
+            LOG.debug("{}: Querykeys:\n{}", method, keys);
             parseOrderby(qrlevel);
         } catch (IllegalArgumentException e) {
             throw new WebApplicationException(e, Status.BAD_REQUEST);
@@ -500,9 +501,10 @@ public class QidoRS {
 
     private Object writeXML(QueryRetrieveLevel qrlevel) {
         MultipartRelatedOutput output = new MultipartRelatedOutput();
+        int count = 0;
         while (queryService.hasMoreMatches()) {
             final Attributes match = filter(addRetrieveURI(queryService.nextMatch(), qrlevel));
-            LOG.debug("org.dcm4chee.archive.qido.QuidoRS.{}:\n{}", method, match);
+            LOG.debug("{}: Match #{}:\n{}", new Object[]{method, ++count, match});
             output.addPart(new StreamingOutput() {
 
                 @Override
@@ -516,20 +518,19 @@ public class QidoRS {
                 }},
                 MediaTypes.APPLICATION_DICOM_XML_TYPE);
         }
-        LOG.info("org.dcm4chee.archive.qido.QuidoRS.{}: {} matches", method,
-                output.getParts().size());
+        LOG.info("{} Matches", method, count);
         return output;
     }
 
     private Object writeJSON(QueryRetrieveLevel qrlevel) {
         final ArrayList<Attributes> matches = new ArrayList<Attributes>();
+        int count = 0;
         while (queryService.hasMoreMatches()) {
             Attributes match = filter(addRetrieveURI(queryService.nextMatch(), qrlevel));
-            LOG.debug("org.dcm4chee.archive.qido.QuidoRS.{}:\n{}", method, match);
+            LOG.debug("{}: Match #{}:\n{}", new Object[]{method, ++count, match});
             matches.add(match);
         }
-        LOG.info("org.dcm4chee.archive.qido.QuidoRS.{}: {} matches", method, 
-                matches.size());
+        LOG.info("{}: {} Matches", method, count);
         StreamingOutput output = new StreamingOutput(){
 
             @Override
