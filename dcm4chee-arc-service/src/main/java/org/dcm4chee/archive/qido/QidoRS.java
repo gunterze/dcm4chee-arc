@@ -44,7 +44,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -53,7 +52,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
@@ -131,9 +129,6 @@ public class QidoRS {
     private volatile static Templates jsonTpls;
 
     @Context
-    private HttpServletRequest request;
-
-    @Context
     private UriInfo uriInfo;
 
     @Context
@@ -175,62 +170,51 @@ public class QidoRS {
 
     private org.dcm4chee.archive.common.QueryParam queryParam;
 
+    private String method;
+
     private QueryService queryService;
 
     private IDWithIssuer[] pids;
 
-    private String name;
-
-    @Override
-    public String toString() {
-        if (name == null) {
-            if (request == null)
-                return super.toString();
-
-            name = request.getRemoteHost() + ':' + request.getRemotePort();
-        }
-        return name;
-    }
-
     @GET
     @Path("/studies")
-    @Produces("multipart/related")
+    @Produces("multipart/related;type=application/dicom+xml")
     public Response searchForStudiesXML() {
-        return search(QueryRetrieveLevel.STUDY, false, null, null,
-                Output.DICOM_XML);
+        return search("searchForStudiesXML", QueryRetrieveLevel.STUDY,
+                false, null, null, Output.DICOM_XML);
     }
 
     @GET
     @Path("/studies")
     @Produces("application/json")
     public Response searchForStudiesJSON() {
-        return search(QueryRetrieveLevel.STUDY, false, null, null,
-                Output.JSON);
+        return search("searchForStudiesJSON", 
+                QueryRetrieveLevel.STUDY, false, null, null, Output.JSON);
     }
 
     @GET
     @Path("/series")
-    @Produces("multipart/related")
-    public Response searchForSeriesXML() {
-        return search(QueryRetrieveLevel.SERIES, true, null, null,
-                Output.DICOM_XML);
+    @Produces("multipart/related;type=application/dicom+xml")
+    public Response searchRelationalForSeriesXML() {
+        return search("searchRelationalForSeriesXML",
+                QueryRetrieveLevel.SERIES, true, null, null, Output.DICOM_XML);
     }
 
     @GET
     @Path("/series")
     @Produces("application/json")
-    public Response searchForSeriesJSON() {
-        return search(QueryRetrieveLevel.SERIES, true, null, null,
-                Output.JSON);
+    public Response searchRelationalForSeriesJSON() {
+        return search("searchRelationalForSeriesJSON", QueryRetrieveLevel.SERIES, 
+                true, null, null, Output.JSON);
     }
 
     @GET
     @Path("/studies/{StudyInstanceUID}/series")
-    @Produces("multipart/related")
+    @Produces("multipart/related;type=application/dicom+xml")
     public Response searchForSeriesXML(
             @PathParam("StudyInstanceUID") String studyInstanceUID) {
-        return search(QueryRetrieveLevel.SERIES, false, studyInstanceUID, null,
-                Output.DICOM_XML);
+        return search("searchForSeriesXML", QueryRetrieveLevel.SERIES, false,
+                studyInstanceUID, null, Output.DICOM_XML);
     }
 
     @GET
@@ -238,33 +222,33 @@ public class QidoRS {
     @Produces("application/json")
     public Response searchForSeriesJSON(
             @PathParam("StudyInstanceUID") String studyInstanceUID) {
-        return search(QueryRetrieveLevel.SERIES, false, studyInstanceUID, null,
-                Output.JSON);
+        return search("searchForSeriesJSON", QueryRetrieveLevel.SERIES, false,
+                studyInstanceUID, null, Output.JSON);
     }
 
     @GET
     @Path("/instances")
-    @Produces("multipart/related")
-    public Response searchForInstancesXML() {
-        return search(QueryRetrieveLevel.IMAGE, true, null, null,
-                Output.DICOM_XML);
+    @Produces("multipart/related;type=application/dicom+xml")
+    public Response searchRelationalForInstancesXML() {
+        return search("searchRelationalForInstancesXML",
+                QueryRetrieveLevel.IMAGE, true, null, null, Output.DICOM_XML);
     }
 
     @GET
     @Path("/instances")
     @Produces("application/json")
-    public Response searchForInstancesJSON() {
-        return search(QueryRetrieveLevel.IMAGE, true, null, null,
-                Output.JSON);
+    public Response searchRelationalForInstancesJSON() {
+        return search("searchRelationalForInstancesJSON",
+                QueryRetrieveLevel.IMAGE, true, null, null, Output.JSON);
     }
 
     @GET
     @Path("/studies/{StudyInstanceUID}/series/{SeriesInstanceUID}/instances")
-    @Produces("multipart/related")
+    @Produces("multipart/related;type=application/dicom+xml")
     public Response searchForInstancesXML(
             @PathParam("StudyInstanceUID") String studyInstanceUID,
             @PathParam("SeriesInstanceUID") String seriesInstanceUID) {
-        return search(QueryRetrieveLevel.IMAGE, false, 
+        return search("searchForInstancesXML", QueryRetrieveLevel.IMAGE, false,
                 studyInstanceUID, seriesInstanceUID, Output.DICOM_XML);
     }
 
@@ -274,13 +258,14 @@ public class QidoRS {
     public Response searchForInstancesJSON(
             @PathParam("StudyInstanceUID") String studyInstanceUID,
             @PathParam("SeriesInstanceUID") String seriesInstanceUID) {
-        return search(QueryRetrieveLevel.IMAGE, false, 
+        return search("searchForInstancesJSON", QueryRetrieveLevel.IMAGE, false, 
                 studyInstanceUID, seriesInstanceUID, Output.JSON);
     }
 
-    private Response search(QueryRetrieveLevel qrlevel, boolean relational,
-            String studyInstanceUID, String seriesInstanceUID, Output output) {
-        init(qrlevel, relational, studyInstanceUID, seriesInstanceUID);
+    private Response search(String method, QueryRetrieveLevel qrlevel,
+            boolean relational, String studyInstanceUID,
+            String seriesInstanceUID, Output output) {
+        init(method, qrlevel, relational, studyInstanceUID, seriesInstanceUID);
         try {
             queryService.createQuery(qrlevel, pids, keys, queryParam);
             int status = STATUS_OK;
@@ -317,15 +302,10 @@ public class QidoRS {
         }
     }
 
-    private void init(QueryRetrieveLevel qrlevel, boolean relational,
-            String studyInstanceUID, String seriesInstanceUID) {
-        List<MediaType> acceptableMediaTypes = headers.getAcceptableMediaTypes();
-        LOG.info("{} >> QIDO-RS[{}?{}, Accept={}]", new Object[] {
-                this,
-                request.getRequestURL(),
-                request.getQueryString(),
-                acceptableMediaTypes});
-
+    private void init(String method, QueryRetrieveLevel qrlevel,
+            boolean relational, String studyInstanceUID,
+            String seriesInstanceUID) {
+        this.method = method;
         Device device = Archive.getInstance().getDevice();
         ae = device.getApplicationEntity(aet);
         if (ae == null || !ae.isInstalled() ||
@@ -520,17 +500,14 @@ public class QidoRS {
 
     private Object writeXML(QueryRetrieveLevel qrlevel) {
         MultipartRelatedOutput output = new MultipartRelatedOutput();
-        int count = 0;
         while (queryService.hasMoreMatches()) {
-            final int partNumber = ++count;
             final Attributes match = filter(addRetrieveURI(queryService.nextMatch(), qrlevel));
+            LOG.debug("org.dcm4chee.archive.qido.QuidoRS.{}:\n{}", method, match);
             output.addPart(new StreamingOutput() {
 
                 @Override
                 public void write(OutputStream out) throws IOException,
                         WebApplicationException {
-                    LOG.info("{} << {}:QIDO-RS[Content-Type=application/dicom+xml]",
-                            QidoRS.this, partNumber);
                     try {
                         SAXTransformer.getSAXWriter(new StreamResult(out)).write(match);
                     } catch (Exception e) {
@@ -539,23 +516,27 @@ public class QidoRS {
                 }},
                 MediaTypes.APPLICATION_DICOM_XML_TYPE);
         }
+        LOG.info("org.dcm4chee.archive.qido.QuidoRS.{}: {} matches", method,
+                output.getParts().size());
         return output;
     }
 
     private Object writeJSON(QueryRetrieveLevel qrlevel) {
         final ArrayList<Attributes> matches = new ArrayList<Attributes>();
         while (queryService.hasMoreMatches()) {
-            matches.add(filter(addRetrieveURI(queryService.nextMatch(), qrlevel)));
+            Attributes match = filter(addRetrieveURI(queryService.nextMatch(), qrlevel));
+            LOG.debug("org.dcm4chee.archive.qido.QuidoRS.{}:\n{}", method, match);
+            matches.add(match);
         }
+        LOG.info("org.dcm4chee.archive.qido.QuidoRS.{}: {} matches", method, 
+                matches.size());
         StreamingOutput output = new StreamingOutput(){
 
             @Override
             public void write(OutputStream out) throws IOException {
                 for (int i = 0, n=matches.size(); i < n; i++) {
                     out.write(i == 0 ? '[' : ',');
-                    LOG.info("{} << {}:QIDO-RS[Content-Type=application/json]",
-                            QidoRS.this, i+1);
-                     try {
+                    try {
                         SAXTransformer.getSAXWriter(jsonTpls(), new StreamResult(out))
                             .write(matches.get(i));
                     } catch (Exception e) {
