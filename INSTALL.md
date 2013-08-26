@@ -607,7 +607,7 @@ Setup JBoss AS
         13:11:02,713 INFO  [org.dcm4che.net.Connection] (pool-18-thread-2) Start listening on localhost/127.0.0.1:2762
         13:11:02,713 INFO  [org.dcm4che.net.Connection] (pool-18-thread-3) Start listening on localhost/127.0.0.1:2575
         13:11:02,714 INFO  [org.dcm4che.net.Connection] (pool-18-thread-4) Start listening on localhost/127.0.0.1:12575
-        13:11:02,726 INFO  [org.jboss.web] (MSC service thread 1-1) JBAS018210: Registering web context: /service
+        13:11:02,726 INFO  [org.jboss.web] (MSC service thread 1-1) JBAS018210: Registering web context: /dcm4chee-arc
         13:11:02,771 INFO  [org.jboss.as.server] (management-handler-thread - 1) JBAS018559: Deployed "dcm4chee-arc-4.1.0.Alpha2-mysql.war"
 
 15. You may undeploy DCM4CHEE Archive at any time using JBoss AS CLI, e.g.:
@@ -644,16 +644,16 @@ Java Monitoring and Management Console `jconsole`
 Control DCM4CHEE Archive 4.x by HTTP GET
 ----------------------------------------
 
-1.  `HTTP GET http://localhost:8080/service/archive/running` 
+1.  `HTTP GET http://localhost:8080/dcm4chee-arc/rs/running` 
     returns `true`, if the archive is running, otherwise `false`.
 
-2.  `HTTP GET http://localhost:8080/service/archive/stop` 
+2.  `HTTP GET http://localhost:8080/dcm4chee-arc/rs/stop` 
      stops DCM4CHEE Archive 4.x. 
 
-3.  `HTTP GET http://localhost:8080/service/archive/start` 
+3.  `HTTP GET http://localhost:8080/dcm4chee-arc/rs/start` 
     starts DCM4CHEE Archive 4.x. 
 
-4.  `HTTP GET http://localhost:8080/service/archive/reload` 
+4.  `HTTP GET http://localhost:8080/dcm4chee-arc/rs/reload` 
     reloads the configuration from the configuration backend.
 
 *Note*: `start`, `stop` and `reload` returns `HTTP status: 204 No Content` 
@@ -789,7 +789,7 @@ Use DCM4CHE 3.x's `dcmdump` utility to determine `Study`, `Series` and
 
 Invoke
 
-    GET http://localhost:8080/service/archive/wado-uri/DCM4CHEE?requestType=WADO
+    GET http://localhost:8080/dcm4chee-arc/rs/wado/DCM4CHEE?requestType=WADO
       &studyUID=1.2.840.113674.514.212.200
       &seriesUID=1.2.840.113674.514.212.81.300
       &objectUID=1.2.840.113674.950809132354242.100
