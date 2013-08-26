@@ -88,7 +88,7 @@ import org.slf4j.LoggerFactory;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-@Path("/wado-rs/{AETitle}")
+@Path("/wado/{AETitle}")
 public class WadoRS {
 
     private static final int STATUS_OK = 200;
@@ -149,7 +149,7 @@ public class WadoRS {
     }
 
     private String toBulkDataURI(String uri) {
-        return uriInfo.getBaseUri() + "wado-rs/" + aet + "/bulkdata/" + uri;
+        return uriInfo.getBaseUri() + "wado/" + aet + "/bulkdata/" + uri;
     }
 
 

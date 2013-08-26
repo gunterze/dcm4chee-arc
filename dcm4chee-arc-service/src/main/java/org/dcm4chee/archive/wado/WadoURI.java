@@ -91,7 +91,7 @@ import org.slf4j.LoggerFactory;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
-@Path("/wado-uri/{AETitle}")
+@Path("/wado/{AETitle}")
 public class WadoURI extends Object  {
 
     private static final Logger LOG = LoggerFactory.getLogger(WadoURI.class);
