@@ -54,7 +54,7 @@ import org.dcm4chee.archive.wado.WadoURI;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-@ApplicationPath("/archive")
+@ApplicationPath("/rs")
 public class ArchiveApplication extends Application {
 
     private final Set<Class<?>> classes = new HashSet<Class<?>>(4);

@@ -47,7 +47,7 @@ import javax.naming.NamingException;
  */
 public class BeanLocator {
 
-    private static final String GLOBAL_JNDI = "java:global/service/";
+    private static final String GLOBAL_JNDI = "java:global/dcm4chee-arc/";
 
     public static <T> T lookup(Class<T> beanClass) {
         return lookup(beanClass, GLOBAL_JNDI + beanClass.getSimpleName());
