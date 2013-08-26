@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="web.css">
+<meta charset="UTF-8">
+<title>dcm4chee-arc ${project.version}</title>
+</head>
+<body>
+    <form id="form">
+    <table>
+      <thead>
+        <tr class="study">
+          <td rowspan="3" colspan="2">
+            <a id="query" href="#" title="Search Studies">S</a>
+            <a id="back" href="#" title="Previous Results">&lt;</a>
+            <a id="next" href="#" title="Next Results">&gt;</a>
+          </td>
+          <th colspan="4">AE Title: <input id="aet" type="text" value="DCM4CHEE"/></th>
+          <th>Order By:
+            <select id="orderby">
+              <option value="-StudyDate,-StudyTime" selected>-StudyDate</option>
+              <option value="StudyDate,StudyTime">StudyDate</option>
+              <option value="PatientName,StudyDate,StudyTime">PatientName</option>
+            </select>
+          </th>
+          <th>Study Date</td>
+          <th>Study Time</td>
+          <th colspan="3">
+              <input type="checkbox" name="fuzzymatching" value="true"/>Fuzzy Matching
+              <input type="checkbox" name="datetimematching" value="true"/>Combined Date/Time Matching
+              <input type="checkbox" name="timezoneadjustment" value="true"/>Time Zone Adjustment
+          </th>
+          <th colspan=2>Limit</th>
+        </tr>
+        <tr class="study">
+          <th colspan="4">Patient Name</th>
+          <th>Patient ID</th>
+          <td>&gt;<input type="text" id="fromStudyDate" size="10"/></td>
+          <td>&gt;<input type="text" id="fromStudyTime" size="10"/></td>
+          <th>Accession Number</th>
+          <th>Modalities</th>
+          <th>Study Description</th>
+          <td colspan=2><input id="limit" type="text" name="limit" value="20" size="3"/></td>
+        </tr>
+        <tr class="study">
+          <td colspan="4"><input type="text" name="PatientName"/></td>
+          <td><input type="text" name="PatientID"/></td>
+          <td>&lt;<input type="text" id="toStudyDate" size="10"/></td>
+          <td>&lt;<input type="text" id="toStudyTime" size="10"/></td>
+          <td><input type="text" name="AccessionNumber"/></td>
+          <td><input type="text" name="ModalitiesInStudy" size="6"/></td>
+          <td><input type="text" name="StudyDescription"/></td>
+          <th>#S</th>
+          <th>#I</th>
+        </tr>
+      </thead>
+      <tbody id="list">
+      </tbody>
+    </table>
+    </form>
+<script type="text/javascript" src="web.js"></script>
+</body>
+</html>
