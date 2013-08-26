@@ -93,7 +93,7 @@ import com.mysema.query.types.path.StringPath;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-@Path("/qido-rs/{AETitle}")
+@Path("/qido/{AETitle}")
 public class QidoRS {
 
     private static final int STATUS_OK = 200;
@@ -590,7 +590,7 @@ public class QidoRS {
     private String retrieveURI(Attributes match, QueryRetrieveLevel qrlevel) {
         StringBuilder sb = new StringBuilder(256);
         sb.append(uriInfo.getBaseUri())
-          .append("wado-rs/")
+          .append("wado/")
           .append(aet)
           .append("/studies/")
           .append(match.getString(Tag.StudyInstanceUID));
