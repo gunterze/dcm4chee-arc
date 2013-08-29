@@ -1,0 +1,56 @@
+.nav {
+    background-color: #333333;
+    margin: 0;
+}
+
+.nav a {
+    color: #AAAAAA;
+    font-weight: bold;
+    text-decoration: none
+}
+
+.nav span,a:hover {
+    color: #FFFFFF;
+    font-weight: bold;
+    text-decoration: none
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+table,td,th {
+    border: 1px solid black;
+}
+
+th {
+    text-align: left;
+    vertical-align: center;
+}
+
+td {
+    text-align: left;
+    vertical-align: top;
+}
+
+tr.attributes td {
+    padding: 0;
+}
+
+tr.attributes td table{
+    margin: -1px;
+}
+
+tr.study,tr.study+tr.attributes td table tbody tr {
+    background-color: #66A366;
+}
+
+tr.series,tr.series+tr.attributes td table tbody tr {
+    background-color: #99C299;
+}
+
+tr.instance,tr.instance+tr.attributes td table tbody tr {
+    background-color: #CCE0CC;
+}

@@ -169,7 +169,18 @@
           <webResources>
             <resource>
               <directory>src/main/webapp</directory>
+              <excludes>
+                <exclude>css/*</exclude>
+                <exclude>images/*</exclude>
+              </excludes>
               <filtering>true</filtering>
+            </resource>
+            <resource>
+              <directory>src/main/webapp</directory>
+              <includes>
+                <include>css/*</include>
+                <include>images/*</include>
+              </includes>
             </resource>
           </webResources>
           <webappDirectory>target/dcm4chee-arc-${project.version}-${db}</webappDirectory>

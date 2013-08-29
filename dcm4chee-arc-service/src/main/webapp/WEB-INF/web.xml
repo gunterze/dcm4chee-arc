@@ -25,6 +25,6 @@
     <load-on-startup>1</load-on-startup>
   </servlet>
   <welcome-file-list>
-    <welcome-file>web.html</welcome-file>
+    <welcome-file>browse.html</welcome-file>
   </welcome-file-list>
 </web-app>
