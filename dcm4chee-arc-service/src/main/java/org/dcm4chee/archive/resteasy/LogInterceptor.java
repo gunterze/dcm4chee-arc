@@ -86,7 +86,7 @@ public class LogInterceptor implements PreProcessInterceptor, PostProcessInterce
         return null;
     }
 
-    private <V> String toString(Map<String, List<V>> map) {
+    public static <V> String toString(Map<String, List<V>> map) {
         if (map.isEmpty())
             return "";
 

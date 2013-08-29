@@ -102,6 +102,7 @@ import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.entity.FileRef;
 import org.dcm4chee.archive.entity.FileSystem;
+import org.dcm4chee.archive.resteasy.LogInterceptor;
 import org.dcm4chee.archive.store.Supplements;
 import org.dcm4chee.archive.store.dao.StoreService;
 import org.dcm4chee.archive.util.BeanLocator;
@@ -124,8 +125,6 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
 
     //TODO replace my Tag.WarningReason when defined
     private static final int TagWarningReason = 0x00081196;
-
-    private String name;
 
     @Context
     private HttpServletRequest request;
@@ -174,17 +173,6 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
 
     private Sequence failedSOPSequence;
 
-    @Override
-    public String toString() {
-        if (name == null) {
-            if (request == null)
-                return super.toString();
-
-            name = request.getRemoteHost() + ':' + request.getRemotePort();
-        }
-        return name;
-    }
-
     @POST
     @Path("/studies")
     @Consumes({"multipart/related","multipart/form-data"})
@@ -198,10 +186,6 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
     public Response storeInstances(
             @PathParam("StudyInstanceUID") String studyInstanceUID,
             InputStream in) throws DicomServiceException {
-        LOG.info("{} >> STOW-RS[{}, Content-Type={}]", new Object[] {
-                this,
-                request.getRequestURL(),
-                contentType });
         init(studyInstanceUID);
         try {
             try {
@@ -294,19 +278,15 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
 
     @Override
     public void bodyPart(int partNumber, MultipartInputStream in) throws IOException {
-        Map<String, String> headerParams = in.readHeaderParams();
-            String mediaTypeStr = headerParams.get("content-type");
-            String bulkdataURI = headerParams.get("content-location");
-            LOG.info("{} >> {}:STOW-RS[Content-Type={}, Content-Location={}]",
-                    new Object[] {
-                    this,
-                    partNumber,
-                    mediaTypeStr,
-                    bulkdataURI });
+        Map<String, List<String>> headerParams = in.readHeaderParams();
+        LOG.info("STOW-RS: Received Part #{}{}",
+                partNumber, LogInterceptor.toString(headerParams));
+        String mediaTypeStr = firstOf(headerParams.get("content-type"));
         try {
             MediaType mediaType = mediaTypeStr != null
                     ? MediaType.valueOf(mediaTypeStr)
-                   : MediaType.TEXT_PLAIN_TYPE;
+                    : MediaType.TEXT_PLAIN_TYPE;
+            String bulkdataURI = firstOf(headerParams.get("content-location"));
             if (creatorType.accept(mediaType, bulkdataURI)) {
                 if (in.isZIP()) {
                     ZipInputStream zip = new ZipInputStream(in);
@@ -319,14 +299,17 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
                     storeFile(in, mediaType, bulkdataURI);
                 }
             } else {
-                LOG.info("{}: Ignore Part with Content-Type={}", this, mediaType);
+                LOG.info("STOW-RS: Ignore Part with Content-Type={}", mediaType);
                 in.skipAll();
             }
         } catch (IllegalArgumentException e) {
-            LOG.info("{}: Ignore Part with illegal Content-Type={}", this,
-                    mediaTypeStr);
+            LOG.info("STOW-RS: Ignore Part with illegal Content-Type={}", mediaTypeStr);
             in.skipAll();
         }
+    }
+
+    private String firstOf(List<String> list) {
+        return list != null && !list.isEmpty() ? list.get(0) : null;
     }
 
     private void storeFile(InputStream in, MediaType mediaType,
@@ -334,7 +317,7 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
         File file = File.createTempFile("dcm",
                 creatorType.fileSuffix(mediaType),
                 spoolDir);
-        LOG.info("{}: M-WRITE {}", this, file);
+        LOG.info("STOW-RS: M-WRITE {}", file);
         OutputStream out = new FileOutputStream(file);
         try {
             MessageDigest digest = creatorType.digest(this.digest); 
@@ -357,7 +340,7 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
 
     private void writeDicomInstance(File file, Attributes fmi,
             Attributes dataset) throws IOException {
-        LOG.info("{}: M-WRITE {}", this, file);
+        LOG.info("STOW-RS: M-WRITE {}", file);
         file.getParentFile().mkdirs();
         OutputStream out = new FileOutputStream(file);
         try {
@@ -477,7 +460,14 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
     private Attributes readFileMetaInformation(File file) throws IOException {
         DicomInputStream in = new DicomInputStream(file);
         try {
-            return in.readFileMetaInformation();
+            Attributes fmi = in.readFileMetaInformation();
+            if (fmi == null) {
+                fmi = in.readDataset(-1, Tag.StudyInstanceUID)
+                        .createFileMetaInformation(UID.ImplicitVRLittleEndian);
+            }
+            fmi.setString(Tag.SourceApplicationEntityTitle, VR.AE,
+                    request.getRemoteAddr());
+            return fmi;
         } finally {
             SafeClose.close(in);
         }
@@ -498,12 +488,10 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
 
             File destFile = null;
             try {
-                Attributes fmi;
                 Attributes attrs;
                 DicomInputStream in = new DicomInputStream(fileInfo.file);
                 try {
                     in.setIncludeBulkData(IncludeBulkData.URI);
-                    fmi = in.readFileMetaInformation();
                     attrs = in.readDataset(-1, -1);
                 } finally {
                     SafeClose.close(in);
@@ -515,9 +503,9 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
 
                 destFile = destinationFile(attrs);
                 renameTo(fileInfo.file, destFile);
-                storeDicomInstance(destFile, fmi, attrs, fileInfo.digest);
+                storeDicomInstance(destFile, fileInfo.attrs, attrs, fileInfo.digest);
             } catch (Exception e) {
-                LOG.info("Storage Failed:", e);
+                LOG.info("STOW-RS: Storage Failed:", e);
 
                 int failureReason = e instanceof DicomServiceException
                         ? ((DicomServiceException) e).getStatus()
@@ -620,7 +608,7 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
                 storeDicomInstance(destFile, fmi, fileInfo.attrs,
                         digest != null ? digest.digest() : null);
             } catch (Exception e) {
-                LOG.info("Storage Failed:", e);
+                LOG.info("STOW-RS: Storage Failed:", e);
 
                 int failureReason = e instanceof DicomServiceException
                         ? ((DicomServiceException) e).getStatus()
@@ -706,14 +694,14 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
 
     private void deleteFile(File file) {
         if (file.delete())
-            LOG.info("{}: M-DELETE {}", this, file);
+            LOG.info("STOW-RS: M-DELETE {}", file);
         else
-            LOG.warn("{}: M-DELETE {} failed!", this, file);
+            LOG.warn("STOW-RS: M-DELETE {} failed!", file);
     }
 
     private void renameTo(File from, File dest)
             throws IOException {
-        LOG.info("{}: M-RENAME {} to {}", new Object[]{ this, from, dest });
+        LOG.info("STOW-RS: M-RENAME {} to {}", from, dest);
         dest.getParentFile().mkdirs();
         if (!from.renameTo(dest))
             throw new IOException("Failed to rename " + from + " to " + dest);
