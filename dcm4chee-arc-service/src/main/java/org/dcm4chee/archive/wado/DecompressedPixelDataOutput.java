@@ -42,12 +42,10 @@ import java.io.OutputStream;
 
 import javax.imageio.stream.ImageInputStream;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.dcm4che.imageio.codec.Decompressor;
 import org.dcm4che.util.SafeClose;
-import org.slf4j.Logger;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -57,33 +55,15 @@ public class DecompressedPixelDataOutput implements StreamingOutput {
 
     private final Decompressor decompressor;
     private final int frameIndex;
-    private final MediaType mediaType;
-    private final String contentLocation;
-    private final Logger log;
-    private final Object service;
-    private final int partNumber;
 
-    public DecompressedPixelDataOutput(Decompressor decompressor, int frameIndex,
-            MediaType mediaType, String contentLocation,
-            Logger log, Object service, int partNumber) {
+    public DecompressedPixelDataOutput(Decompressor decompressor, int frameIndex) {
         this.decompressor = decompressor;
         this.frameIndex = frameIndex;
-        this.mediaType = mediaType;
-        this.contentLocation = contentLocation;
-        this.log = log;
-        this.service = service;
-        this.partNumber = partNumber;
     }
 
     @Override
     public void write(OutputStream output) throws IOException,
             WebApplicationException {
-        log.info("{} << {}:WADO-RS[Content-Type={}, Content-Location={}]",
-                new Object[] {
-                partNumber,
-                service,
-                mediaType,
-                contentLocation });
         if (frameIndex == -1)
             decompressor.writeTo(output);
         else {

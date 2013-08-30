@@ -71,6 +71,7 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.UID;
 import org.dcm4che.image.PaletteColorModel;
 import org.dcm4che.image.PixelAspectRatio;
+import org.dcm4che.imageio.codec.ImageReaderFactory;
 import org.dcm4che.imageio.plugins.dcm.DicomImageReadParam;
 import org.dcm4che.imageio.plugins.dcm.DicomMetaData;
 import org.dcm4che.imageio.stream.OutputStreamAdapter;
@@ -84,8 +85,6 @@ import org.dcm4chee.archive.dao.SeriesService;
 import org.dcm4chee.archive.entity.InstanceFileRef;
 import org.dcm4chee.archive.util.AuditUtils;
 import org.dcm4chee.archive.wado.dao.WadoService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -94,7 +93,7 @@ import org.slf4j.LoggerFactory;
 @Path("/wado/{AETitle}")
 public class WadoURI extends Object  {
 
-    private static final Logger LOG = LoggerFactory.getLogger(WadoURI.class);
+    private static final int STATUS_NOT_IMPLEMENTED = 501;
 
     public enum Anonymize { yes }
 
@@ -215,19 +214,6 @@ public class WadoURI extends Object  {
     @QueryParam("transferSyntax")
     private List<String> transferSyntax;
 
-    private String name;
-
-    @Override
-    public String toString() {
-        if (name == null) {
-            if (request == null)
-                return super.toString();
-
-            name = request.getRemoteHost() + ':' + request.getRemotePort();
-        }
-        return name;
-    }
-
     @GET
     public Response retrieve() throws WebApplicationException {
         checkRequest();
@@ -253,19 +239,12 @@ public class WadoURI extends Object  {
         if (mediaType == MediaTypes.IMAGE_JPEG_TYPE)
             return retrieveJPEG(ref, attrs);
 
-        throw new WebApplicationException(501);
+        throw new WebApplicationException(STATUS_NOT_IMPLEMENTED);
 
     }
 
     private void checkRequest()
             throws WebApplicationException {
-        List<MediaType> acceptableMediaTypes = headers.getAcceptableMediaTypes();
-        LOG.info("{} >> WADO-URI[{}?{}, Accept={}]", new Object[] {
-                this,
-                request.getRequestURL(),
-                request.getQueryString(),
-                acceptableMediaTypes});
-
         Device device = Archive.getInstance().getDevice();
         ApplicationEntity ae = device.getApplicationEntity(aet);
         if (ae == null || !ae.isInstalled())
@@ -275,6 +254,7 @@ public class WadoURI extends Object  {
             throw new WebApplicationException(Status.BAD_REQUEST);
         if (studyUID == null || seriesUID == null || objectUID == null)
             throw new WebApplicationException(Status.BAD_REQUEST);
+
         boolean applicationDicom = false;
         if (contentType != null) {
             for (MediaType mediaType : contentType.values) {
@@ -314,18 +294,23 @@ public class WadoURI extends Object  {
 
     private Response retrieveNativeDicomObject(InstanceFileRef ref,
             Attributes attrs) {
-        String tsuid = acceptedTransferSyntax(ref.transferSyntaxUID);
+        String tsuid = selectTransferSyntax(ref.transferSyntaxUID);
         MediaType mediaType = MediaType.valueOf(
                 "application/dicom;transfer-syntax=" + tsuid);
-        return Response.ok(new DicomObjectOutput(ref, attrs, tsuid,
-                    mediaType, LOG, this, 0),
+        return Response.ok(new DicomObjectOutput(ref, attrs, tsuid),
                 mediaType).build();
     }
 
-    private String acceptedTransferSyntax(String tsuid) {
-        return transferSyntax.contains(tsuid) || transferSyntax.contains("*")
+    private String selectTransferSyntax(String tsuid) {
+        return transferSyntax.contains("*") 
+                || transferSyntax.contains(tsuid)
+                || !canDecompress(tsuid)
                 ? tsuid
                 : UID.ExplicitVRLittleEndian;
+    }
+
+    private boolean canDecompress(String tsuid) {
+        return ImageReaderFactory.getImageReaderParam(tsuid) != null;
     }
 
     private Response retrieveJPEG(final InstanceFileRef ref, 
@@ -343,13 +328,6 @@ public class WadoURI extends Object  {
                 } finally {
                     SafeClose.close(iis);
                 }
-                LOG.info("{}@{} << {}: Content-Type={}, iuid=",
-                        new Object[] {
-                        request.getRemoteUser(),
-                        request.getRemoteHost(),
-                        this,
-                        mediaType,
-                        ref.sopInstanceUID });
                 writeJPEG(bi, new OutputStreamAdapter(out));
             }
         }, mediaType).build();

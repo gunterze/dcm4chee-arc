@@ -40,7 +40,6 @@ package org.dcm4chee.archive.wado;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.dcm4che.data.Attributes;
@@ -51,7 +50,6 @@ import org.dcm4che.io.DicomInputStream.IncludeBulkData;
 import org.dcm4che.io.DicomOutputStream;
 import org.dcm4che.util.SafeClose;
 import org.dcm4chee.archive.entity.InstanceFileRef;
-import org.slf4j.Logger;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -62,36 +60,14 @@ class DicomObjectOutput implements StreamingOutput {
     private final InstanceFileRef fileRef;
     private final Attributes attrs;
     private final String tsuid;
-    private final MediaType mediaType;
-    private final Logger log;
-    private final Object service;
-    private final int partNumber;
 
-    DicomObjectOutput(InstanceFileRef fileRef, Attributes attrs, String tsuid,
-            MediaType mediaType, Logger log, Object service, int partNumber) {
+    DicomObjectOutput(InstanceFileRef fileRef, Attributes attrs, String tsuid) {
         this.fileRef = fileRef;
         this.attrs = attrs;
         this.tsuid = tsuid;
-        this.mediaType = mediaType;
-        this.log = log;
-        this.service = service;
-        this.partNumber = partNumber;
     }
 
     public void write(OutputStream out) throws IOException {
-        if (partNumber > 0)
-            log.info("{} << {}:WADO-RS[Content-Type={}, iuid={}]",
-                    new Object[] {
-                    service,
-                    partNumber,
-                    mediaType,
-                    fileRef.sopInstanceUID });
-        else
-            log.info("{} << WADO-URI[Content-Type={}, iuid={}]",
-                    new Object[] {
-                    service,
-                    mediaType,
-                    fileRef.sopInstanceUID });
         DicomInputStream dis = new DicomInputStream(fileRef.getFile());
         try {
             dis.setIncludeBulkData(IncludeBulkData.URI);

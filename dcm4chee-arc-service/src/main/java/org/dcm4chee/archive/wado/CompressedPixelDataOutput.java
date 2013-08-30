@@ -43,14 +43,12 @@ import java.io.OutputStream;
 import java.util.Iterator;
 
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.dcm4che.data.BulkData;
 import org.dcm4che.data.Fragments;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.StreamUtils;
-import org.slf4j.Logger;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -59,32 +57,14 @@ import org.slf4j.Logger;
 public class CompressedPixelDataOutput implements StreamingOutput {
 
     private final Fragments fragments;
-    private final MediaType mediaType;
-    private final String contentLocation;
-    private final Logger log;
-    private final Object service;
-    private final int partNumber;
 
-    public CompressedPixelDataOutput(Fragments fragments,
-            MediaType mediaType, String contentLocation,
-            Logger log, Object service, int partNumber) {
+    public CompressedPixelDataOutput(Fragments fragments) {
         this.fragments = fragments;
-        this.mediaType = mediaType;
-        this.contentLocation = contentLocation;
-        this.log = log;
-        this.service = service;
-        this.partNumber = partNumber;
     }
 
     @Override
     public void write(OutputStream out) throws IOException,
             WebApplicationException {
-        log.info("{} << {}:WADO-RS[Content-Type={}, Content-Location={}]",
-                new Object[] {
-                partNumber,
-                service,
-                mediaType,
-                contentLocation });
         Iterator<Object> iter = fragments.iterator();
         iter.next(); // skip frame offset table
         BulkData fragment = (BulkData) iter.next();

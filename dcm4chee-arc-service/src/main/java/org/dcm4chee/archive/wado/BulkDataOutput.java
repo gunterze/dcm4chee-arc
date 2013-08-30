@@ -42,13 +42,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.dcm4che.data.BulkData;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.StreamUtils;
-import org.slf4j.Logger;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -57,31 +55,14 @@ import org.slf4j.Logger;
 public class BulkDataOutput implements StreamingOutput {
 
     private final BulkData bulkData;
-    private final MediaType mediaType;
-    private final String contentLocation;
-    private final Logger log;
-    private final Object service;
-    private final int partNumber;
 
-    public BulkDataOutput(BulkData bulkData, MediaType mediaType,
-            String contentLocation, Logger log, Object service, int partNumber) {
+    public BulkDataOutput(BulkData bulkData) {
         this.bulkData = bulkData;
-        this.mediaType = mediaType;
-        this.contentLocation = contentLocation;
-        this.log = log;
-        this.service = service;
-        this.partNumber = partNumber;
     }
 
     @Override
     public void write(OutputStream out) throws IOException,
             WebApplicationException {
-        log.info("{} << {}:WADO-RS[Content-Type={}, Content-Location={}]",
-                new Object[] {
-                service,
-                partNumber,
-                mediaType,
-                contentLocation });
         InputStream in = bulkData.openStream();
         try {
             StreamUtils.skipFully(in, bulkData.offset);

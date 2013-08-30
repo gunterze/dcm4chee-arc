@@ -41,7 +41,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 import javax.xml.transform.stream.StreamResult;
 
@@ -55,7 +54,6 @@ import org.dcm4che.io.DicomInputStream.IncludeBulkData;
 import org.dcm4che.io.SAXTransformer;
 import org.dcm4che.util.SafeClose;
 import org.dcm4chee.archive.entity.InstanceFileRef;
-import org.slf4j.Logger;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -66,32 +64,17 @@ public class DicomXMLOutput implements StreamingOutput {
     private final InstanceFileRef fileRef;
     private final Attributes attrs;
     private final String bulkDataURI;
-    private final MediaType mediaType;
-    private final Logger log;
-    private final Object service;
-    private final int partNumber;
 
     public DicomXMLOutput(InstanceFileRef fileRef, String bulkDataURI,
-            Attributes attrs, MediaType mediaType, Logger log,
-            Object service, int partNumber) {
+            Attributes attrs) {
         this.fileRef = fileRef;
         this.bulkDataURI = bulkDataURI;
         this.attrs = attrs;
-        this.mediaType = mediaType;
-        this.log = log;
-        this.service = service;
-        this.partNumber = partNumber;
     }
 
     @Override
     public void write(OutputStream out) throws IOException,
             WebApplicationException {
-        log.info("{} << {}:WADO-RS[Content-Type={}, iuid={}]",
-                new Object[] {
-                service,
-                partNumber,
-                mediaType,
-                fileRef.sopInstanceUID });
         DicomInputStream dis = new DicomInputStream(fileRef.getFile());
         dis.setURI(bulkDataURI);
         try {
