@@ -314,14 +314,18 @@ public class WadoURI extends Object  {
 
     private Response retrieveNativeDicomObject(InstanceFileRef ref,
             Attributes attrs) {
-        String tsuid = ref.transferSyntaxUID;
-        if (!transferSyntax.contains(tsuid))
-            tsuid = UID.ExplicitVRLittleEndian;
+        String tsuid = acceptedTransferSyntax(ref.transferSyntaxUID);
         MediaType mediaType = MediaType.valueOf(
                 "application/dicom;transfer-syntax=" + tsuid);
         return Response.ok(new DicomObjectOutput(ref, attrs, tsuid,
                     mediaType, LOG, this, 0),
                 mediaType).build();
+    }
+
+    private String acceptedTransferSyntax(String tsuid) {
+        return transferSyntax.contains(tsuid) || transferSyntax.contains("*")
+                ? tsuid
+                : UID.ExplicitVRLittleEndian;
     }
 
     private Response retrieveJPEG(final InstanceFileRef ref, 

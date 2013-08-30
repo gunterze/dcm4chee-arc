@@ -29,7 +29,7 @@
             + "<a href='#' title='Previous Series'>&lt;</a>&nbsp;"
             + "<a href='#' title='Next Series'>&gt;</a>"
             +"</td>"
-            + "<th colspan='3'>Station Name</th>"
+            + "<th colspan='2'>Station Name</th>"
             + "<th>Series #</th>"
             + "<th>PPS Date</th>"
             + "<th>PPS Time</th>"
@@ -45,10 +45,15 @@
             + "<a href='#' title='Previous Instances'>&lt;</a>&nbsp;"
             + "<a href='#' title='Next Instances'>&gt;</a>"
             + "</td>"
+            + "<th>SOP Class UID</th>"
+            + "<th>Instance #</th>"
             + "<th>Content Date</th>"
             + "<th>Content Time</th>"
-            + "<th>Instance #</th>"
-            + "<th colspan='7'>Content Description</th>",
+            + "<th colspan='5'>Content Description</th>",
+
+        APPLICATION_DICOM = "&contentType=application/dicom",
+
+        IMAGE_JPEG_FRAME_NUMBER_1 = "&contentType=image/jpeg&frameNumber=1",
 
         search = function (url, onSuccess) {
             var xhr = new XMLHttpRequest();
@@ -164,16 +169,19 @@
 
         addStudyRow = function (list, n, study) {
             var row = document.createElement("tr"),
-                studyUID = valueOf(study.StudyInstanceUID),
+                studyUID = study.StudyInstanceUID.Value[0],
+                retrieveURI = study.RetrieveURI.Value[0],
                 studyExpand, cell, showAttributesLink, searchSeriesLink;
 
             row.className = "study";
             studyExpand = row.insertCell(-1),
             cell = row.insertCell(-1),
-            cell.innerHTML = SHOW_ATTRS + "&nbsp;" + SEARCH_SERIES;
+            cell.innerHTML = SHOW_ATTRS 
+                + "&nbsp;<a href='" + retrieveURI + "' title='Download Study'>D</a>&nbsp;"
+                + SEARCH_SERIES;
             showAttributesLink = cell.firstChild;
             searchSeriesLink = cell.lastChild;
-            insertCell(row, 4, pnOf(study.PatientName));
+            insertCell(row, 3, pnOf(study.PatientName));
             insertCell(row, 1, valueOf(study.PatientID));
             insertCell(row, 1, dateOf(study.StudyDate));
             insertCell(row, 1, timeOf(study.StudyTime));
@@ -184,7 +192,7 @@
             insertCell(row, 1, valueOf(study.NumberOfStudyRelatedInstances));
 
             showAttributesLink.onclick = function () {
-                showAttributes(row, showAttributesLink, 13, study, [ studyExpand ]);
+                showAttributes(row, showAttributesLink, 12, study, [ studyExpand ]);
             };
 
             studyExpand.innerHTML = n + ".";
@@ -254,17 +262,20 @@
 
         addSeriesRow = function (list, n, series, studyExpand) {
             var row = document.createElement("tr"),
-                studyUID = valueOf(series.StudyInstanceUID),
-                seriesUID = valueOf(series.SeriesInstanceUID),
+                studyUID = series.StudyInstanceUID.Value[0],
+                seriesUID = series.SeriesInstanceUID.Value[0],
+                retrieveURI = series.RetrieveURI.Value[0],
                 seriesExpand, cell, showAttributesLink, searchInstancesLink;
 
             row.className = "series";
             seriesExpand = row.insertCell(-1),
             cell = row.insertCell(-1),
-            cell.innerHTML = SHOW_ATTRS + "&nbsp;" + SEARCH_INSTANCES;
+            cell.innerHTML = SHOW_ATTRS
+                + "&nbsp;<a href='" + retrieveURI + "' title='Download Series'>D</a>&nbsp;"
+                + SEARCH_INSTANCES;
             showAttributesLink = cell.firstChild;
             searchInstancesLink = cell.lastChild;;
-            insertCell(row, 3, valueOf(series.StationName));
+            insertCell(row, 2, valueOf(series.StationName));
             insertCell(row, 1, valueOf(series.SeriesNumber));
             insertCell(row, 1, dateOf(series.PerformedProcedureStepStartDate));
             insertCell(row, 1, timeOf(series.PerformedProcedureStepStartTime));
@@ -274,7 +285,7 @@
             insertCell(row, 1, valueOf(series.NumberOfSeriesRelatedInstances));
 
             showAttributesLink.onclick = function () {
-                showAttributes(row, showAttributesLink, 12, series, [ studyExpand, seriesExpand ]);
+                showAttributes(row, showAttributesLink, 11, series, [ studyExpand, seriesExpand ]);
             };
 
             seriesExpand.innerHTML = n + ".";
@@ -351,28 +362,46 @@
             };
         },
 
+        wadoURIof = function (rsuri) {
+            return rsuri.replace("/studies/", "?requestType=WADO&studyUID=")
+                        .replace("/series/", "&seriesUID=")
+                        .replace("/instances/", "&objectUID=");
+        },
+
         addInstanceRow = function (list, n, inst, studyExpand, seriesExpand) {
             var row = document.createElement("tr"),
                 dateAttr = inst.ContentDate,
                 timeAttr = inst.ContentTime,
+                wadouri = wadoURIof(inst.RetrieveURI.Value[0]),
                 cell, showAttributesLink;
 
             row.className = "instance";
             row.insertCell(-1).innerHTML = n + ".";
             cell = row.insertCell(-1),
-            cell.innerHTML = SHOW_ATTRS;
+            cell.innerHTML = SHOW_ATTRS
+                + "&nbsp;<a href='"
+                + wadouri + APPLICATION_DICOM
+                + "' title='Download Object'>D</a>"
+                + "&nbsp;<a href='"
+                + wadouri + APPLICATION_DICOM + "&transferSyntax=*"
+                + "' title='Download Compressed Object'>C</a>"
+                + "&nbsp;<a href='"
+                + wadouri + (inst.NumberOfFrames ? IMAGE_JPEG_FRAME_NUMBER_1 : "")
+                + "' title='View' target=_blank>V</a>";
             showAttributesLink = cell.firstChild;
+
             if (!dateAttr) {
                 dateAttr = inst.PresentationCreationDate;
                 timeAttr = inst.PresentationCreationTime;
             }
+            insertCell(row, 1, valueOf(inst.SOPClassUID));
+            insertCell(row, 1, valueOf(inst.InstanceNumber));
             insertCell(row, 1, dateOf(dateAttr));
             insertCell(row, 1, timeOf(timeAttr));
-            insertCell(row, 1, valueOf(inst.InstanceNumber));
-            insertCell(row, 7, contentDescriptionOf(inst));
+            insertCell(row, 5, contentDescriptionOf(inst));
     
             showAttributesLink.onclick = function () {
-                showAttributes(row, showAttributesLink, 12, inst,
+                showAttributes(row, showAttributesLink, 11, inst,
                         [ studyExpand, seriesExpand, row.firstChild ]);
             };
     
