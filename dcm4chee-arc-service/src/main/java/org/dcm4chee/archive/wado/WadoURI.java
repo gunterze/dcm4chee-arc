@@ -304,13 +304,9 @@ public class WadoURI extends Object  {
     private String selectTransferSyntax(String tsuid) {
         return transferSyntax.contains("*") 
                 || transferSyntax.contains(tsuid)
-                || !canDecompress(tsuid)
+                || !ImageReaderFactory.canDecompress(tsuid)
                 ? tsuid
                 : UID.ExplicitVRLittleEndian;
-    }
-
-    private boolean canDecompress(String tsuid) {
-        return ImageReaderFactory.getImageReaderParam(tsuid) != null;
     }
 
     private Response retrieveJPEG(final InstanceFileRef ref, 

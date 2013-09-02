@@ -69,7 +69,7 @@ import org.dcm4che.data.Fragments;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
 import org.dcm4che.imageio.codec.Decompressor;
-import org.dcm4che.imageio.codec.TransferSyntaxType;
+import org.dcm4che.imageio.codec.ImageReaderFactory;
 import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.io.DicomInputStream.IncludeBulkData;
 import org.dcm4che.net.ApplicationEntity;
@@ -138,7 +138,22 @@ public class WadoRS {
     @Context
     private HttpHeaders headers;
 
-    private List<MediaType> mediaTypes;
+    private boolean acceptAll;
+
+    private boolean acceptZip;
+
+    private boolean acceptDicomXML;
+
+    private boolean acceptDicom;
+
+    private boolean acceptOctetStream;
+
+    private boolean acceptBulkdata;
+
+    private List<String> acceptedTransferSyntaxes;
+
+    private List<MediaType> acceptedBulkdataMediaTypes;
+
     private String method;
 
     private String toBulkDataURI(String uri) {
@@ -154,37 +169,57 @@ public class WadoRS {
         if (ae == null || !ae.isInstalled())
             throw new WebApplicationException(Status.SERVICE_UNAVAILABLE);
 
-        this.mediaTypes = new ArrayList<MediaType>(acceptableMediaTypes.size());
-        for (MediaType mediaType : acceptableMediaTypes)
+        this.acceptedTransferSyntaxes =
+                new ArrayList<String>(acceptableMediaTypes.size());
+
+        this.acceptedBulkdataMediaTypes =
+                new ArrayList<MediaType>(acceptableMediaTypes.size());
+
+        for (MediaType mediaType : acceptableMediaTypes) {
             if (mediaType.isWildcardType())
-                mediaTypes.add(mediaType);
-            else if (mediaType.isCompatible(MediaTypes.MULTIPART_RELATED_TYPE))
+                acceptAll = true;
+            else if (mediaType.isCompatible(MediaTypes.APPLICATION_ZIP_TYPE))
+                acceptZip = true;
+            else if (mediaType.isCompatible(MediaTypes.MULTIPART_RELATED_TYPE)) {
                 try {
-                    mediaTypes.add(
-                            MediaType.valueOf(mediaType.getParameters().get("type")));
+                    MediaType relatedType = MediaType.valueOf(
+                            mediaType.getParameters().get("type"));
+                    if (relatedType.isCompatible(
+                            MediaTypes.APPLICATION_DICOM_TYPE)) {
+                        acceptDicom = true;
+                        acceptedTransferSyntaxes.add(
+                                relatedType.getParameters().get("transfer-syntax"));
+                    } else if (relatedType.isCompatible(
+                            MediaTypes.APPLICATION_DICOM_XML_TYPE)) {
+                        acceptDicomXML = true;
+                    } else {
+                        acceptBulkdata = true;
+                        if (relatedType.isCompatible(
+                                MediaType.APPLICATION_OCTET_STREAM_TYPE))
+                            acceptOctetStream = true;
+                        acceptedBulkdataMediaTypes.add(relatedType);
+                    }
                 } catch (IllegalArgumentException e) {
                     throw new WebApplicationException(Status.BAD_REQUEST);
                 }
+            }
+        }
     }
 
     private String selectDicomTransferSyntaxes(String ts) {
-        String littleEndianTS = null;
-        for (MediaType mediaType : mediaTypes) {
-            if (mediaType.isCompatible(MediaTypes.APPLICATION_DICOM_TYPE)) {
-                String ts1 = mediaType.getParameters().get("transfer-syntax");
-                if (ts1 == null || ts1.equals(ts))
-                    return ts;
-
-                if (littleEndianTS == null
-                        && (ts1.equals(UID.ExplicitVRLittleEndian)
-                         || ts1.equals(UID.ImplicitVRLittleEndian)))
-                    littleEndianTS = ts1;
+        for (String ts1 : acceptedTransferSyntaxes) {
+            if (ts1 == null || ts1.equals(ts))
+                return ts;
+        }
+        if (ImageReaderFactory.canDecompress(ts)) {
+            if (acceptedTransferSyntaxes.contains(UID.ExplicitVRLittleEndian)) {
+                return UID.ExplicitVRLittleEndian;
+            }
+            if (acceptedTransferSyntaxes.contains(UID.ImplicitVRLittleEndian)) {
+                return UID.ImplicitVRLittleEndian;
             }
         }
-        return (littleEndianTS != null
-                && TransferSyntaxType.forUID(ts) != TransferSyntaxType.MPEG)
-                    ? littleEndianTS
-                    : null;
+        return null;
     }
 
     private MediaType selectBulkdataMediaTypeForTransferSyntax(String ts) {
@@ -195,39 +230,26 @@ public class WadoRS {
         if (requiredMediaType == null)
             return null;
 
+        if (acceptAll)
+            return requiredMediaType;
+
         boolean defaultTS = !requiredMediaType.getParameters()
                 .containsKey("transfer-syntax");
-        for (MediaType mediaType : mediaTypes) {
-            if (mediaType.isWildcardType())
-                return requiredMediaType;
-
+        for (MediaType mediaType : acceptedBulkdataMediaTypes) {
             if (mediaType.isCompatible(requiredMediaType)) {
                 String ts1 = mediaType.getParameters().get("transfer-syntax");
                 if (ts1 == null ? defaultTS : ts1.equals(ts))
                     return requiredMediaType;
             }
         }
-        return (!MediaTypes.isMultiframeMediaType(requiredMediaType)
-                    && isAccepted(MediaType.APPLICATION_OCTET_STREAM_TYPE))
-                ? MediaType.APPLICATION_OCTET_STREAM_TYPE
-                : null;
-    }
-
-    private boolean isApplicationDicomPreferred() {
-        return mediaTypes.get(0).isCompatible(MediaTypes.APPLICATION_DICOM_TYPE);
-    }
-
-    private boolean isAccepted(MediaType type) {
-        for (MediaType mediaType : mediaTypes) {
-            if (mediaType.isCompatible(type))
-                return true;
+        if (acceptOctetStream && ImageReaderFactory.canDecompress(ts)) {
+            return MediaType.APPLICATION_OCTET_STREAM_TYPE;
         }
-        return false;
+        return null;
     }
 
     @GET
     @Path("/studies/{StudyInstanceUID}")
-    @Produces("multipart/related")
     public Response retrieveStudy(
             @PathParam("StudyInstanceUID") String studyInstanceUID) {
         init("retrieveStudy");
@@ -236,7 +258,6 @@ public class WadoRS {
 
     @GET
     @Path("/studies/{StudyInstanceUID}/series/{SeriesInstanceUID}")
-    @Produces("multipart/related")
     public Response retrieveSeries(
             @PathParam("StudyInstanceUID") String studyInstanceUID,
             @PathParam("SeriesInstanceUID") String seriesInstanceUID) {
@@ -246,7 +267,6 @@ public class WadoRS {
 
     @GET
     @Path("/studies/{StudyInstanceUID}/series/{SeriesInstanceUID}/instances/{SOPInstanceUID}")
-    @Produces("multipart/related")
     public Response retrieveInstance(
             @PathParam("StudyInstanceUID") String studyInstanceUID,
             @PathParam("SeriesInstanceUID") String seriesInstanceUID,
@@ -302,41 +322,71 @@ public class WadoRS {
         if (refs.isEmpty())
             throw new WebApplicationException(Status.NOT_FOUND);
 
-        MultipartRelatedOutput output = new MultipartRelatedOutput();
-        int failed = 0;
-        if (isApplicationDicomPreferred()) {
-            for (InstanceFileRef ref : refs)
-                if (!addDicomObjectTo(ref, output))
-                    failed++;
-        } else {
-            for (InstanceFileRef ref : refs)
-                if (addPixelDataTo(ref.uri, output) != STATUS_OK)
-                    failed++;
+        if (acceptDicom || acceptBulkdata) {
+            MultipartRelatedOutput output = new MultipartRelatedOutput();
+            int failed = 0;
+            if (acceptedBulkdataMediaTypes.isEmpty()) {
+                for (InstanceFileRef ref : refs)
+                    if (!addDicomObjectTo(ref, output))
+                        failed++;
+            } else {
+                for (InstanceFileRef ref : refs)
+                    if (addPixelDataTo(ref.uri, output) != STATUS_OK)
+                        failed++;
+            }
+    
+            if (output.getParts().isEmpty())
+                throw new WebApplicationException(Status.NOT_ACCEPTABLE);
+    
+            int status = failed > 0 ? STATUS_PARTIAL_CONTENT : STATUS_OK;
+            return Response.status(status).entity(output).build();
         }
 
-        if (output.getParts().isEmpty())
+        if (!acceptZip && !acceptAll)
             throw new WebApplicationException(Status.NOT_ACCEPTABLE);
 
-        int status = failed > 0 ? STATUS_PARTIAL_CONTENT : STATUS_OK;
-        return Response.status(status).entity(output).build();
+        ZipOutput output = new ZipOutput();
+        for (InstanceFileRef ref : refs) {
+            Attributes attrs = ref
+                    .getAttributes(WadoAttributesCache.INSTANCE
+                    .getAttributes(seriesService, ref.seriesPk));
+            output.addEntry(
+                    new DicomObjectOutput(ref, attrs, ref.transferSyntaxUID));
+        }
+        return Response.ok().entity(output)
+                .type(MediaTypes.APPLICATION_ZIP_TYPE).build();
     }
 
     private Response retrieve(InstanceFileRef ref) {
         if (ref == null)
             throw new WebApplicationException(Status.NOT_FOUND);
 
-        MultipartRelatedOutput output = new MultipartRelatedOutput();
-        int status = STATUS_OK;
-        if (isApplicationDicomPreferred()) {
-            addDicomObjectTo(ref, output);
-        } else {
-            status = addPixelDataTo(ref.uri, output);
+        if (acceptDicom || acceptBulkdata) {
+            int status = STATUS_OK;
+            MultipartRelatedOutput output = new MultipartRelatedOutput();
+            if (acceptBulkdata) {
+                addDicomObjectTo(ref, output);
+            } else {
+                status = addPixelDataTo(ref.uri, output);
+            }
+
+            if (output.getParts().isEmpty())
+                throw new WebApplicationException(Status.NOT_ACCEPTABLE);
+
+            return Response.status(status).entity(output).build();
         }
 
-        if (output.getParts().isEmpty())
+        if (!acceptZip && !acceptAll)
             throw new WebApplicationException(Status.NOT_ACCEPTABLE);
 
-        return Response.status(status).entity(output).build();
+        ZipOutput output = new ZipOutput();
+        Attributes attrs = ref
+                .getAttributes(WadoAttributesCache.INSTANCE
+                .getAttributes(seriesService, ref.seriesPk));
+        output.addEntry(
+                new DicomObjectOutput(ref, attrs, ref.transferSyntaxUID));
+        return Response.ok().entity(output)
+                .type(MediaTypes.APPLICATION_ZIP_TYPE).build();
     }
 
     private Response retrievePixelData(String fileURI, int... frames) {
@@ -351,7 +401,7 @@ public class WadoRS {
     }
 
     private Response retrieveBulkData(BulkData bulkData) {
-        if (!isAccepted(MediaType.APPLICATION_OCTET_STREAM_TYPE))
+        if (!acceptOctetStream)
             throw new WebApplicationException(Status.NOT_ACCEPTABLE);
 
         MultipartRelatedOutput output = new MultipartRelatedOutput();
@@ -369,7 +419,7 @@ public class WadoRS {
         if (refs.isEmpty())
             throw new WebApplicationException(Status.NOT_FOUND);
 
-        if (!isAccepted(MediaTypes.APPLICATION_DICOM_XML_TYPE))
+        if (!acceptDicomXML && !acceptAll)
             throw new WebApplicationException(Status.NOT_ACCEPTABLE);
 
         MultipartRelatedOutput output = new MultipartRelatedOutput();
@@ -379,7 +429,7 @@ public class WadoRS {
         return Response.ok(output).build();
     }
 
-    private boolean addDicomObjectTo(final InstanceFileRef ref,
+    private boolean addDicomObjectTo(InstanceFileRef ref,
             MultipartRelatedOutput output) {
         String tsuid = selectDicomTransferSyntaxes(ref.transferSyntaxUID);
         if (tsuid == null) {

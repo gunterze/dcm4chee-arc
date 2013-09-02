@@ -176,6 +176,17 @@ public class MediaTypes {
             new MediaType("application", "pdf");
 
     /**
+     * "application/zip"
+     */
+    public final static String APPLICATION_ZIP = "application/zip";
+
+    /**
+     * "application/zip"
+     */
+    public final static MediaType APPLICATION_ZIP_TYPE =
+            new MediaType("application", "zip");
+
+    /**
      * "multipart/related"
      */
     public final static String MULTIPART_RELATED = "multipart/related";
