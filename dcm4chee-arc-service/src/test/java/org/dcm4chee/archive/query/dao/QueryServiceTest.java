@@ -101,6 +101,7 @@ public class QueryServiceTest {
         QueryParam queryParam = ParamFactory.createQueryParam();
         IDWithIssuer[] pids = { new IDWithIssuer("DOB*") };
         queryService.createPatientQuery(pids, null, queryParam);
+        queryService.executeQuery();
         assertArrayEquals(
                 new String[] { "DOB_20010101", "DOB_20020202", "DOB_NONE" },
                 matches(queryService, Tag.PatientID));
@@ -112,6 +113,7 @@ public class QueryServiceTest {
         queryService.createPatientQuery(null, 
                 attrs(Tag.PatientName, VR.PN, "OOMIYA^SHOUGO"),
                 queryParam);
+        queryService.executeQuery();
         assertArrayEquals(new String[] { "OOMIYA_SHOUGO" },
                 matches(queryService, Tag.PatientID));
     }
@@ -135,6 +137,7 @@ public class QueryServiceTest {
                 "ISO 2022 IR 6", "ISO 2022 IR 87");
         keys.setString(Tag.PatientName, VR.PN, name);
         queryService.createPatientQuery(null, keys, queryParam);
+        queryService.executeQuery();
         assertArrayEquals(expected_ids, matches(queryService, Tag.PatientID));
     }
 
@@ -177,6 +180,7 @@ public class QueryServiceTest {
         queryService.createPatientQuery(pids,
                 attrs(Tag.PatientName, VR.PN, name),
                 queryParam);
+        queryService.executeQuery();
         assertArrayEquals(expected_ids, matches(queryService, Tag.PatientID));
     }
 
@@ -210,6 +214,7 @@ public class QueryServiceTest {
         IDWithIssuer[] pids = { new IDWithIssuer("DOB*") };
         queryService.createPatientQuery(pids,
                 attrs(Tag.PatientBirthDate, VR.DA, date), queryParam);
+        queryService.executeQuery();
         assertArrayEquals(expected_ids, matches(queryService, Tag.PatientID));
     }
 
@@ -247,6 +252,7 @@ public class QueryServiceTest {
         IDWithIssuer[] pids = { new IDWithIssuer("MODS_IN_STUDY") };
         queryService.createStudyQuery(pids,
                 attrs(Tag.ModalitiesInStudy, VR.CS, modality), queryParam);
+        queryService.executeQuery();
         assertArrayEquals(expected_ids, matches(queryService, Tag.StudyID));
     }
 
@@ -365,6 +371,7 @@ public class QueryServiceTest {
         if (time != null)
             keys.setString(Tag.StudyTime, VR.TM, time);
         queryService.createStudyQuery(pids, keys, queryParam);
+        queryService.executeQuery();
         assertArrayEquals(expected_ids, matches(queryService, Tag.StudyID));
     }
 
@@ -393,6 +400,7 @@ public class QueryServiceTest {
         keys.newSequence(Tag.IssuerOfAccessionNumberSequence, 1)
             .add(attrs(Tag.LocalNamespaceEntityID, VR.UT, issuer));
         queryService.createStudyQuery(pids, keys, queryParam);
+        queryService.executeQuery();
         assertArrayEquals(expected_ids, matches(queryService, Tag.StudyID));
     }
 
@@ -420,6 +428,7 @@ public class QueryServiceTest {
         item.setString(Tag.CodingSchemeDesignator, VR.SH, designator);
         keys.newSequence(Tag.ProcedureCodeSequence, 1).add(item);
         queryService.createStudyQuery(pids, keys, queryParam);
+        queryService.executeQuery();
         assertArrayEquals(expected_ids, matches(queryService, Tag.StudyID));
     }
 
@@ -428,6 +437,7 @@ public class QueryServiceTest {
         QueryParam queryParam = ParamFactory.createQueryParam();
         IDWithIssuer[] pids = { new IDWithIssuer("MODS_IN_STUDY") };
         queryService.createSeriesQuery(pids, attrs(Tag.Modality, VR.CS, "PR"), queryParam);
+        queryService.executeQuery();
         assertArrayEquals(
                 new String[] { 
                         "1.2.40.0.13.1.1.99.16.2",
@@ -476,6 +486,7 @@ public class QueryServiceTest {
         IDWithIssuer[] pids = { new IDWithIssuer("MODS_IN_STUDY") };
         queryService.createSeriesQuery(pids,
                 attrs(Tag.ModalitiesInStudy, VR.CS, modality), queryParam);
+        queryService.executeQuery();
         assertArrayEquals(expected_ids, matches(queryService, Tag.SeriesInstanceUID));
     }
 
@@ -494,6 +505,7 @@ public class QueryServiceTest {
         issuer.setString(Tag.LocalNamespaceEntityID, VR.UT, "DCM4CHEE_TESTDATA_ACCNO_ISSUER_1");
         
         queryService.createSeriesQuery(pids, keys, queryParam);
+        queryService.executeQuery();
         assertArrayEquals(new String[] { "1.2.40.0.13.1.1.99.13.1" }, 
                 matches(queryService, Tag.SeriesInstanceUID));
     }
@@ -506,6 +518,7 @@ public class QueryServiceTest {
         keys.setString(Tag.Modality, VR.CS, "SR");
         keys.setString(Tag.VerificationFlag, VR.CS, "VERIFIED");
         queryService.createInstanceQuery(pids, keys, queryParam);
+        queryService.executeQuery();
         assertArrayEquals(
                 new String[] { 
                         "1.2.40.0.13.1.1.99.23.1.2",
@@ -539,6 +552,7 @@ public class QueryServiceTest {
         item.setString(Tag.CodingSchemeDesignator, VR.SH, designator);
         keys.newSequence(Tag.ConceptNameCodeSequence, 1).add(item);
         queryService.createInstanceQuery(pids, keys, queryParam);
+        queryService.executeQuery();
         assertArrayEquals(expected_uids,
                 matches(queryService, Tag.SOPInstanceUID));
     }
@@ -580,6 +594,7 @@ public class QueryServiceTest {
         item.setString(Tag.VerifyingObserverName, VR.PN, name);
         keys.newSequence(Tag.VerifyingObserverSequence, 1).add(item);
         queryService.createInstanceQuery(pids, keys, queryParam);
+        queryService.executeQuery();
         assertArrayEquals(expected_uids,
                 matches(queryService, Tag.SOPInstanceUID));
     }
@@ -595,6 +610,7 @@ public class QueryServiceTest {
         contentSeq.add(contentSequenceItem("TCE104", "IHERADTF", null,
                 "CONTAINS", "Max's Abstract"));
         queryService.createInstanceQuery(pids, keys, queryParam);
+        queryService.executeQuery();
         assertArrayEquals(
                 new String[] { "1.2.40.0.13.1.1.99.27.1.1" },
                 matches(queryService, Tag.SOPInstanceUID));
@@ -611,6 +627,7 @@ public class QueryServiceTest {
         contentSeq.add(contentSequenceCodeItem("TCE105", "IHERADTF", null,
                 "466.0", "I9C", null, "CONTAINS"));
         queryService.createInstanceQuery(pids, keys, queryParam);
+        queryService.executeQuery();
         assertArrayEquals(
                 new String[] { "1.2.40.0.13.1.1.99.27.1.2" },
                 matches(queryService, Tag.SOPInstanceUID));
