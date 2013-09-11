@@ -71,7 +71,7 @@
     create index req_visit_fk_idx on request (visit_fk);
 
     create index series_study_fk_idx on series (study_fk);
-    create index series_iuid_idx on series (series_iuid);
+    create unique index series_iuid_idx on series (series_iuid);
     create index series_no_idx on series (series_no);
     create index series_modality_idx on series (modality);
     create index series_station_name_idx on series (station_name);
@@ -108,7 +108,7 @@
     create index sps_station_aet_station_aet_idx on sps_station_aet (station_aet);
 
     create index study_patient_fk_idx on study (patient_fk);
-    create index study_iuid_idx on study (study_iuid);
+    create unique index study_iuid_idx on study (study_iuid);
     create index study_id_idx on study (study_id);
     create index study_date_idx on study (study_date);
     create index study_time_idx on study (study_time);
