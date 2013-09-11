@@ -44,7 +44,6 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Code;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
-import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Device;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4chee.archive.conf.ArchiveAEExtension;
@@ -231,9 +230,9 @@ public class StoreParam {
         return storeParam;
     }
 
-    public static StoreParam valueOf(ApplicationEntity ae) {
-        StoreParam storeParam = StoreParam.valueOf(ae.getDevice());
-        ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
+    public static StoreParam valueOf(ArchiveAEExtension aeExt) {
+        StoreParam storeParam = StoreParam.valueOf(
+                aeExt.getApplicationEntity().getDevice());
         storeParam.setStoreOriginalAttributes(aeExt.isStoreOriginalAttributes());
         storeParam.setModifyingSystem(aeExt.getEffectiveModifyingSystem());
         storeParam.setRetrieveAETs(aeExt.getRetrieveAETs());

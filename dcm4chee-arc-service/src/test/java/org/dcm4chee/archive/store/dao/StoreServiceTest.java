@@ -56,18 +56,16 @@ import org.dcm4chee.archive.entity.Instance;
 import org.dcm4chee.archive.entity.PerformedProcedureStep;
 import org.dcm4chee.archive.entity.Series;
 import org.dcm4chee.archive.entity.Study;
+import org.dcm4chee.archive.mpps.dao.IANQueryService;
 import org.dcm4chee.archive.mpps.dao.MPPSService;
 import org.dcm4chee.archive.mpps.dao.PPSWithIAN;
 import org.dcm4chee.archive.test.util.Deployments;
 import org.dcm4chee.archive.test.util.ParamFactory;
-import org.dcm4chee.archive.util.BeanLocator;
 import org.dcm4chee.archive.util.FileUtils;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -86,13 +84,16 @@ public class StoreServiceTest {
     @EJB
     private MPPSService mppsService;
 
+    @EJB
     private StoreService storeService;
+
+    @EJB
+    private IANQueryService ianQueryService;
 
     @Deployment
     public static WebArchive createDeployment() {
         WebArchive arc = Deployments.createWebArchive()
                 .addClass(ParamFactory.class)
-                .addClass(BeanLocator.class)
                 .addClass(FileUtils.class)
                 .addPackage("org.dcm4chee.archive.common")
                 .addPackage("org.dcm4chee.archive.dao")
@@ -114,17 +115,6 @@ public class StoreServiceTest {
         patientService.deletePatient(pid);
     }
 
-    @Before
-    public void initStoreService() {
-        storeService = BeanLocator.lookup(StoreService.class,
-                "java:/global/test/StoreService");
-    }
-
-    @After
-    public void closeStoreService() {
-        storeService.close();
-    }
-
     @Test
     public void testNewInstance() throws Exception {
         Attributes mpps_create = load("testdata/mpps-create.xml");
@@ -132,42 +122,45 @@ public class StoreServiceTest {
         String sourceAET = mpps_create.getString(Tag.PerformedStationAETitle);
         clearData(pid);
         StoreParam storeParam = ParamFactory.createStoreParam();
+        StoreContext storeContext = new StoreContext(storeParam);
         PerformedProcedureStep pps = mppsService.createPerformedProcedureStep(
                 MPPS_IUID, mpps_create, storeParam);
         assertEquals(PerformedProcedureStep.Status.IN_PROGRESS, pps.getStatus());
         PPSWithIAN ppsWithIAN = mppsService.updatePerformedProcedureStep(
                 MPPS_IUID, load("testdata/mpps-set.xml"), storeParam);
         assertEquals(PerformedProcedureStep.Status.COMPLETED, ppsWithIAN.pps.getStatus());
-        storeService.setStoreParam(storeParam);
         storeParam.setRetrieveAETs("AET_1","AET_2");
         storeParam.setExternalRetrieveAET("AET_3");
+        storeContext.setAvailability(Availability.ONLINE);
         Attributes modified1 = new Attributes();
         Instance ct1 = storeService.newInstance(sourceAET,
-                load("testdata/store-ct-1.xml"), modified1, Availability.ONLINE);
+                load("testdata/store-ct-1.xml"), modified1, storeContext);
         assertTrue(modified1.isEmpty());
         storeParam.setRetrieveAETs("AET_2");
         storeParam.setExternalRetrieveAET("AET_3");
+        storeContext.setAvailability(Availability.NEARLINE);
         Attributes modified2 = new Attributes();
         Instance ct2 = storeService.newInstance(sourceAET,
-                load("testdata/store-ct-2.xml"), modified2, Availability.NEARLINE);
+                load("testdata/store-ct-2.xml"), modified2, storeContext);
         assertEquals(2, modified2.size());
         assertEquals("TEST-REPLACE", modified2.getString(Tag.StudyID));
         assertEquals("0", modified2.getString(Tag.SeriesNumber));
         storeParam.setRetrieveAETs("AET_1","AET_2");
         storeParam.setExternalRetrieveAET("AET_4");
+        storeContext.setAvailability(Availability.ONLINE);
         Attributes modified3 = new Attributes();
         Instance pr1 = storeService.newInstance(sourceAET,
-                load("testdata/store-pr-1.xml"), modified3, Availability.ONLINE);
+                load("testdata/store-pr-1.xml"), modified3, storeContext);
         assertEquals(1, modified3.size());
         assertEquals("TEST-REPLACE", modified3.getString(Tag.StudyID));
-        List<Attributes> ians = storeService.createIANsforCurrentMPPS();
+        List<Attributes> ians = ianQueryService.createIANsforMPPS(storeContext.getCurrentMPPS());
         assertEquals(1, ians.size());
 
-        Series ctSeries = ct1.getSeries();
+        Series ctSeries = ct2.getSeries();
         Series prSeries = pr1.getSeries();
-        Study study = ctSeries.getStudy();
-        assertEquals(ctSeries, ct2.getSeries());
-        assertEquals(study, prSeries.getStudy());
+        Study study = prSeries.getStudy();
+        assertEquals(ct1.getSeries().getPk(), ctSeries.getPk());
+        assertEquals(ctSeries.getStudy().getPk(), study.getPk());
         assertArrayEquals(new String[]{"CT", "PR" }, sort(study.getModalitiesInStudy()));
         assertArrayEquals(
                 new String[]{

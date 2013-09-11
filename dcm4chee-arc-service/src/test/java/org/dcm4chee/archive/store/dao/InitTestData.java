@@ -49,14 +49,11 @@ import org.dcm4chee.archive.entity.Availability;
 import org.dcm4chee.archive.entity.Patient;
 import org.dcm4chee.archive.test.util.Deployments;
 import org.dcm4chee.archive.test.util.ParamFactory;
-import org.dcm4chee.archive.util.BeanLocator;
 import org.dcm4chee.archive.util.FileUtils;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -124,12 +121,12 @@ public class InitTestData {
     @EJB
     private RequestService requestService;
 
+    @EJB
     private StoreService storeService;
 
     @Deployment
     public static WebArchive createDeployment() {
         WebArchive arc = Deployments.createWebArchive()
-                .addClass(BeanLocator.class)
                 .addClass(FileUtils.class)
                 .addClass(ParamFactory.class)
                 .addPackage("org.dcm4chee.archive.common")
@@ -146,25 +143,15 @@ public class InitTestData {
         return arc;
     }
 
-    @Before
-    public void initStoreService() {
-        storeService = BeanLocator.lookup(StoreService.class,
-                "java:/global/test/StoreService");
-    }
-
-    @After
-    public void closeStoreService() {
-        storeService.close();
-    }
-
     @Test
     public void initTestData() throws Exception {
         StoreParam storeParam = ParamFactory.createStoreParam();
         storeParam.setRetrieveAETs(RETRIEVE_AETS);
-        storeService.setStoreParam(storeParam);
+        StoreContext storeContext = new StoreContext(storeParam);
+        storeContext.setAvailability(Availability.ONLINE);
         for (String res : INSTANCES)
             storeService.newInstance(SOURCE_AET, load(res), new Attributes(),
-                    Availability.ONLINE);
+                    storeContext);
         Patient mwlPat = null;
         for (String res : MWL_ITEMS) {
             Attributes ds = load(res);

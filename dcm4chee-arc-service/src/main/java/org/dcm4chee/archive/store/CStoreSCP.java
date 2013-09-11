@@ -83,10 +83,11 @@ import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.entity.FileRef;
 import org.dcm4chee.archive.entity.FileSystem;
 import org.dcm4chee.archive.entity.Instance;
+import org.dcm4chee.archive.entity.PerformedProcedureStep;
 import org.dcm4chee.archive.mpps.dao.IANQueryService;
+import org.dcm4chee.archive.store.dao.StoreContext;
 import org.dcm4chee.archive.store.dao.StoreService;
 import org.dcm4chee.archive.util.AuditUtils;
-import org.dcm4chee.archive.util.BeanLocator;
 import org.dcm4chee.archive.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,7 +98,7 @@ import org.slf4j.LoggerFactory;
  */
 public class CStoreSCP extends BasicCStoreSCP {
 
-    private static final String STORE_SERVICE_PROPERTY = CStoreSCP.class.getName();
+    private static final String STORE_CONTEXT_PROPERTY = StoreContext.class.getName();
     private static final String AUDIT_MESSAGE_SUCCESS = "InstanceStoredSuccess";
     private static final String AUDIT_MESSAGE_FAILURE = "InstanceStoredFailed";
 
@@ -106,6 +107,9 @@ public class CStoreSCP extends BasicCStoreSCP {
 
     @EJB
     private IANQueryService ianQueryService;
+
+    @EJB
+    private StoreService storeService;
 
     public CStoreSCP() {
         super("*");
@@ -118,6 +122,20 @@ public class CStoreSCP extends BasicCStoreSCP {
 
         ApplicationEntity ae = as.getApplicationEntity();
         ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
+        if (aeExt == null)
+            throw new DicomServiceException(
+                    org.dcm4che.net.Status.ProcessingFailure,
+                    "No ArchiveAEExtension configured for " + ae.getAETitle());
+
+        AttributesFormat filePathFormat = aeExt.getStorageFilePathFormat();
+        if (filePathFormat == null)
+            throw new DicomServiceException(
+                    org.dcm4che.net.Status.ProcessingFailure,
+                    "No StorageFilePathFormat configured for "
+                            + ae.getAETitle());
+
+        StoreContext storeContext = getStoreContext(as, ae, aeExt);
+
         String sourceAET = as.getRemoteAET();
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         String iuid = rq.getString(Tag.AffectedSOPInstanceUID);
@@ -130,15 +148,8 @@ public class CStoreSCP extends BasicCStoreSCP {
             MessageDigest digest = createMessageDigest(
                     aeExt.getDigestAlgorithm());
 
-            AttributesFormat filePathFormat = aeExt.getStorageFilePathFormat();
-            if (filePathFormat == null)
-                throw new DicomServiceException(org.dcm4che.net.Status.ProcessingFailure,
-                        "No Storage File Path Format configured for "
-                                + ae.getAETitle());
 
-            StoreService store = initStoreService(as, ae, aeExt);
-
-            FileSystem storeDir = store.getCurrentFileSystem();
+            FileSystem storeDir = storeContext.getFileSystem();
             
             destFile = spoolFile = File.createTempFile("dcm", ".dcm",
                     spoolDir(storeDir, aeExt, sourceAET, cuid));
@@ -172,13 +183,17 @@ public class CStoreSCP extends BasicCStoreSCP {
             }
             destFile = f;
             Attributes modified = coerceAttributes(aeExt, sourceAET, cuid, attrs);
-            FileRef fileRef = store.addFileRef(sourceAET, attrs, modified, destFile, 
-                    digest(digest), tsuid);
+            FileRef fileRef = storeService.addFileRef(
+                    sourceAET, attrs, modified, destFile, 
+                    digest(digest), tsuid, storeContext);
             if (!modified.isEmpty())
                 onCoercionOfDataElements(as, aeExt, attrs, modified, rsp);
             if (fileRef != null) {
-                if (aeExt.hasIANDestinations())
-                    scheduleIANs(store, ae, attrs, fileRef.getInstance());
+                PerformedProcedureStep mpps = storeContext.getPreviousMPPS();
+                scheduleIANsForMPPS(aeExt, mpps);
+                storeContext.setPreviousMPPS(null);
+                
+                scheduleIANForRejectionNote(aeExt, attrs, fileRef.getInstance());
             } else {
                deleteFile(as, destFile);
             }
@@ -260,24 +275,33 @@ public class CStoreSCP extends BasicCStoreSCP {
         }
     }
 
-    private void scheduleIANs(StoreService store, ApplicationEntity ae,
+    public void scheduleIANForRejectionNote(ArchiveAEExtension aeExt,
             Attributes attrs, Instance instance) {
-        for (Attributes ian : store.createIANsforPreviousMPPS())
-            scheduleIAN(ae, ian);
+        if (aeExt.hasIANDestinations()) {
+            switch (instance.getAvailability()) {
+            case REJECTED_FOR_QUALITY_REASONS_REJECTION_NOTE:
+            case REJECTED_FOR_PATIENT_SAFETY_REASONS_REJECTION_NOTE:
+            case DATA_RETENTION_PERIOD_EXPIRED_REJECTION_NOTE:
+                scheduleIAN(aeExt, ianQueryService.createIANforRejectionNote(attrs));
+                break;
+            case INCORRECT_MODALITY_WORKLIST_ENTRY_REJECTION_NOTE:
+                for (Attributes ian : ianQueryService
+                        .createIANsforIncorrectModalityWorklistEntry(attrs))
+                    scheduleIAN(aeExt, ian);
+                break;
+            default:
+            }
+        }
+    }
 
-        switch (instance.getAvailability()) {
-        case REJECTED_FOR_QUALITY_REASONS_REJECTION_NOTE:
-        case REJECTED_FOR_PATIENT_SAFETY_REASONS_REJECTION_NOTE:
-        case DATA_RETENTION_PERIOD_EXPIRED_REJECTION_NOTE:
-            scheduleIAN(ae, ianQueryService.createIANforRejectionNote(attrs));
-            break;
-        case INCORRECT_MODALITY_WORKLIST_ENTRY_REJECTION_NOTE:
-            for (Attributes ian : ianQueryService
-                    .createIANsforIncorrectModalityWorklistEntry(attrs))
-                scheduleIAN(ae, ian);
-            break;
-        default:
-            break;
+    public void scheduleIANsForMPPS(ArchiveAEExtension aeExt,
+            PerformedProcedureStep mpps) {
+        if (aeExt.hasIANDestinations()
+                && mpps != null
+                && mpps.getStatus() != PerformedProcedureStep.Status.IN_PROGRESS) {
+            for (Attributes ian : ianQueryService.createIANsforMPPS(mpps)) {
+                scheduleIAN(aeExt, ian);
+            }
         }
     }
 
@@ -371,58 +395,59 @@ public class CStoreSCP extends BasicCStoreSCP {
     }
 
 
-    private void scheduleIAN(ApplicationEntity ae, Attributes ian) {
-        Archive r = Archive.getInstance();
-        if (ian != null)
-        for (String remoteAET : ae.getAEExtension(ArchiveAEExtension.class)
-                .getIANDestinations())
-            r.scheduleIAN(ae.getAETitle(), remoteAET, ian);
-    }
+    private void scheduleIAN(ArchiveAEExtension aeExt, Attributes ian) {
+        if (ian == null)
+            return;
+
+        String localAET = aeExt.getApplicationEntity().getAETitle();
+        for (String remoteAET : aeExt.getIANDestinations())
+            Archive.getInstance().scheduleIAN(localAET, remoteAET, ian);
+
+}
 
     private String digest(MessageDigest digest) {
         return digest != null ? TagUtils.toHexString(digest.digest()) : null;
     }
 
-    private StoreService initStoreService(Association as, ApplicationEntity ae,
+    private StoreContext getStoreContext(Association as, ApplicationEntity ae,
             ArchiveAEExtension aeExt) throws DicomServiceException {
-        StoreService store =
-                    (StoreService) as.getProperty(STORE_SERVICE_PROPERTY);
-        if (store == null) {
-            String fsGroupID = aeExt.getFileSystemGroupID();
-            if (fsGroupID == null)
-                throw new DicomServiceException(Status.ProcessingFailure,
-                        "No File System Group ID configured for "
-                                + ae.getAETitle());
-            store = BeanLocator.lookup(StoreService.class);
-            store.setStoreParam(StoreParam.valueOf(ae));
-            store.selectFileSystem(fsGroupID, aeExt.getInitFileSystemURI());
-            as.setProperty(STORE_SERVICE_PROPERTY, store);
-        }
-        return store;
-    }
 
-    private void closeStoreService(Association as) {
-        StoreService store =
-                (StoreService) as.clearProperty(STORE_SERVICE_PROPERTY);
-        if (store != null) {
-            ApplicationEntity ae = as.getApplicationEntity();
-            ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
-            if (aeExt.hasIANDestinations()) {
-                for (Attributes ian : store.createIANsforCurrentMPPS()) {
-                    scheduleIAN(ae, ian);
-                }
-            }
-            store.close();
+        StoreContext storeContext =
+                    (StoreContext) as.getProperty(STORE_CONTEXT_PROPERTY);
+        if (storeContext != null)
+            return storeContext;
+
+        String fsGroupID = aeExt.getFileSystemGroupID();
+        if (fsGroupID == null) {
+            throw new DicomServiceException(Status.ProcessingFailure,
+                    "No File System Group ID configured for "
+                            + ae.getAETitle());
         }
+        FileSystem fs = storeService.selectFileSystem(
+                fsGroupID, aeExt.getInitFileSystemURI());
+        storeContext = new StoreContext(StoreParam.valueOf(aeExt));
+        storeContext.setFileSystem(fs);
+
+        as.setProperty(STORE_CONTEXT_PROPERTY, storeContext);
+        return storeContext;
     }
 
     @Override
     public void onClose(Association as) {
-        closeStoreService(as);
+        createIANsforCurrentMPPS(as,
+                (StoreContext) as.clearProperty(STORE_CONTEXT_PROPERTY));
         AuditUtils.sendAuditLogMessage(
                 (AuditMessage) as.clearProperty(AUDIT_MESSAGE_SUCCESS));
         AuditUtils.sendAuditLogMessage(
                 (AuditMessage) as.clearProperty(AUDIT_MESSAGE_FAILURE));
     }
 
+    private void createIANsforCurrentMPPS(Association as,
+            StoreContext storeContext) {
+        if (storeContext != null) {
+            ApplicationEntity ae = as.getApplicationEntity();
+            ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
+            scheduleIANsForMPPS(aeExt, storeContext.getCurrentMPPS());
+        }
+    }
 }

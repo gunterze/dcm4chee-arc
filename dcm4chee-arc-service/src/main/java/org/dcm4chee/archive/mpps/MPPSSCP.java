@@ -82,7 +82,8 @@ public class MPPSSCP extends BasicMPPSSCP {
                 Supplements.supplementMPPS(rqAttrs, sourceAE.getDevice());
             } catch (ConfigurationNotFoundException e) {
             }
-            mppsService.createPerformedProcedureStep(iuid , rqAttrs, StoreParam.valueOf(ae));
+            mppsService.createPerformedProcedureStep(iuid , rqAttrs,
+                    StoreParam.valueOf(aeExt));
         } catch (DicomServiceException e) {
             throw e;
         } catch (Exception e) {
@@ -119,7 +120,7 @@ public class MPPSSCP extends BasicMPPSSCP {
         PPSWithIAN ppsWithIAN;
         try {
             ppsWithIAN = mppsService.updatePerformedProcedureStep(iuid, rqAttrs,
-                    StoreParam.valueOf(ae));
+                    StoreParam.valueOf(aeExt));
         } catch (DicomServiceException e) {
             throw e;
         } catch (Exception e) {

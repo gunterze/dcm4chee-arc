@@ -55,6 +55,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import javax.ejb.EJB;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
@@ -104,8 +105,8 @@ import org.dcm4chee.archive.entity.FileRef;
 import org.dcm4chee.archive.entity.FileSystem;
 import org.dcm4chee.archive.resteasy.LogInterceptor;
 import org.dcm4chee.archive.store.Supplements;
+import org.dcm4chee.archive.store.dao.StoreContext;
 import org.dcm4chee.archive.store.dao.StoreService;
-import org.dcm4chee.archive.util.BeanLocator;
 import org.dcm4chee.archive.util.FileUtils;
 import org.dcm4chee.archive.wado.MediaTypes;
 import org.slf4j.Logger;
@@ -125,6 +126,9 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
 
     //TODO replace my Tag.WarningReason when defined
     private static final int TagWarningReason = 0x00081196;
+
+    @EJB
+    private StoreService storeService;
 
     @Context
     private HttpServletRequest request;
@@ -148,9 +152,7 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
 
     private ArchiveAEExtension aeExt;
 
-    private StoreParam storeParam;
-
-    private StoreService storeService;
+    private StoreContext storeContext;
 
     private MultipartParser parser;
 
@@ -247,8 +249,7 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
                     "No File System Group ID configured for "
                             + ae.getAETitle());
 
-        storeService = BeanLocator.lookup(StoreService.class);
-        storeService.setStoreParam(storeParam = StoreParam.valueOf(ae));
+        storeContext = new StoreContext(StoreParam.valueOf(aeExt));
         storeDir = storeService.selectFileSystem(
                 fsGroupID, aeExt.getInitFileSystemURI());
         String spoolDirectoryPath = aeExt.getSpoolDirectoryPath();
@@ -558,12 +559,12 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
         String tsuid = fmi.getString(Tag.TransferSyntaxUID);
         String sourceAET = fmi.getString(Tag.SourceApplicationEntityTitle);
         Attributes modified = coerceAttributes(sourceAET , cuid, attrs);
-        FileRef fileRef = storeService.addFileRef(sourceAET, attrs,
-                modified, f, 
+        FileRef fileRef = storeService.addFileRef(sourceAET, attrs, modified, f, 
                 digest != null
                     ? TagUtils.toHexString(digest)
                     : null,
-                tsuid);
+                tsuid,
+                storeContext);
 
         if (fileRef == null)
             deleteFile(f);
@@ -578,7 +579,7 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
         if (!modified.isEmpty()) {
             sopRef.setInt(TagWarningReason, VR.US,
                           org.dcm4che.net.Status.CoercionOfDataElements);
-            if (storeParam.isStoreOriginalAttributes()) {
+            if (storeContext.getStoreParam().isStoreOriginalAttributes()) {
                 Sequence seq = attrs.getSequence(Tag.OriginalAttributesSequence);
                 sopRef.newSequence(Tag.OriginalAttributesSequence, 1)
                     .add(new Attributes(seq.get(seq.size()-1)));
@@ -682,9 +683,6 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
     }
 
     private void cleanup() {
-        if (storeService != null)
-            storeService.close();
-
         if (spoolDir != null) {
             for (File f : spoolDir.listFiles())
                 deleteFile(f);
