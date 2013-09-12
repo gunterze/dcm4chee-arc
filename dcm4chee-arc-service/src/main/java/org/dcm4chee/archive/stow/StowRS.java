@@ -373,12 +373,12 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
             @Override
             boolean accept(MediaType mediaType, String bulkdataURI) {
                 String type = mediaType.getType();
-                String subtype = mediaType.getSubtype();
-                return type.equalsIgnoreCase("application")
-                        && (subtype.equalsIgnoreCase("dicom")
-                         || subtype.equalsIgnoreCase("octet-stream")
-                         || subtype.equalsIgnoreCase("zip")
-                         || subtype.equalsIgnoreCase("x-zip"));
+//                String subtype = mediaType.getSubtype();
+                return type.equalsIgnoreCase("application");
+//                        && (subtype.equalsIgnoreCase("dicom")
+//                         || subtype.equalsIgnoreCase("octet-stream")
+//                         || subtype.equalsIgnoreCase("zip")
+//                         || subtype.equalsIgnoreCase("x-zip"));
             }
 
             @Override
