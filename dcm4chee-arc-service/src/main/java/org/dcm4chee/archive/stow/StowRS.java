@@ -98,6 +98,7 @@ import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.TagUtils;
+import org.dcm4che.util.UIDUtils;
 import org.dcm4chee.archive.Archive;
 import org.dcm4chee.archive.common.StoreParam;
 import org.dcm4chee.archive.conf.ArchiveAEExtension;
@@ -121,6 +122,7 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
 
     private static final int TRANSFER_SYNTAX_NOT_SUPPORTED = 0xC122;
     private static final int DIFF_STUDY_INSTANCE_UID = 0xC123;
+    private static final String NON_DICOM_CUID = "1.2.40.0.13.1.999";
 
     private static final Logger LOG = LoggerFactory.getLogger(StowRS.class);
 
@@ -249,9 +251,11 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
                     "No File System Group ID configured for "
                             + ae.getAETitle());
 
-        storeContext = new StoreContext(StoreParam.valueOf(aeExt));
         storeDir = storeService.selectFileSystem(
                 fsGroupID, aeExt.getInitFileSystemURI());
+        storeContext = new StoreContext(StoreParam.valueOf(aeExt));
+        storeContext.setFileSystem(storeDir);
+        
         String spoolDirectoryPath = aeExt.getSpoolDirectoryPath();
         if (spoolDirectoryPath != null) {
             try {
@@ -458,60 +462,47 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
         }
     }
 
-    private Attributes readFileMetaInformation(File file) throws IOException {
-        DicomInputStream in = new DicomInputStream(file);
-        try {
-            Attributes fmi = in.readFileMetaInformation();
-            if (fmi == null) {
-                fmi = in.readDataset(-1, Tag.StudyInstanceUID)
-                        .createFileMetaInformation(UID.ImplicitVRLittleEndian);
-            }
-            fmi.setString(Tag.SourceApplicationEntityTitle, VR.AE,
-                    request.getRemoteAddr());
-            return fmi;
-        } finally {
-            SafeClose.close(in);
-        }
-    }
-
     private void storeDicomInstances() {
         for (FileInfo fileInfo : files) {
-            try {
-                fileInfo.attrs = readFileMetaInformation(fileInfo.file);
-            } catch (IOException e) {
-                throw new WebApplicationException(e, Status.BAD_REQUEST);
-            }
-        }
-
-        for (FileInfo fileInfo : files) {
-            if (!checkTransferCapability(fileInfo.attrs))
-                continue;
-
             File destFile = null;
+            Attributes fmi = null;
             try {
                 Attributes attrs;
                 DicomInputStream in = new DicomInputStream(fileInfo.file);
                 try {
+                    fmi = in.readFileMetaInformation();
                     in.setIncludeBulkData(IncludeBulkData.URI);
                     attrs = in.readDataset(-1, -1);
+                    if (fmi == null) {
+                        fmi = attrs.createFileMetaInformation(UID.ImplicitVRLittleEndian);
+                    }
+                    fmi.setString(Tag.SourceApplicationEntityTitle, VR.AE,
+                            request.getRemoteAddr());
+                } catch (IOException e) {
+                    fmi = Attributes.createFileMetaInformation(
+                                    UIDUtils.createUID(),
+                                    NON_DICOM_CUID,
+                                    UID.ImplicitVRLittleEndian);
+                    throw new DicomServiceException(org.dcm4che.net.Status.CannotUnderstand);
                 } finally {
                     SafeClose.close(in);
                 }
-                validate(attrs);
+                checkStudyInstanceUID(attrs);
+                checkTransferCapability(fmi);
 
                 if (attrs.bigEndian())
                     attrs = new Attributes(attrs, false);
 
                 destFile = destinationFile(attrs);
                 renameTo(fileInfo.file, destFile);
-                storeDicomInstance(destFile, fileInfo.attrs, attrs, fileInfo.digest);
+                storeDicomInstance(destFile, fmi, attrs, fileInfo.digest);
             } catch (Exception e) {
                 LOG.info("storeInstances: Storage Failed:", e);
 
                 int failureReason = e instanceof DicomServiceException
                         ? ((DicomServiceException) e).getStatus()
                         : org.dcm4che.net.Status.ProcessingFailure;
-                storageFailed(fileInfo.attrs, failureReason);
+                storageFailed(fmi, failureReason);
 
                 if (destFile != null && destFile.exists())
                     deleteFile(destFile);
@@ -519,25 +510,21 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
         }
     }
 
-    private void validate(Attributes attrs)
-            throws DicomServiceException {
+    private void checkStudyInstanceUID(Attributes attrs) throws DicomServiceException {
         if (studyInstanceUID != null
                 && !studyInstanceUID.equals(attrs.getString(Tag.StudyInstanceUID)))
             throw new DicomServiceException(DIFF_STUDY_INSTANCE_UID);
     }
 
-    private boolean checkTransferCapability(Attributes fmi) {
+    private void checkTransferCapability(Attributes fmi) throws DicomServiceException {
         TransferCapability tc = ae.getTransferCapabilityFor(
                 fmi.getString(Tag.MediaStorageSOPClassUID), Role.SCP);
         if (tc == null) {
-            storageFailed(fmi, org.dcm4che.net.Status.SOPclassNotSupported);
-            return false;
+            throw new DicomServiceException(org.dcm4che.net.Status.SOPclassNotSupported);
         }
         if (!tc.containsTransferSyntax(fmi.getString(Tag.TransferSyntaxUID))) {
-            storageFailed(fmi, TRANSFER_SYNTAX_NOT_SUPPORTED);
-            return false;
+            throw new DicomServiceException(TRANSFER_SYNTAX_NOT_SUPPORTED);
         }
-        return true;
     }
 
     private void storageFailed(Attributes fmi, int failureReason) {
@@ -599,12 +586,11 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
         for (FileInfo fileInfo : files) {
             String tsuid = resolveBulkdata(fileInfo.attrs);
             Attributes fmi = fileInfo.attrs.createFileMetaInformation(tsuid);
-            if (!checkTransferCapability(fmi))
-                continue;
 
             File destFile = destinationFile(fileInfo.attrs);
             try {
-                validate(fileInfo.attrs);
+                checkStudyInstanceUID(fileInfo.attrs);
+                checkTransferCapability(fmi);
                 writeDicomInstance(destFile, fmi, fileInfo.attrs);
                 storeDicomInstance(destFile, fmi, fileInfo.attrs,
                         digest != null ? digest.digest() : null);
