@@ -53,7 +53,7 @@
 
         APPLICATION_DICOM = "&contentType=application/dicom",
 
-        IMAGE_JPEG_FRAME_NUMBER_1 = "&contentType=image/jpeg&frameNumber=1",
+        IMAGE_JPEG_FRAME_NUMBER = "&contentType=image/jpeg&frameNumber=",
 
         search = function (url, onSuccess) {
             var xhr = new XMLHttpRequest();
@@ -368,12 +368,27 @@
                         .replace("/instances/", "&objectUID=");
         },
 
+        createFrameSelect = function (frames) {
+            var select = document.createElement("select"),
+                option, i;
+
+            select.setAttribute("title","Frame"); 
+            for (i = 0; i < frames; i += 1) {
+                option = document.createElement("option");
+                option.text = i+1;
+                select.add(option, null);
+            }
+            return select;
+        },
+
         addInstanceRow = function (list, n, inst, studyExpand, seriesExpand) {
             var row = document.createElement("tr"),
                 dateAttr = inst.ContentDate,
                 timeAttr = inst.ContentTime,
                 wadouri = wadoURIof(inst.RetrieveURI.Value[0]),
-                cell, showAttributesLink;
+                frameSelect = inst.NumberOfFrames && inst.NumberOfFrames.Value[0] > 1
+                        && createFrameSelect(inst.NumberOfFrames.Value[0]),
+                cell, showAttributesLink, viewLink;
 
             row.className = "instance";
             row.insertCell(-1).innerHTML = n + ".";
@@ -385,11 +400,14 @@
                 + "&nbsp;<a href='"
                 + wadouri + APPLICATION_DICOM + "&transferSyntax=*"
                 + "' title='Download Compressed Object'>C</a>"
-                + "&nbsp;<a href='"
-                + wadouri + (inst.NumberOfFrames ? IMAGE_JPEG_FRAME_NUMBER_1 : "")
-                + "' title='View' target=_blank>V</a>";
+                + "&nbsp;<a href='#' title='View'>V</a>";
             showAttributesLink = cell.firstChild;
+            viewLink = cell.lastChild;
 
+            if (frameSelect) {
+                cell.appendChild(document.createTextNode('\u00a0'));
+                cell.appendChild(frameSelect);
+            }
             if (!dateAttr) {
                 dateAttr = inst.PresentationCreationDate;
                 timeAttr = inst.PresentationCreationTime;
@@ -404,7 +422,12 @@
                 showAttributes(row, showAttributesLink, 11, inst,
                         [ studyExpand, seriesExpand, row.firstChild ]);
             };
-    
+            viewLink.onclick = function () {
+                window.open(frameSelect 
+                        ? wadouri + IMAGE_JPEG_FRAME_NUMBER
+                                + (frameSelect.selectedIndex+1)
+                        : wadouri);
+            };
             list.appendChild(row);
         },
 
@@ -430,7 +453,7 @@
 
         contentDescriptionOf = function (inst) {
             return inst.ContentDescription ? valueOf(inst.ContentDescription)
-                    : inst.ImageType ? imageDescriptionOf(inst)
+                    : inst.Rows ? imageDescriptionOf(inst)
                     : inst.ConceptNameCodeSequence ? srDescriptionOf(inst)
                     : valueOf(inst.SOPClassUID);
         },
@@ -438,7 +461,8 @@
         imageDescriptionOf = function (inst) {
             return valueOf(inst.ImageType) 
                 + " " + valueOf(inst.Columns) + "x" + valueOf(inst.Rows)
-                + (inst.NumberOfFrames ? "x" + valueOf(inst.NumberOfFrames) : "")
+                + (inst.NumberOfFrames && inst.NumberOfFrames.Value[0] > 1
+                        ? "x" + valueOf(inst.NumberOfFrames) : "")
                 + " " + valueOf(inst.BitsAllocated) + " bit";
         },
 
