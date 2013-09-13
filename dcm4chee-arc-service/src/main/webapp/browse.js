@@ -396,7 +396,7 @@
 
         numberOfRefImages = function (refSeriesSeq) {
             var n = 0,
-                max = refSeriesSeq && refSeriesSeq.length || 0,
+                max = refSeriesSeq.length,
                 i;
 
             for (i = 0; i < max; i += 1) {
@@ -429,7 +429,7 @@
                 gsps = cuid === GSPS_CUID,
                 select = gsps
                     ? createSelect("Referenced Image",
-                            numberOfRefImages(inst.ReferencedSeriesSequence))
+                            numberOfRefImages(inst.ReferencedSeriesSequence.Sequence))
                     : createSelect("Frame", intOf(inst.NumberOfFrames)),
                 wadouri = wadoURIof(inst.RetrieveURI.Value[0]),
                 cell, showAttributesLink, viewLink;
