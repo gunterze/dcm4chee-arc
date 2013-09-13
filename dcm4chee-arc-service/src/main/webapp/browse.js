@@ -12,6 +12,8 @@
         inputFields = document.getElementsByTagName("input"),
         offset = 0,
 
+        GSPS_CUID = "1.2.840.10008.5.1.4.1.1.11.1",
+
         QIDO_PATH = "rs/qido/",
 
         ATTRS_HEADER = "<td><a href='#' title='Hide Attributes'>X</a></td>"
@@ -52,8 +54,6 @@
             + "<th colspan='5'>Content Description</th>",
 
         APPLICATION_DICOM = "&contentType=application/dicom",
-
-        IMAGE_JPEG_FRAME_NUMBER = "&contentType=image/jpeg&frameNumber=",
 
         search = function (url, onSuccess) {
             var xhr = new XMLHttpRequest();
@@ -368,12 +368,51 @@
                         .replace("/instances/", "&objectUID=");
         },
 
-        createFrameSelect = function (frames) {
-            var select = document.createElement("select"),
-                option, i;
+        wadoURIofFrame = function (wadouri, frame) {
+            return wadouri + "&contentType=image/jpeg&frameNumber=" + frame;
+        },
 
-            select.setAttribute("title","Frame"); 
-            for (i = 0; i < frames; i += 1) {
+        wadoURIofGSPS = function (inst, index) {
+            var rsuri = inst.RetrieveURI.Value[0],
+                refSeriesSeq = inst.ReferencedSeriesSequence.Sequence,
+                i, imax = refSeriesSeq.length,
+                refSeries, refImageSeq;
+
+            for (i = 0; i < imax; i += 1) {
+                refSeries = refSeriesSeq[i];
+                refImageSeq = refSeries.ReferencedImageSequence.Sequence;
+                if (index < refImageSeq.length) {
+                    return rsuri.replace("/studies/", "?requestType=WADO&studyUID=")
+                                .replace("/series/", "&presentationSeriesUID=")
+                                .replace("/instances/", "&presentationUID=")
+                        + "&seriesUID=" + refSeries.SeriesInstanceUID.Value[0]
+                        + "&objectUID=" + refImageSeq[index].ReferencedSOPInstanceUID.Value[0]
+                        + "&contentType=image/jpeg&frameNumber=1";
+                }
+                index -= refImageSeq.length;
+            }
+        },
+
+        numberOfRefImages = function (refSeriesSeq) {
+            var n = 0,
+                max = refSeriesSeq && refSeriesSeq.length || 0,
+                i;
+
+            for (i = 0; i < max; i += 1) {
+                n += refSeriesSeq[i].ReferencedImageSequence.Sequence.length;
+            }
+            return n;
+        },
+
+        createSelect = function (title, n) {
+            var select, option, i;
+
+            if (n === 0 || n === 1)
+                return null;
+
+            select = document.createElement("select");
+            select.setAttribute("title", title); 
+            for (i = 0; i < n; i += 1) {
                 option = document.createElement("option");
                 option.text = i+1;
                 select.add(option, null);
@@ -385,9 +424,13 @@
             var row = document.createElement("tr"),
                 dateAttr = inst.ContentDate,
                 timeAttr = inst.ContentTime,
+                cuid = inst.SOPClassUID.Value[0],
+                gsps = cuid === GSPS_CUID,
+                select = gsps
+                    ? createSelect("Referenced Image",
+                            numberOfRefImages(inst.ReferencedSeriesSequence))
+                    : createSelect("Frame", intOf(inst.NumberOfFrames)),
                 wadouri = wadoURIof(inst.RetrieveURI.Value[0]),
-                frameSelect = inst.NumberOfFrames && inst.NumberOfFrames.Value[0] > 1
-                        && createFrameSelect(inst.NumberOfFrames.Value[0]),
                 cell, showAttributesLink, viewLink;
 
             row.className = "instance";
@@ -404,15 +447,15 @@
             showAttributesLink = cell.firstChild;
             viewLink = cell.lastChild;
 
-            if (frameSelect) {
+            if (select) {
                 cell.appendChild(document.createTextNode('\u00a0'));
-                cell.appendChild(frameSelect);
+                cell.appendChild(select);
             }
             if (!dateAttr) {
                 dateAttr = inst.PresentationCreationDate;
                 timeAttr = inst.PresentationCreationTime;
             }
-            insertCell(row, 1, valueOf(inst.SOPClassUID));
+            insertCell(row, 1, cuid);
             insertCell(row, 1, valueOf(inst.InstanceNumber));
             insertCell(row, 1, dateOf(dateAttr));
             insertCell(row, 1, timeOf(timeAttr));
@@ -423,10 +466,12 @@
                         [ studyExpand, seriesExpand, row.firstChild ]);
             };
             viewLink.onclick = function () {
-                window.open(frameSelect 
-                        ? wadouri + IMAGE_JPEG_FRAME_NUMBER
-                                + (frameSelect.selectedIndex+1)
-                        : wadouri);
+                window.open(gsps 
+                        ? wadoURIofGSPS(inst,
+                                select ? select.selectedIndex : 0)
+                        : select
+                                ? wadoURIofFrame(wadouri, select.selectedIndex + 1)
+                                : wadouri);
             };
             list.appendChild(row);
         },
@@ -565,6 +610,10 @@
 
         tag2str = function (tag) {
             return "(" + tag.slice(0,4) + "," + tag.slice(4) + ")";
+        },
+
+        intOf = function (attr) {
+            return attr && attr.Value[0] || 0;
         },
 
         pnOf = function (attr) {
