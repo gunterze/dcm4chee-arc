@@ -51,7 +51,8 @@
             + "<th>Instance #</th>"
             + "<th>Content Date</th>"
             + "<th>Content Time</th>"
-            + "<th colspan='5'>Content Description</th>",
+            + "<th colspan='4'>Content Description</th>"
+            + "<th>#F</th>",
 
         APPLICATION_DICOM = "&contentType=application/dicom",
 
@@ -459,7 +460,8 @@
             insertCell(row, 1, valueOf(inst.InstanceNumber));
             insertCell(row, 1, dateOf(dateAttr));
             insertCell(row, 1, timeOf(timeAttr));
-            insertCell(row, 5, contentDescriptionOf(inst));
+            insertCell(row, 4, contentDescriptionOf(inst));
+            insertCell(row, 1, valueOf(inst.NumberOfFrames));
     
             showAttributesLink.onclick = function () {
                 showAttributes(row, showAttributesLink, 11, inst,
@@ -504,11 +506,9 @@
         },
 
         imageDescriptionOf = function (inst) {
-            return valueOf(inst.ImageType) 
-                + " " + valueOf(inst.Columns) + "x" + valueOf(inst.Rows)
-                + (inst.NumberOfFrames && inst.NumberOfFrames.Value[0] > 1
-                        ? "x" + valueOf(inst.NumberOfFrames) : "")
-                + " " + valueOf(inst.BitsAllocated) + " bit";
+            return valueOf(inst.Columns) + "x" + valueOf(inst.Rows) + " "
+                + valueOf(inst.BitsAllocated) + " bit "
+                + valueOf(inst.ImageType);
         },
 
         srDescriptionOf = function (inst) {
