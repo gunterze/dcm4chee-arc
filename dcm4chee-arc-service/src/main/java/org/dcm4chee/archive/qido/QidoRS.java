@@ -524,7 +524,7 @@ public class QidoRS {
         MultipartRelatedOutput output = new MultipartRelatedOutput();
         int count = 0;
         while (queryService.hasMoreMatches()) {
-            final Attributes match = filter(addRetrieveURI(queryService.nextMatch(), qrlevel));
+            final Attributes match = filter(addRetrieveURL(queryService.nextMatch(), qrlevel));
             LOG.debug("{}: Match #{}:\n{}", new Object[]{method, ++count, match});
             output.addPart(new StreamingOutput() {
 
@@ -547,7 +547,7 @@ public class QidoRS {
         final ArrayList<Attributes> matches = new ArrayList<Attributes>();
         int count = 0;
         while (queryService.hasMoreMatches()) {
-            Attributes match = filter(addRetrieveURI(queryService.nextMatch(), qrlevel));
+            Attributes match = filter(addRetrieveURL(queryService.nextMatch(), qrlevel));
             LOG.debug("{}: Match #{}:\n{}", new Object[]{method, ++count, match});
             matches.add(match);
         }
@@ -582,12 +582,12 @@ public class QidoRS {
         return jsonTpls0;
     }
 
-    private Attributes addRetrieveURI(Attributes match, QueryRetrieveLevel qrlevel) {
-        match.setString(Tag.RetrieveURI, VR.UT, retrieveURI(match, qrlevel));
+    private Attributes addRetrieveURL(Attributes match, QueryRetrieveLevel qrlevel) {
+        match.setString(Tag.RetrieveURL, VR.UT, RetrieveURL(match, qrlevel));
         return match;
     }
 
-    private String retrieveURI(Attributes match, QueryRetrieveLevel qrlevel) {
+    private String RetrieveURL(Attributes match, QueryRetrieveLevel qrlevel) {
         StringBuilder sb = new StringBuilder(256);
         sb.append(uriInfo.getBaseUri())
           .append("wado/")
@@ -615,7 +615,7 @@ public class QidoRS {
 
         Attributes filtered = new Attributes(match.size());
         filtered.addSelected(match, Tag.SpecificCharacterSet,
-                Tag.RetrieveAETitle, Tag.InstanceAvailability, Tag.RetrieveURI);
+                Tag.RetrieveAETitle, Tag.InstanceAvailability, Tag.RetrieveURL);
         filtered.addSelected(match, keys);
         return filtered;
     }
