@@ -126,9 +126,6 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
 
     private static final Logger LOG = LoggerFactory.getLogger(StowRS.class);
 
-    //TODO replace my Tag.WarningReason when defined
-    private static final int TagWarningReason = 0x00081196;
-
     @EJB
     private StoreService storeService;
 
@@ -275,9 +272,9 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
     public void initResponse() {
         wadoURL = uriInfo.getBaseUri() + "wado/" + aet + "/studies/";
         if (studyInstanceUID != null)
-            response.setString(Tag.RetrieveURI, VR.UT, wadoURL + studyInstanceUID);
+            response.setString(Tag.RetrieveURL, VR.UT, wadoURL + studyInstanceUID);
         else
-            response.setNull(Tag.RetrieveURI, VR.UT);
+            response.setNull(Tag.RetrieveURL, VR.UT);
         sopSequence = response.newSequence(Tag.ReferencedSOPSequence, files.size());
     }
 
@@ -559,12 +556,12 @@ public class StowRS implements MultipartParser.Handler, StreamingOutput {
         Attributes sopRef = new Attributes(5);
         sopRef.setString(Tag.ReferencedSOPClassUID, VR.UI, cuid);
         sopRef.setString(Tag.ReferencedSOPInstanceUID, VR.UI, iuid);
-        sopRef.setString(Tag.RetrieveURI, VR.UT, wadoURL
+        sopRef.setString(Tag.RetrieveURL, VR.UT, wadoURL
                 + attrs.getString(Tag.StudyInstanceUID) + "/series/"
                 + attrs.getString(Tag.SeriesInstanceUID) + "/instances/"
                 + iuid);
         if (!modified.isEmpty()) {
-            sopRef.setInt(TagWarningReason, VR.US,
+            sopRef.setInt(Tag.WarningReason, VR.US,
                           org.dcm4che.net.Status.CoercionOfDataElements);
             if (storeContext.getStoreParam().isStoreOriginalAttributes()) {
                 Sequence seq = attrs.getSequence(Tag.OriginalAttributesSequence);
