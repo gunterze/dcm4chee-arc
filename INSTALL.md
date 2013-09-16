@@ -1,4 +1,4 @@
-Getting Started with DCM4CHEE Archive 4.1.0.Alpha2
+Getting Started with DCM4CHEE Archive 4.1.0.Alpha3
 ==================================================
 
 Requirements
@@ -22,7 +22,7 @@ Requirements
     - [OpenLDAP 2.4.35](http://www.openldap.org/software/download/) and
     - [Apache DS 2.0.0-M12](http://directory.apache.org/apacheds/downloads.html).
 
-    *Note*: DCM4CHEE Archive 4.1.0.Alpha2 also supports using Java Preferences 
+    *Note*: DCM4CHEE Archive 4.1.0.Alpha3 also supports using Java Preferences 
     as configuration backend. But because DCM4CHEE Archive 4.2. does not yet
     contain a configuration front-end, you would have to edit configuration 
     entries in the Java Preferences back-end manually, which is quit cumbersome 
@@ -30,7 +30,7 @@ Requirements
 
 -   LDAP Browser - [Apache Directory Studio 2.0.0](http://directory.apache.org/studio/)
 
-    *Note*: Because DCM4CHEE Archive 4.1.0.Alpha2 does not yet contain a specific
+    *Note*: Because DCM4CHEE Archive 4.1.0.Alpha3 does not yet contain a specific
     configuration front-end, the LDAP Browser is needed to modify the archive
     configuration.
 
@@ -44,7 +44,7 @@ Extract (unzip) your chosen download to the directory of your choice.
 
 Initialize Database
 -------------------
-*Note*: DCM4CHEE Archive 4.1.0.Alpha2 does not provide SQL scripts and utilities to
+*Note*: DCM4CHEE Archive 4.1.0.Alpha3 does not provide SQL scripts and utilities to
 migrate DCM4CHEE Archive 2.x data base schema to DCM4CHEE Archive 4.x. There will be
 provided by DCM4CHEE Archive 4.x final releases.
 
@@ -61,8 +61,8 @@ provided by DCM4CHEE Archive 4.x final releases.
 
 3. Create tables and indexes
        
-        > mysql -u <user-name> -p<user-password> < $DCM4CHEE_ARC/sql/create-table-mysql.ddl
-        > mysql -u <user-name> -p<user-password> < $DCM4CHEE_ARC/sql/create-index.ddl
+        > mysql -u <user-name> -p<user-password> <database-name> < $DCM4CHEE_ARC/sql/create-table-mysql.ddl
+        > mysql -u <user-name> -p<user-password> <database-name> < $DCM4CHEE_ARC/sql/create-index.ddl
 
 
 ### PostgreSQL
@@ -246,7 +246,9 @@ See also [Converting old style slapd.conf file to cn=config format][1]
         > echo -n VmVyeVNlY3JldA== | base64 -d
         VerySecret
 
-    or specify a new password in plan text, e.g:
+    If there is no `olcRootPW` entry, you may just add one.
+
+    You may also specify the password in plan text, e.g:
 
         olcRootPW: VerySecret
 
@@ -256,10 +258,10 @@ See also [Converting old style slapd.conf file to cn=config format][1]
         olcSuffix: dc=my-domain,dc=com
         olcRootDN: cn=Manager,dc=my-domain,dc=com
 
-    of object `olcDatabase={1}bdb,cn=config` by specifing the new values in a 
+    of object `olcDatabase={1}hdb,cn=config` by specifing the new values in a 
     LDIF file (e.g. `modify-baseDN.ldif`)
 
-        dn: olcDatabase={1}bdb,cn=config
+        dn: olcDatabase={1}hdb,cn=config
         changetype: modify
         replace: olcSuffix
         olcSuffix: dc=example,dc=com
@@ -272,13 +274,12 @@ See also [Converting old style slapd.conf file to cn=config format][1]
 
         > ldapmodify -xW -Dcn=config -f modify-baseDN.ldif
 
-
 ### Apache DS 2.0.0
 
-1.  Install [Apache DS 2.0.0-M12](http://directory.apache.org/apacheds/downloads.html)
+1.  Install [Apache DS 2.0.0](http://directory.apache.org/apacheds/downloads.html)
     on your system and start Apache DS.
 
-2.  Install [Apache Directory Studio 1.5.3](http://directory.apache.org/studio/) and
+2.  Install [Apache Directory Studio 2.0.0](http://directory.apache.org/studio/) and
     create a new LDAP Connection with:
 
         Network Parameter:
@@ -315,7 +316,7 @@ Import sample configuration into LDAP Server
 --------------------------------------------  
 
 1.  If not alread done, install
-    [Apache Directory Studio 1.5.3](http://directory.apache.org/studio/) and create
+    [Apache Directory Studio 2.0.0](http://directory.apache.org/studio/) and create
     a new LDAP Connection corresponding to your LDAP Server configuration, e.g:
 
         Network Parameter:
@@ -400,8 +401,8 @@ Import sample configuration into LDAP Server
 8.  By default configuration, DCM4CHEE Archive stores received objects below
     `$JBOSS_HOME/standalone/data`. To specify a different storage location,
     replace the value of attribute
-    
-        dcmInitFileSystemURI=file:${jboss.server.data.dir}
+
+        dcmInitFileSystemURI=${jboss.server.data.url}
 
     of the `dicomNetworkAE` object
 
@@ -411,12 +412,12 @@ Import sample configuration into LDAP Server
             + dicomDeviceName=dcm4chee-arc
                 dicomAETitle=DCM4CHEE
 
-    by `file:<absolute-directory-path>`, using Apache Directory Studio LDAP Browser.
+    by `file:<absolute-directory-path-with-slashes>`, using Apache Directory Studio LDAP Browser.
 
     **Attention**: The value of attribute `dcmInitFileSystemURI` is used to initialize
     the (first) record in the `filesystem` table of the archive data base on receive of
     the first object. It is not effective, if the `filesystem` table already contains
-    such record. 
+    such record.
 
 
 Setup JBoss AS
@@ -442,10 +443,10 @@ Setup JBoss AS
     and XSLT stylesheets specifing attribute coercion in incoming or outgoing DICOM messages
     and mapping of HL7 fields in incoming HL7 messages are not stored in LDAP.
 
-3.  Install DCM4CHE 3.2.0 libraries as JBoss AS module:
+3.  Install DCM4CHE 3.2.1 libraries as JBoss AS module:
 
         > cd  $JBOSS_HOME
-        > unzip $DCM4CHEE_ARC/jboss-module/dcm4che-jboss-modules-3.0.0.zip
+        > unzip $DCM4CHEE_ARC/jboss-module/dcm4che-jboss-modules-3.2.1.zip
 
 4.  Install JAI Image IO 1.2 libraries as JBoss AS module
     (needed for compression/decompression, does not work on Windows 64 bit
@@ -596,11 +597,11 @@ Setup JBoss AS
    
 14. Deploy DCM4CHEE Archive 4.x using JBoss AS CLI, e.g.:
 
-        [standalone@localhost:9999 /] deploy $DCM4CHEE_ARC/deploy/dcm4chee-arc-4.1.0.Alpha2-mysql.war
+        [standalone@localhost:9999 /] deploy $DCM4CHEE_ARC/deploy/dcm4chee-arc-4.1.0.Alpha3-mysql.war
 
     Verify that DCM4CHEE Archive was deployed and started successfully, e.g.:
 
-        13:11:01,711 INFO  [org.jboss.as.server.deployment] (MSC service thread 1-1) JBAS015876: Starting deployment of "dcm4chee-arc-4.1.0.Alpha2-mysql.war"
+        13:11:01,711 INFO  [org.jboss.as.server.deployment] (MSC service thread 1-1) JBAS015876: Starting deployment of "dcm4chee-arc-4.1.0.Alpha3-mysql.war"
         13:11:01,763 INFO  [org.jboss.as.jpa] (MSC service thread 1-8) JBAS011401: Read persistence.xml for dcm4chee-arc
         :
         13:11:02,706 INFO  [org.dcm4che.net.Connection] (pool-18-thread-1) Start listening on localhost/127.0.0.1:11112
@@ -608,21 +609,23 @@ Setup JBoss AS
         13:11:02,713 INFO  [org.dcm4che.net.Connection] (pool-18-thread-3) Start listening on localhost/127.0.0.1:2575
         13:11:02,714 INFO  [org.dcm4che.net.Connection] (pool-18-thread-4) Start listening on localhost/127.0.0.1:12575
         13:11:02,726 INFO  [org.jboss.web] (MSC service thread 1-1) JBAS018210: Registering web context: /dcm4chee-arc
-        13:11:02,771 INFO  [org.jboss.as.server] (management-handler-thread - 1) JBAS018559: Deployed "dcm4chee-arc-4.1.0.Alpha2-mysql.war"
+        13:11:02,771 INFO  [org.jboss.as.server] (management-handler-thread - 1) JBAS018559: Deployed "dcm4chee-arc-4.1.0.Alpha3-mysql.war"
 
 15. You may undeploy DCM4CHEE Archive at any time using JBoss AS CLI, e.g.:
 
-        [standalone@localhost:9999 /] undeploy dcm4chee-arc-4.1.0.Alpha2-mysql.war
+        [standalone@localhost:9999 /] undeploy dcm4chee-arc-4.1.0.Alpha3-mysql.war
 
         14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-2) Stop listening on localhost/127.0.0.1:2762
         14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-4) Stop listening on localhost/127.0.0.1:12575
         14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-1) Stop listening on localhost/127.0.0.1:11112
         14:06:09,874 INFO  [org.dcm4che.net.Connection] (pool-18-thread-3) Stop listening on localhost/127.0.0.1:2575
-        14:06:09,955 INFO  [org.jboss.as.jpa] (MSC service thread 1-7) JBAS011403: Stopping Persistence Unit Service 'dcm4chee-arc-4.1.0.Alpha2-mysql.war#dcm4chee-arc'
-        14:06:10,000 INFO  [org.jboss.as.server.deployment] (MSC service thread 1-5) JBAS015877: Stopped deployment dcm4chee-arc-4.1.0.Alpha2-mysql.war in 132ms
+        14:06:09,955 INFO  [org.jboss.as.jpa] (MSC service thread 1-7) JBAS011403: Stopping Persistence Unit Service 'dcm4chee-arc-4.1.0.Alpha3-mysql.war#dcm4chee-arc'
+        14:06:10,000 INFO  [org.jboss.as.server.deployment] (MSC service thread 1-5) JBAS015877: Stopped deployment dcm4chee-arc-4.1.0.Alpha3-mysql.war in 132ms
         14:06:10,561 INFO  [org.jboss.as.repository] (management-handler-thread - 7) JBAS014901: Content removed from location ... 
-        14:06:10,563 INFO  [org.jboss.as.server] (management-handler-thread - 7) JBAS018558: Undeployed "dcm4chee-arc-4.1.0.Alpha2-mysql.war"
+        14:06:10,563 INFO  [org.jboss.as.server] (management-handler-thread - 7) JBAS018558: Undeployed "dcm4chee-arc-4.1.0.Alpha3-mysql.war"
 
+16. Verify, that the Web interface is available at http://localhost:8080/dcm4chee-arc.
+    Currently the Web interface is only tested with Firefox 23 and Chormium 29.
 
 Java Monitoring and Management Console `jconsole`
 -------------------------------------------------
@@ -796,3 +799,52 @@ Invoke
       &contentType=application/dicom
 
 by your Web Browser or any other HTTP client to retrieve the DICOM object.
+
+Invoke
+
+    GET http://localhost:8080/dcm4chee-arc/rs/wado/DCM4CHEE/studies/1.2.840.113674.514.212.200
+
+by your Web Browser or any other HTTP client to retrieve all DICOM objects of
+the Study in a ZIP Archive.
+
+
+### Test [Query based on ID for DICOM Objects by RESTful Services (QIDO-RS)][1]
+
+Open the Web interface (http://localhost:8080/dcm4chee-arc) in your Web Browser.
+Verify that the `AE Title` field in the Web interface matches the configured
+AE Title of the archive (default: `DCM4CHEE`).
+
+The maximal number of returned matches is configurable by the `Limit' field
+(default: 20).
+
+Click on S(earch Studies) to invoke a QIDO-RS `searchForStudies` HTTP GET request.
+Received JSON Objects for each matching study will show up as rows in the table.
+
+Click on S(earch Series) in Study rows invoke a QIDO-RS `searchForSeries`
+HTTP GET request. Received JSON Objects for Series of the Study will show
+up in inserted rows in the table.
+
+Click on S(earch Instances) in Series rows invoke a QIDO-RS `searchForInstances`
+HTTP GET request. Received JSON Objects for Instances of the Series will show
+up in inserted rows in the table.
+
+The maximal number of returned matches is configurable by the `Limit' field
+(default: 20), which is also effective for shown Series and Instances. You may
+use `>` to request following objects. 
+
+
+### Test [Store Over the Web by RESTful Services (STOW-RS)][2]
+
+Open the Web interface (http://localhost:8080/dcm4chee-arc) in your Web Browser
+and switch to the `Upload` tab. Verify that the `AE Title` field in the Web
+interface matches the configured AE Title of the archive (default: `DCM4CHEE`).
+
+Drop DICOM files in the drop box or click on it to open a File Browser to
+select multiple DICOM files to be stored in the archive.
+
+Click `Start Upload` to invoke a STOW-RS `Store Instances` HTTP POST multipart
+request including all selected DICOM objects to the archive.
+
+[1]: ftp://medical.nema.org/medical/dicom/supps/LB/sup166_lb.pdf
+[2]: ftp://medical.nema.org/medical/dicom/Final/sup163_ft3.pdf
+

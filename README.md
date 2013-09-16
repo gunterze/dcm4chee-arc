@@ -12,8 +12,6 @@ One major improvement to 2.x is the use of LDAP as central configuration,
 compliant to the DICOM Application Configuration Management Profile,
 specified in [DICOM 2011, Part 15][1], Annex H.
 
-[1]: ftp://medical.nema.org/medical/dicom/2011/11_15pu.pdf
-
 This Alpha version supports DICOM and HL7 Services required for
 compliance with IHE Radiology Workflow Integration Profiles:
 
@@ -27,18 +25,17 @@ for IHE Actor Image Manager/Archive, including the new
 
 for these Profiles.
 
-[2]: http://wiki.ihe.net/index.php?title=Scheduled_Workflow
-[3]: http://wiki.ihe.net/index.php?title=Patient_Information_Reconciliation
-[4]: http://www.ihe.net/Technical_Framework/upload/IHE_RAD_Suppl_IOCM_Rev1-1_TI_2011-05-17.pdf
-[5]: http://www.ihe.net/Technical_Framework/upload/IHE_RAD_Suppl_MIMA.pdf
-
 Additionally it supports
-- WADO URI Service
+
 - compression/decompression of images
+- WADO URI Service
+- [WADO by means of RESTful Services (WADO-RS)][6]
+- [Store Over the Web by RESTful Services (STOW-RS)][7]
+- [Query based on ID for DICOM Objects by RESTful Services (QIDO-RS)][8]
 
 There are still major gaps compared to the functionality of DCM4CHEE Archive 2.x:
 
-- no Web-interface
+- no Web-interface for administration
 - no auto-routing
 - no auto-switch of storage filesystems
 - no HSM support
@@ -60,3 +57,12 @@ See [INSTALL.md](https://github.com/dcm4che/dcm4chee-arc/blob/master/INSTALL.md)
 License
 -------
 * [Mozilla Public License Version 1.1](http://www.mozilla.org/MPL/1.1/)
+
+[1]: ftp://medical.nema.org/medical/dicom/2011/11_15pu.pdf
+[2]: http://wiki.ihe.net/index.php?title=Scheduled_Workflow
+[3]: http://wiki.ihe.net/index.php?title=Patient_Information_Reconciliation
+[4]: http://www.ihe.net/Technical_Framework/upload/IHE_RAD_Suppl_IOCM_Rev1-1_TI_2011-05-17.pdf
+[5]: http://www.ihe.net/Technical_Framework/upload/IHE_RAD_Suppl_MIMA.pdf
+[6]: ftp://medical.nema.org/medical/dicom/final/sup161_ft.pdf
+[7]: ftp://medical.nema.org/medical/dicom/Final/sup163_ft3.pdf
+[8]: ftp://medical.nema.org/medical/dicom/supps/LB/sup166_lb.pdf
