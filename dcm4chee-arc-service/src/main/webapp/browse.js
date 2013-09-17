@@ -1,5 +1,6 @@
 (function () {
-    var query = document.getElementById("query"),
+    var form = document.getElementById("form"),
+        query = document.getElementById("query"),
         back = document.getElementById("back"),
         next = document.getElementById("next"),
         aetField = document.getElementById("aet"),
@@ -171,14 +172,14 @@
         addStudyRow = function (list, n, study) {
             var row = document.createElement("tr"),
                 studyUID = study.StudyInstanceUID.Value[0],
-                retrieveURI = study.RetrieveURI.Value[0],
+                RetrieveURL = study.RetrieveURL.Value[0],
                 studyExpand, cell, showAttributesLink, searchSeriesLink;
 
             row.className = "study";
             studyExpand = row.insertCell(-1),
             cell = row.insertCell(-1),
             cell.innerHTML = SHOW_ATTRS 
-                + "&nbsp;<a href='" + retrieveURI + "' title='Download Study'>D</a>&nbsp;"
+                + "&nbsp;<a href='" + RetrieveURL + "' title='Download Study'>D</a>&nbsp;"
                 + SEARCH_SERIES;
             showAttributesLink = cell.firstChild;
             searchSeriesLink = cell.lastChild;
@@ -265,14 +266,14 @@
             var row = document.createElement("tr"),
                 studyUID = series.StudyInstanceUID.Value[0],
                 seriesUID = series.SeriesInstanceUID.Value[0],
-                retrieveURI = series.RetrieveURI.Value[0],
+                RetrieveURL = series.RetrieveURL.Value[0],
                 seriesExpand, cell, showAttributesLink, searchInstancesLink;
 
             row.className = "series";
             seriesExpand = row.insertCell(-1),
             cell = row.insertCell(-1),
             cell.innerHTML = SHOW_ATTRS
-                + "&nbsp;<a href='" + retrieveURI + "' title='Download Series'>D</a>&nbsp;"
+                + "&nbsp;<a href='" + RetrieveURL + "' title='Download Series'>D</a>&nbsp;"
                 + SEARCH_INSTANCES;
             showAttributesLink = cell.firstChild;
             searchInstancesLink = cell.lastChild;;
@@ -374,7 +375,7 @@
         },
 
         wadoURIofGSPS = function (inst, index) {
-            var rsuri = inst.RetrieveURI.Value[0],
+            var rsuri = inst.RetrieveURL.Value[0],
                 refSeriesSeq = inst.ReferencedSeriesSequence.Sequence,
                 i, imax = refSeriesSeq.length,
                 refSeries, refImageSeq;
@@ -431,7 +432,7 @@
                     ? createSelect("Referenced Image",
                             numberOfRefImages(inst.ReferencedSeriesSequence.Sequence))
                     : createSelect("Frame", intOf(inst.NumberOfFrames)),
-                wadouri = wadoURIof(inst.RetrieveURI.Value[0]),
+                wadouri = wadoURIof(inst.RetrieveURL.Value[0]),
                 cell, showAttributesLink, viewLink;
 
             row.className = "instance";
@@ -650,10 +651,15 @@
                  || attr.Sequence && (attr.Sequence.length + " Item")
                  || "&nbsp";
         };
-   
+
     query.onclick = function () {
         offset = 0;
         searchStudies();
+    };
+    form.onsubmit = function (e) {
+        offset = 0;
+        searchStudies();
+        e.preventDefault();
     };
     back.onclick = function () {
         offset = Math.max(0, offset - parseInt(limitField.value,10));
