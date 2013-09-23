@@ -7,11 +7,11 @@
   <name>dcm4chee-arc-parent</name>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <dcm4che.version>3.2.1</dcm4che.version>
+    <dcm4che.version>3.3.0-SNAPSHOT</dcm4che.version>
     <slf4j.version>1.6.1</slf4j.version>
     <hibernate.version>4.0.1.Final</hibernate.version>
     <querydsl.version>2.8.1</querydsl.version>
-    <db>mysql</db>
+    <db>psql</db>
     <ds>java:/PacsDS</ds>
   </properties>
   <dependencyManagement>

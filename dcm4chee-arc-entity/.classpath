@@ -6,12 +6,8 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry including="**/*.java" kind="src" path="src/main/resources-psql"/>
 	<classpathentry kind="src" path="target/generated-sources/annotations"/>
-	<classpathentry excluding="**" kind="src" output="target/classes" path="src/main/resources-mysql">
-		<attributes>
-			<attribute name="maven.pomderived" value="true"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="src" output="target/test-classes" path="src/test/java">
 		<attributes>
 			<attribute name="optional" value="true"/>
