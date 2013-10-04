@@ -453,7 +453,7 @@ Setup JBoss AS
     and Mac OS X caused by missing native components for these platforms):
 
         > cd  $JBOSS_HOME
-        > unzip $DCM4CHEE_ARC/jboss-module/jai-imageio-jboss-modules-1.2-pre-dr-b04.zip
+        > unzip $DCM4CHEE_ARC/jboss-module/jai_imageio-jboss-modules-1.2-pre-dr-b04.zip
 
 5.  Install QueryDSL 2.8.1 libraries as JBoss AS module:
 
