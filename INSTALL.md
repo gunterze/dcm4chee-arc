@@ -79,8 +79,8 @@ provided by DCM4CHEE Archive 4.x final releases.
 
 3. Create tables and indexes
        
-        > psql -U <user-name> < $DCM4CHEE_ARC/sql/create-table-psql.ddl
-        > psql -U <user-name> < $DCM4CHEE_ARC/sql/create-index.ddl
+        > psql -U <user-name> <database-name> < $DCM4CHEE_ARC/sql/create-table-psql.ddl
+        > psql -U <user-name> <database-name> < $DCM4CHEE_ARC/sql/create-index.ddl
 
 
 ### Firebird
@@ -284,7 +284,7 @@ See also [Converting old style slapd.conf file to cn=config format][1]
 
         Network Parameter:
             Hostname: localhost
-            Port:     10398
+            Port:     10389
         Authentication Parameter:
             Bind DN or user: uid=admin,ou=system
             Bind password:   secret
@@ -321,9 +321,9 @@ Import sample configuration into LDAP Server
 
         Network Parameter:
             Hostname: localhost
-            Port:     1398
+            Port:     10389
         Authentication Parameter:
-            Bind DN or user: cn=Directory Manager
+            Bind DN or user: cn=uid=admin,ou=system
             Bind password:   secret
         Browser Options:
             Base DN: dc=example,dc=com
@@ -369,7 +369,7 @@ Import sample configuration into LDAP Server
                 cn=hl7,dicomDeviceName
                 cn=hl7-tls,dicomDeviceName
 
-    by the actual hostname of your system, using Apache Directory Studio LDAP Browser. 
+    by the actual host IP of your system, using Apache Directory Studio LDAP Browser. 
 
 7.  To change the default AE Title: `DCM4CHEE`, modify the _Relative Distinguished Name_
     (RDN) of the `dicomNetworkAE` object
@@ -471,9 +471,8 @@ Setup JBoss AS
     -   [Microsoft SQL Server](http://msdn.microsoft.com/data/jdbc/)
 
     The JDBC driver can be installed either as a deployment or as a core module.
-    [See](https://docs.jboss.org/author/display/AS71/Developer+Guide#DeveloperGuide-InstalltheJDBCdriver)
-    
-    Installation as deployment is limited to JDBC 4-compliant driver consisting of **one** JAR.
+    [See](https://docs.jboss.org/author/display/AS71/Developer+Guide#DeveloperGuide-InstalltheJDBCdriver). This involves simply copying the JDBC driver jar into the $JBOSS_HOME/standalone/deployments directory. Note: installation as a deployment is limited to JDBC 4-compliant driver consisting of **one** JAR. Also, note that the driver name will be the full file name of the jar. This will be needed when adding the data source.
+
 
     For installation as a core module, `$DCM4CHEE_ARC/jboss-module/jdbc-jboss-modules-1.0.0-<database>.zip`
     already provides a module definition file `module.xml`. You just need to extract the ZIP file into
@@ -535,7 +534,7 @@ Setup JBoss AS
                 
     Running JBoss AS in domain mode should work, but was not yet tested.
 
-8.  Add JDBC Driver into the server configuration using JBoss AS CLI in a new console window:
+8.  If you installed the JDBC driver as a core module, you will need to add the JDBC Driver into the server configuration using JBoss AS CLI in a new console window:
 
         > $JBOSS_HOME/bin/jboss-cli.sh -c [UNIX]
         > %JBOSS_HOME%\bin\jboss-cli.bat -c [Windows]
@@ -563,6 +562,17 @@ Setup JBoss AS
     -  DB2: `jdbc:db2://localhost:50000/<database-name>`
     -  Oracle: `jdbc:oracle:thin:@localhost:1521:<database-name>`
     -  Microsoft SQL Server: `jdbc:sqlserver://localhost:1433;databaseName=<database-name>`
+
+    For debugging, the following jboss cli commands are useful:
+
+    JBOSS - list installed drivers
+
+    /subsystem=datasources:installed-drivers-list
+
+    JBOSS - list data sources
+
+    /subsystem=datasources:read-resource
+
 
 10. Create JMS Queues using JBoss AS CLI:
 
@@ -642,6 +652,41 @@ Java Monitoring and Management Console `jconsole`
 4.  Invoke the `start`, `stop` or `reload` operation to start or stop
     DCM4CHEE Archive 4.x, or to reload its configuration from the configuration
     backend (LDAP Server or Java Preferences).
+
+
+Source Build With Eclipse
+--------------------------
+
+0. Use Eclipse Kepler, and install Jboss Tools 4.1
+
+
+1. Clone *dcm4che*, *dcm4chee-arc*, *querydsl-jboss-modules*, *jai-imageio-jboss-modules* and *jdbc-jboss-modules* from github
+
+2. run *mvn clean install* *dcm4che*, *dcm4chee-arc*, *querydsl-jboss-modules*, *jai-imageio-jboss-modules* and *jdbc-jboss-modules* projects.
+
+3. In install instructions above, use *dcm4che* project for *dcm4che-jboss-modules* zip file, and *querydsl-jboss-modules* project for *querydsl jboss modules* zip file.
+
+4. In install instructions above, *..\dcm4chee-arc\dcm4chee-arc-conf\src\main\config\configuration\dcm4chee-arc\ldap.properties* will hold 
+the ldap properties
+
+5. import dcm4che and dcm4chee-arc into eclipse as maven projects
+
+6. under dcm4chee-arc project settings -> validation, disable JPA validation 
+
+7. under dcm4chee-arc-entity, add target/generated-sources/annotations as build path source folder
+
+8. set up a run configuration for dcm4chee-arc-parent, with install goal, and
+db = psql, for example.
+
+9. verify that the run configuration will build the WAR
+
+10. Open Window -> Show View -> Servers, and create a new jboss 7.1 server
+
+11. add dcm4chee-arc-service when creating the server
+
+12. now, you should be able to debug the archive from inside eclipse
+
+
 
 
 Control DCM4CHEE Archive 4.x by HTTP GET

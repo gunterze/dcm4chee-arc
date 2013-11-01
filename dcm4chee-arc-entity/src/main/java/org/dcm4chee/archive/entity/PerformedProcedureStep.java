@@ -67,7 +67,7 @@ import org.dcm4chee.archive.conf.AttributeFilter;
 @NamedQueries({
     @NamedQuery(
             name="PerformedProcedureStep.findBySOPInstanceUID",
-            query="SELECT pps FROM PerformedProcedureStep pps WHERE pps.sopInstanceUID = ?1)")
+            query="SELECT pps FROM PerformedProcedureStep pps WHERE pps.sopInstanceUID = ?1")
 })
 @Entity
 @Table(name = "pps")
