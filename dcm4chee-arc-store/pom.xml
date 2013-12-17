@@ -20,10 +20,6 @@
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
-      <artifactId>dcm4che-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dcm4che</groupId>
       <artifactId>dcm4che-net</artifactId>
     </dependency>
     <dependency>
@@ -48,6 +44,11 @@
         <version>2.3</version>
         <configuration>
           <ejbVersion>3.0</ejbVersion>
+          <archive>
+            <manifestEntries>
+              <Dependencies>org.dcm4che.net,org.dcm4che.soundex</Dependencies>
+            </manifestEntries>
+          </archive>
         </configuration>
       </plugin>
     </plugins>

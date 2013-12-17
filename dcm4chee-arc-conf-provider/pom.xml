@@ -54,8 +54,7 @@
         <configuration>
           <archive>
             <manifestEntries>
-              <Dependencies>org.dcm4che.conf.ldap-hl7, org.dcm4che.conf.ldap-audit, org.dcm4che.conf.ldap-imageio, org.dcm4che.conf.prefs-hl7, org.dcm4che.conf.prefs-audit, org.dcm4che.conf.prefs-imageio
-              </Dependencies>
+              <Dependencies>org.dcm4che.conf.ldap-hl7, org.dcm4che.conf.ldap-audit, org.dcm4che.conf.ldap-imageio, org.dcm4che.conf.prefs-hl7, org.dcm4che.conf.prefs-audit, org.dcm4che.conf.prefs-imageio</Dependencies>
             </manifestEntries>
           </archive>
         </configuration>
