@@ -30,7 +30,7 @@
         <configuration>
           <archive>
             <manifestEntries>
-              <Dependencies>org.dcm4che.imageio</Dependencies>
+              <Dependencies>org.dcm4che.imageio services export</Dependencies>
             </manifestEntries>
           </archive>
         </configuration>
