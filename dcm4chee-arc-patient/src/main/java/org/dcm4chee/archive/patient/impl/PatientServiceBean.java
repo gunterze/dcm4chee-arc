@@ -40,6 +40,7 @@ package org.dcm4chee.archive.patient.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -53,14 +54,23 @@ import javax.persistence.TypedQuery;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.IDWithIssuer;
+import org.dcm4che.data.Tag;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4chee.archive.conf.AttributeFilter;
 import org.dcm4chee.archive.entity.Issuer;
 import org.dcm4chee.archive.entity.Patient;
+import org.dcm4chee.archive.entity.QPatient;
+import org.dcm4chee.archive.entity.Utils;
 import org.dcm4chee.archive.issuer.IssuerService;
 import org.dcm4chee.archive.patient.PatientCircularMergedException;
 import org.dcm4chee.archive.patient.PatientMergedException;
 import org.dcm4chee.archive.patient.PatientService;
+import org.dcm4chee.archive.query.builder.QueryBuilder;
+import org.hibernate.Session;
+
+import com.mysema.query.BooleanBuilder;
+import com.mysema.query.Tuple;
+import com.mysema.query.jpa.hibernate.HibernateQuery;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -77,27 +87,15 @@ public class PatientServiceBean implements PatientService {
 
     @Override
     public Patient findUniqueOrCreatePatient(
-            AttributeFilter filter, FuzzyStr fuzzyStr,
-            Attributes data, boolean followMergedWith, boolean mergeAttributes) {
-        try {
-            Patient patient = findUniqueOrCreatePatient(em, filter, fuzzyStr,
-                    data, followMergedWith, mergeAttributes);
-            return patient;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } 
-    }
-
-    private Patient findUniqueOrCreatePatient(EntityManager em,
             AttributeFilter filter, FuzzyStr fuzzyStr, Attributes data,
             boolean followMergedWith, boolean mergeAttributes) {
         IDWithIssuer pid = IDWithIssuer.fromPatientIDWithIssuer(data);
         if (pid == null)
-            return createNewPatient(em, filter, fuzzyStr, data, null);
+            return createNewPatient(filter, fuzzyStr, data, null);
 
         Patient patient;
         try {
-            patient = findPatient(em, pid);
+            patient = findPatient(pid);
             Patient mergedWith = patient.getMergedWith();
             if (mergedWith != null)
                 if (followMergedWith)
@@ -108,9 +106,9 @@ public class PatientServiceBean implements PatientService {
             if (mergeAttributes)
                 mergeAttributes(filter, fuzzyStr, patient, data, pid);
         } catch (NonUniqueResultException e) {
-            patient = createNewPatient(em, filter, fuzzyStr, data, pid);
+            patient = createNewPatient(filter, fuzzyStr, data, pid);
         } catch (NoResultException e) {
-            patient = createNewPatient(em, filter, fuzzyStr, data, pid);
+            patient = createNewPatient(filter, fuzzyStr, data, pid);
             // TO DO check if patient was inserted concurrently
         }
         return patient;
@@ -148,8 +146,7 @@ public class PatientServiceBean implements PatientService {
         }
     }
 
-    private Patient createNewPatient(EntityManager em,
-            AttributeFilter filter, FuzzyStr fuzzyStr,
+    private Patient createNewPatient(AttributeFilter filter, FuzzyStr fuzzyStr,
             Attributes attrs, IDWithIssuer pid) {
         Patient patient = new Patient();
         patient.setIssuerOfPatientID(findOrCreateIssuer(pid));
@@ -158,7 +155,7 @@ public class PatientServiceBean implements PatientService {
         return patient;
     }
 
-    private List<Patient> findPatients(EntityManager em, IDWithIssuer pid) {
+    private List<Patient> findPatients(IDWithIssuer pid) {
         if (pid.getID() == null)
             throw new IllegalArgumentException("Missing pid");
 
@@ -181,8 +178,8 @@ public class PatientServiceBean implements PatientService {
         return list;
     }
 
-    private Patient findPatient(EntityManager em, IDWithIssuer pid) {
-        List<Patient> list = findPatients(em, pid);
+    private Patient findPatient(IDWithIssuer pid) {
+        List<Patient> list = findPatients(pid);
         if (list.isEmpty())
             throw new NoResultException();
         if (list.size() > 1)
@@ -190,4 +187,22 @@ public class PatientServiceBean implements PatientService {
         return list.get(0);
     }
 
+    @Override
+    public String[] patientNamesOf(IDWithIssuer[] pids) {
+        HashSet<String> c = new HashSet<String>(pids.length * 4 / 3 + 1);
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(QueryBuilder.pids(pids, false));
+        builder.and(QPatient.patient.mergedWith.isNull());
+        List<Tuple> tuples = new HibernateQuery(em.unwrap(Session.class))
+            .from(QPatient.patient)
+            .where(builder)
+            .list(
+                QPatient.patient.pk,
+                QPatient.patient.encodedAttributes);
+        for (Tuple tuple : tuples)
+            c.add(Utils.decodeAttributes(tuple.get(1, byte[].class))
+                    .getString(Tag.PatientName));
+        c.remove(null);
+        return c.toArray(new String[c.size()]);
+    }
 }

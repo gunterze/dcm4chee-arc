@@ -5,7 +5,7 @@
     <artifactId>dcm4chee-arc-parent</artifactId>
     <version>4.1.0.Alpha4</version>
   </parent>
-  <artifactId>dcm4chee-arc-store</artifactId>
+  <artifactId>dcm4chee-arc-series</artifactId>
   <packaging>ejb</packaging>
   <dependencies>
     <dependency>
@@ -14,17 +14,8 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.dcm4che.dcm4chee-arc</groupId>
-      <artifactId>dcm4chee-arc-issuer</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.dcm4che</groupId>
-      <artifactId>dcm4che-net</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dcm4che</groupId>
-      <artifactId>dcm4che-soundex</artifactId>
+      <artifactId>dcm4che-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.hibernate.javax.persistence</groupId>
@@ -47,7 +38,7 @@
           <ejbVersion>3.0</ejbVersion>
           <archive>
             <manifestEntries>
-              <Dependencies>org.dcm4che.net,org.dcm4che.soundex</Dependencies>
+              <Dependencies>org.dcm4che.core</Dependencies>
             </manifestEntries>
           </archive>
         </configuration>

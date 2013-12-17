@@ -36,55 +36,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.store.scp.impl;
-
-import java.io.IOException;
-
-import javax.ejb.EJB;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Typed;
-import javax.inject.Inject;
+package org.dcm4chee.archive.query;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.net.Association;
-import org.dcm4che.net.PDVInputStream;
-import org.dcm4che.net.pdu.PresentationContext;
-import org.dcm4che.net.service.BasicCStoreSCP;
-import org.dcm4che.net.service.DicomService;
-import org.dcm4chee.archive.compress.CompressionService;
-import org.dcm4chee.archive.store.StoreService;
+import org.dcm4che.data.IDWithIssuer;
+import org.dcm4che.net.service.QueryRetrieveLevel;
+import org.dcm4chee.archive.conf.QueryParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-@ApplicationScoped
-@Typed(DicomService.class)
-public class CStoreSCP extends BasicCStoreSCP{
+public interface QueryService {
 
-    @Inject
-    private CompressionService compressionService;
+    Query createQuery(QueryRetrieveLevel qrlevel, IDWithIssuer[] pids,
+            Attributes keys, QueryParam queryParam) throws Exception;
 
-    @EJB
-    private StoreService storeService;
+    Query createPatientQuery(IDWithIssuer[] pids, Attributes keys,
+            QueryParam queryParam) throws Exception;
 
-    public StoreService getStoreService() {
-        return storeService;
-    }
+    Query createStudyQuery(IDWithIssuer[] pids, Attributes keys,
+            QueryParam queryParam) throws Exception;
 
-    public CompressionService getCompressionService() {
-        return compressionService;
-    }
+    Query createSeriesQuery(IDWithIssuer[] pids, Attributes keys,
+            QueryParam queryParam) throws Exception;
 
-    @Override
-    protected void store(Association as, PresentationContext pc,
-            Attributes rq, PDVInputStream data, Attributes rsp)
-            throws IOException {
-
-        try (StoreInstance store = new StoreInstance(this, as, pc, rq)) {
-            store.spool(data);
-            store.process(rsp);
-        }
-    }
+    Query createInstanceQuery(IDWithIssuer[] pids, Attributes keys,
+            QueryParam queryParam) throws Exception;
 
 }

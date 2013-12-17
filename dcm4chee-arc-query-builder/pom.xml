@@ -5,16 +5,20 @@
     <artifactId>dcm4chee-arc-parent</artifactId>
     <version>4.1.0.Alpha4</version>
   </parent>
-  <artifactId>dcm4chee-arc-code</artifactId>
-  <packaging>ejb</packaging>
+  <artifactId>dcm4chee-arc-query-builder</artifactId>
   <dependencies>
     <dependency>
       <groupId>org.dcm4che</groupId>
-      <artifactId>dcm4che-core</artifactId>
+      <artifactId>dcm4che-net</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dcm4che</groupId>
+      <artifactId>dcm4che-soundex</artifactId>
     </dependency>
     <dependency>
       <groupId>org.dcm4che.dcm4chee-arc</groupId>
-      <artifactId>dcm4chee-arc-spi</artifactId>
+      <artifactId>dcm4chee-arc-entity</artifactId>
+      <classifier>${db}</classifier>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -23,26 +27,16 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.jboss.spec.javax.ejb</groupId>
-      <artifactId>jboss-ejb-api_3.2_spec</artifactId>
-      <scope>provided</scope>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.mysema.querydsl</groupId>
+      <artifactId>querydsl-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.mysema.querydsl</groupId>
+      <artifactId>querydsl-jpa</artifactId>
     </dependency>
   </dependencies>
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-ejb-plugin</artifactId>
-        <version>2.3</version>
-        <configuration>
-          <ejbVersion>3.0</ejbVersion>
-          <archive>
-            <manifestEntries>
-              <Dependencies>org.dcm4che.core</Dependencies>
-            </manifestEntries>
-          </archive>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 </project>

@@ -36,55 +36,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.store.scp.impl;
+package org.dcm4chee.archive.query;
 
-import java.io.IOException;
-
-import javax.ejb.EJB;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Typed;
-import javax.inject.Inject;
+import java.sql.SQLException;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.net.Association;
-import org.dcm4che.net.PDVInputStream;
-import org.dcm4che.net.pdu.PresentationContext;
-import org.dcm4che.net.service.BasicCStoreSCP;
-import org.dcm4che.net.service.DicomService;
-import org.dcm4chee.archive.compress.CompressionService;
-import org.dcm4chee.archive.store.StoreService;
+
+import com.mysema.query.types.OrderSpecifier;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-@ApplicationScoped
-@Typed(DicomService.class)
-public class CStoreSCP extends BasicCStoreSCP{
+public interface Query {
 
-    @Inject
-    private CompressionService compressionService;
+    void executeQuery();
 
-    @EJB
-    private StoreService storeService;
+    long count();
 
-    public StoreService getStoreService() {
-        return storeService;
-    }
+    void limit(long limit);
 
-    public CompressionService getCompressionService() {
-        return compressionService;
-    }
+    void offset(long offset);
 
-    @Override
-    protected void store(Association as, PresentationContext pc,
-            Attributes rq, PDVInputStream data, Attributes rsp)
-            throws IOException {
+    void orderBy(OrderSpecifier<?>... orderSpecifiers);
 
-        try (StoreInstance store = new StoreInstance(this, as, pc, rq)) {
-            store.spool(data);
-            store.process(rsp);
-        }
-    }
+    boolean optionalKeyNotSupported();
 
+    boolean hasMoreMatches();
+
+    Attributes nextMatch();
+
+    void close() throws SQLException;
 }

@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Agfa Healthcare.
- * Portions created by the Initial Developer are Copyright (C) 2011-2013
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,55 +36,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.store.scp.impl;
-
-import java.io.IOException;
-
-import javax.ejb.EJB;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Typed;
-import javax.inject.Inject;
+package org.dcm4chee.archive.query.impl;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.net.Association;
-import org.dcm4che.net.PDVInputStream;
-import org.dcm4che.net.pdu.PresentationContext;
-import org.dcm4che.net.service.BasicCStoreSCP;
-import org.dcm4che.net.service.DicomService;
-import org.dcm4chee.archive.compress.CompressionService;
-import org.dcm4chee.archive.store.StoreService;
+import org.dcm4che.data.IDWithIssuer;
+import org.dcm4chee.archive.entity.QPatient;
+import org.dcm4chee.archive.entity.Utils;
+import org.dcm4chee.archive.query.builder.QueryBuilder;
+import org.hibernate.ScrollableResults;
+
+import com.mysema.query.BooleanBuilder;
+import com.mysema.query.jpa.hibernate.HibernateQuery;
+import com.mysema.query.types.Expression;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
- *
  */
-@ApplicationScoped
-@Typed(DicomService.class)
-public class CStoreSCP extends BasicCStoreSCP{
+class PatientQuery extends AbstractQuery {
 
-    @Inject
-    private CompressionService compressionService;
+    private static final Expression<?>[] SELECT = {
+        QPatient.patient.pk,
+        QPatient.patient.encodedAttributes
+    };
 
-    @EJB
-    private StoreService storeService;
-
-    public StoreService getStoreService() {
-        return storeService;
-    }
-
-    public CompressionService getCompressionService() {
-        return compressionService;
+    public PatientQuery(QueryServiceBean qsf) {
+        super(qsf);
     }
 
     @Override
-    protected void store(Association as, PresentationContext pc,
-            Attributes rq, PDVInputStream data, Attributes rsp)
-            throws IOException {
-
-        try (StoreInstance store = new StoreInstance(this, as, pc, rq)) {
-            store.spool(data);
-            store.process(rsp);
-        }
+    protected Expression<?>[] select() {
+        return SELECT;
     }
 
+    @Override
+    protected HibernateQuery createQuery(IDWithIssuer[] pids, Attributes keys) {
+        BooleanBuilder builder = new BooleanBuilder();
+        QueryBuilder.addPatientLevelPredicates(builder, pids, keys, queryParam);
+        return new HibernateQuery(session)
+            .from(QPatient.patient)
+            .where(builder);
+    }
+
+    @Override
+    public Attributes toAttributes(ScrollableResults results) {
+        Attributes attrs = new Attributes();
+        Utils.decodeAttributes(attrs, results.getBinary(1));
+        return attrs;
+    }
 }

@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Agfa Healthcare.
- * Portions created by the Initial Developer are Copyright (C) 2011-2013
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,55 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.store.scp.impl;
+package org.dcm4chee.archive.query.scp.impl;
 
-import java.io.IOException;
-
-import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Typed;
-import javax.inject.Inject;
 
-import org.dcm4che.data.Attributes;
-import org.dcm4che.net.Association;
-import org.dcm4che.net.PDVInputStream;
-import org.dcm4che.net.pdu.PresentationContext;
-import org.dcm4che.net.service.BasicCStoreSCP;
+import org.dcm4che.data.UID;
 import org.dcm4che.net.service.DicomService;
-import org.dcm4chee.archive.compress.CompressionService;
-import org.dcm4chee.archive.store.StoreService;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
- *
  */
 @ApplicationScoped
 @Typed(DicomService.class)
-public class CStoreSCP extends BasicCStoreSCP{
-
-    @Inject
-    private CompressionService compressionService;
-
-    @EJB
-    private StoreService storeService;
-
-    public StoreService getStoreService() {
-        return storeService;
+public class StudyRootCFindSCP  extends CFindSCP {
+    public StudyRootCFindSCP () {
+        super(UID.StudyRootQueryRetrieveInformationModelFIND,
+                "STUDY", "SERIES", "IMAGE");
     }
-
-    public CompressionService getCompressionService() {
-        return compressionService;
-    }
-
-    @Override
-    protected void store(Association as, PresentationContext pc,
-            Attributes rq, PDVInputStream data, Attributes rsp)
-            throws IOException {
-
-        try (StoreInstance store = new StoreInstance(this, as, pc, rq)) {
-            store.spool(data);
-            store.process(rsp);
-        }
-    }
-
 }
