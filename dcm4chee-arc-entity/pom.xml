@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.dcm4che.dcm4chee-arc</groupId>
     <artifactId>dcm4chee-arc-parent</artifactId>
-    <version>4.1.0.Alpha3</version>
+    <version>4.1.0.Alpha4</version>
   </parent>
   <artifactId>dcm4chee-arc-entity</artifactId>
   <name>dcm4chee-arc-entity</name>
@@ -40,7 +40,8 @@
     </dependency>
     <dependency>
       <groupId>org.hibernate.javax.persistence</groupId>
-      <artifactId>hibernate-jpa-2.0-api</artifactId>
+      <artifactId>hibernate-jpa-2.1-api</artifactId>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
   <build>
@@ -95,8 +96,8 @@
     <plugins>
       <plugin>
         <groupId>com.mysema.maven</groupId>
-        <artifactId>maven-apt-plugin</artifactId>
-        <version>1.0.3</version>
+        <artifactId>apt-maven-plugin</artifactId>
+        <version>1.0.9</version>
         <executions>
           <execution>
             <id>process</id>

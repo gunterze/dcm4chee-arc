@@ -46,7 +46,6 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import org.dcm4che.conf.api.ConfigurationException;
-import org.dcm4che.conf.ldap.LdapUtils;
 import org.dcm4che.conf.prefs.PreferencesDicomConfigurationExtension;
 import org.dcm4che.conf.prefs.PreferencesUtils;
 import org.dcm4che.conf.prefs.hl7.PreferencesHL7ConfigurationExtension;

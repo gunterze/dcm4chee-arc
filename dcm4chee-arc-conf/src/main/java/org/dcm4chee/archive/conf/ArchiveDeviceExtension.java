@@ -190,4 +190,22 @@ public class ArchiveDeviceExtension extends DeviceExtension {
         System.arraycopy(arcdev.attributeFilters, 0,
                 attributeFilters, 0, attributeFilters.length);
     }
+
+    public StoreParam getStoreParam() {
+        StoreParam storeParam = new StoreParam();
+        storeParam.setIncorrectWorklistEntrySelectedCode(
+                incorrectWorklistEntrySelectedCode);
+        storeParam.setRejectedForQualityReasonsCode(
+                rejectedForQualityReasonsCode);
+        storeParam.setRejectedForPatientSafetyReasonsCode(
+                rejectedForPatientSafetyReasonsCode);
+        storeParam.setIncorrectModalityWorklistEntryCode(
+                incorrectModalityWorklistEntryCode);
+        storeParam.setDataRetentionPeriodExpiredCode(
+                dataRetentionPeriodExpiredCode);
+        storeParam.setFuzzyStr(getFuzzyStr());
+        storeParam.setAttributeFilters(attributeFilters);
+        return storeParam;
+        
+    }
 }

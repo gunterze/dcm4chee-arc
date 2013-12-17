@@ -41,6 +41,8 @@ package org.dcm4chee.archive.entity;
 import java.io.File;
 import java.io.Serializable;
 import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -155,6 +157,14 @@ public class FileSystem implements Serializable {
     public File getDirectory() {
         try {
             return new File(new URI(uri));
+        } catch (Exception e) {
+            throw new IllegalStateException(e.getMessage());
+        }
+    }
+
+    public Path getPath() {
+        try {
+            return Paths.get(new URI(uri));
         } catch (Exception e) {
             throw new IllegalStateException(e.getMessage());
         }

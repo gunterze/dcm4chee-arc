@@ -40,6 +40,7 @@ package org.dcm4chee.archive.conf;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 
 import javax.xml.transform.Templates;
@@ -52,6 +53,7 @@ import org.dcm4che.imageio.codec.CompressionRules;
 import org.dcm4che.io.TemplatesCache;
 import org.dcm4che.net.AEExtension;
 import org.dcm4che.net.Dimse;
+import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.TransferCapability;
 import org.dcm4che.net.TransferCapability.Role;
 import org.dcm4che.util.AttributesFormat;
@@ -444,6 +446,38 @@ public class ArchiveAEExtension extends AEExtension {
         setStoreDuplicates(arcae.getStoreDuplicates());
         setAttributeCoercions(arcae.getAttributeCoercions());
         setCompressionRules(arcae.getCompressionRules());
+    }
+
+    public StoreParam getStoreParam() {
+        StoreParam storeParam = ae.getDevice()
+                .getDeviceExtension(ArchiveDeviceExtension.class)
+                .getStoreParam();
+        storeParam.setStoreOriginalAttributes(storeOriginalAttributes);
+        storeParam.setModifyingSystem(getEffectiveModifyingSystem());
+        storeParam.setRetrieveAETs(retrieveAETs);
+        storeParam.setExternalRetrieveAET(externalRetrieveAET);
+        storeParam.setStoreDuplicates(storeDuplicates);
+        return storeParam;
+    }
+
+    public QueryParam getQueryParam(EnumSet<QueryOption> queryOpts,
+            String[] accessControlIDs) {
+        ArchiveDeviceExtension devExt = ae.getDevice()
+                .getDeviceExtension(ArchiveDeviceExtension.class);
+        QueryParam queryParam = new QueryParam();
+        queryParam.setFuzzyStr(devExt.getFuzzyStr());
+        queryParam.setAttributeFilters(devExt.getAttributeFilters());
+        queryParam.setCombinedDatetimeMatching(queryOpts
+                .contains(QueryOption.DATETIME));
+        queryParam.setFuzzySemanticMatching(queryOpts
+                .contains(QueryOption.FUZZY));
+        queryParam.setMatchUnknown(matchUnknown);
+        queryParam.setAccessControlIDs(accessControlIDs);
+        queryParam.setShowRejectedInstances(showRejectedInstances);
+        queryParam.setReturnOtherPatientIDs(returnOtherPatientIDs);
+        queryParam.setReturnOtherPatientNames(returnOtherPatientNames);
+
+        return queryParam;
     }
 
 }
