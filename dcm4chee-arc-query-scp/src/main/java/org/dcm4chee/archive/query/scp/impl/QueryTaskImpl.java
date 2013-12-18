@@ -74,7 +74,7 @@ class QueryTaskImpl extends BasicQueryTask {
     public QueryTaskImpl(Association as, PresentationContext pc, Attributes rq,
             Attributes keys, IDWithIssuer[] pids, QueryParam queryParam,
             boolean skipMatchesWithoutPatientID, Query query, 
-            PatientService queryPatientNamesService)
+            PatientService patientService)
             throws Exception {
         super(as, pc, rq, keys);
         this.query = query;
@@ -91,7 +91,7 @@ class QueryTaskImpl extends BasicQueryTask {
         this.returnOtherPatientNames = queryParam.isReturnOtherPatientNames()
                 && keys.contains(Tag.OtherPatientNames);
         this.patientNames = returnOtherPatientNames && pids.length > 1 
-                ? queryPatientNamesService.patientNamesOf(pids)
+                ? patientService.patientNamesOf(pids)
                 : null;
         this.skipMatchesWithoutPatientID = skipMatchesWithoutPatientID;
      }
