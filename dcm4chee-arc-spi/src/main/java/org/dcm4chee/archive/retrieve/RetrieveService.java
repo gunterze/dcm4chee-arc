@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Agfa Healthcare.
- * Portions created by the Initial Developer are Copyright (C) 2013
+ * Portions created by the Initial Developer are Copyright (C) 2011-2013
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,48 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.ctrl;
+package org.dcm4chee.archive.retrieve;
 
-import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
+import java.util.List;
 
-import org.dcm4chee.archive.ArchiveService;
+import org.dcm4che.data.Attributes;
+import org.dcm4che.data.IDWithIssuer;
+import org.dcm4che.net.service.InstanceLocator;
+import org.dcm4chee.archive.conf.QueryParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-@Path("ctrl")
-@RequestScoped
-public class ArchiveCtrl {
+public interface RetrieveService {
 
-    @Inject
-    private ArchiveService service;
-
-    @GET
-    @Path("running")
-    public String isRunning() {
-        return String.valueOf(service.isRunning());
-    }
-
-    @GET
-    @Path("start")
-    public void start() throws Exception {
-        service.start();
-    }
-
-    @GET
-    @Path("stop")
-    public void stop() {
-        service.stop();
-    }
-
-    @GET
-    @Path("reload")
-    public void reload() throws Exception {
-        service.reload();
-    }
+    List<InstanceLocator> calculateMatches(IDWithIssuer[] pids,
+            Attributes keys, QueryParam queryParam);
 
 }

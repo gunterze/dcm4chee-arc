@@ -36,10 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.query.scp.impl;
+package org.dcm4chee.archive.retrieve.scp.impl;
 
+import static org.dcm4che.net.service.BasicRetrieveTask.Service.C_GET;
 
 import java.util.EnumSet;
+import java.util.List;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -48,32 +50,34 @@ import org.dcm4che.conf.api.IApplicationEntityCache;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.IDWithIssuer;
 import org.dcm4che.data.Tag;
+import org.dcm4che.data.UID;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.ExtendedNegotiation;
 import org.dcm4che.net.pdu.PresentationContext;
-import org.dcm4che.net.service.BasicCFindSCP;
+import org.dcm4che.net.service.BasicCGetSCP;
 import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.net.service.QueryRetrieveLevel;
-import org.dcm4che.net.service.QueryTask;
+import org.dcm4che.net.service.RetrieveTask;
 import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.conf.QueryParam;
 import org.dcm4chee.archive.patient.PatientService;
-import org.dcm4chee.archive.query.Query;
-import org.dcm4chee.archive.query.QueryService;
+import org.dcm4chee.archive.retrieve.RetrieveService;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class CFindSCP extends BasicCFindSCP {
+public class CGetSCP extends BasicCGetSCP {
 
     private final String[] qrLevels;
     private final QueryRetrieveLevel rootLevel;
+    private final boolean withoutBulkData;
 
     @EJB
-    private QueryService queryService;
+    private RetrieveService retrieveService;
 
     @EJB
     private PatientService patientService;
@@ -81,27 +85,29 @@ public class CFindSCP extends BasicCFindSCP {
     @Inject
     private IApplicationEntityCache aeCache;
 
-    public CFindSCP(String sopClass, String... qrLevels) {
+    public CGetSCP(String sopClass, String... qrLevels) {
         super(sopClass);
         this.qrLevels = qrLevels;
         this.rootLevel = QueryRetrieveLevel.valueOf(qrLevels[0]);
+        this.withoutBulkData = sopClass.equals(
+                UID.CompositeInstanceRetrieveWithoutBulkDataGET);
     }
 
     @Override
-    protected QueryTask calculateMatches(Association as, PresentationContext pc,
+    protected RetrieveTask calculateMatches(Association as, PresentationContext pc,
             Attributes rq, Attributes keys) throws DicomServiceException {
-        QueryRetrieveLevel qrlevel = QueryRetrieveLevel.valueOf(keys, qrLevels);
+        QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(keys, qrLevels);
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
         boolean relational = queryOpts.contains(QueryOption.RELATIONAL);
-        qrlevel.validateQueryKeys(keys, rootLevel, relational);
+        level.validateRetrieveKeys(keys, rootLevel, relational);
 
         ApplicationEntity ae = as.getApplicationEntity();
         ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
         try {
             QueryParam queryParam = aeExt.getQueryParam(queryOpts,
-                    accessControlID(as));
+                    accessControlIDs());
             ApplicationEntity sourceAE = aeCache.get(as.getRemoteAET());
             if (sourceAE != null)
                 queryParam.setDefaultIssuer(sourceAE.getDevice());
@@ -112,24 +118,23 @@ public class CFindSCP extends BasicCFindSCP {
             IDWithIssuer[] pids = pid != null 
                     ? new IDWithIssuer[]{ pid }
                     : IDWithIssuer.EMPTY;
-            Query query = queryService.createQuery(qrlevel, pids, keys, queryParam);
-            try {
-                query.executeQuery();
-            } catch (Exception e) {
-                query.close();
-                throw e;
-            }
-            return new QueryTaskImpl(as, pc, rq, keys, pids, queryParam,
-                    rootLevel == QueryRetrieveLevel.PATIENT, query,
-                    patientService);
-        } catch (DicomServiceException e) {
-            throw e;
+            List<InstanceLocator> matches = 
+                    retrieveService.calculateMatches(pids, keys, queryParam);
+            RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(
+                    C_GET, as, pc, rq, matches, pids,
+                    patientService, withoutBulkData);
+            if (sourceAE != null)
+                retrieveTask.setDestinationDevice(sourceAE.getDevice());
+            retrieveTask.setSendPendingRSP(aeExt.isSendPendingCGet());
+            retrieveTask.setReturnOtherPatientIDs(aeExt.isReturnOtherPatientIDs());
+            retrieveTask.setReturnOtherPatientNames(aeExt.isReturnOtherPatientNames());
+            return retrieveTask;
         } catch (Exception e) {
-            throw new DicomServiceException(Status.UnableToProcess, e);
+            throw new DicomServiceException(Status.UnableToCalculateNumberOfMatches, e);
         }
     }
 
-    private String[] accessControlID(Association as) {
+    private String[] accessControlIDs() {
         // TODO Auto-generated method stub
         return null;
     }

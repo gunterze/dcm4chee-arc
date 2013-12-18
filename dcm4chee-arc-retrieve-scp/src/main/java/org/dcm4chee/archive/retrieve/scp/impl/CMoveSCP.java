@@ -36,44 +36,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.query.scp.impl;
+package org.dcm4chee.archive.retrieve.scp.impl;
 
+import static org.dcm4che.net.service.BasicRetrieveTask.Service.C_MOVE;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.EnumSet;
+import java.util.List;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
 
+import org.dcm4che.conf.api.ConfigurationNotFoundException;
 import org.dcm4che.conf.api.IApplicationEntityCache;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.IDWithIssuer;
 import org.dcm4che.data.Tag;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
+import org.dcm4che.net.IncompatibleConnectionException;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.ExtendedNegotiation;
 import org.dcm4che.net.pdu.PresentationContext;
-import org.dcm4che.net.service.BasicCFindSCP;
+import org.dcm4che.net.service.BasicCMoveSCP;
 import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.net.service.QueryRetrieveLevel;
-import org.dcm4che.net.service.QueryTask;
+import org.dcm4che.net.service.RetrieveTask;
 import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.conf.QueryParam;
 import org.dcm4chee.archive.patient.PatientService;
-import org.dcm4chee.archive.query.Query;
-import org.dcm4chee.archive.query.QueryService;
+import org.dcm4chee.archive.retrieve.RetrieveService;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class CFindSCP extends BasicCFindSCP {
+public class CMoveSCP extends BasicCMoveSCP {
 
     private final String[] qrLevels;
     private final QueryRetrieveLevel rootLevel;
 
     @EJB
-    private QueryService queryService;
+    private RetrieveService retrieveService;
 
     @EJB
     private PatientService patientService;
@@ -81,27 +87,29 @@ public class CFindSCP extends BasicCFindSCP {
     @Inject
     private IApplicationEntityCache aeCache;
 
-    public CFindSCP(String sopClass, String... qrLevels) {
+    public CMoveSCP(String sopClass, String... qrLevels) {
         super(sopClass);
         this.qrLevels = qrLevels;
         this.rootLevel = QueryRetrieveLevel.valueOf(qrLevels[0]);
     }
 
     @Override
-    protected QueryTask calculateMatches(Association as, PresentationContext pc,
-            Attributes rq, Attributes keys) throws DicomServiceException {
-        QueryRetrieveLevel qrlevel = QueryRetrieveLevel.valueOf(keys, qrLevels);
+    protected RetrieveTask calculateMatches(Association as, PresentationContext pc,
+            final Attributes rq, Attributes keys) throws DicomServiceException {
+        QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(keys, qrLevels);
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
         boolean relational = queryOpts.contains(QueryOption.RELATIONAL);
-        qrlevel.validateQueryKeys(keys, rootLevel, relational);
-
-        ApplicationEntity ae = as.getApplicationEntity();
-        ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
+        level.validateRetrieveKeys(keys, rootLevel, relational);
+        String dest = rq.getString(Tag.MoveDestination);
         try {
+            final ApplicationEntity destAE =
+                    aeCache.findApplicationEntity(dest);
+            ApplicationEntity ae = as.getApplicationEntity();
+            ArchiveAEExtension aeExt = ae.getAEExtension(ArchiveAEExtension.class);
             QueryParam queryParam = aeExt.getQueryParam(queryOpts,
-                    accessControlID(as));
+                    accessControlIDs());
             ApplicationEntity sourceAE = aeCache.get(as.getRemoteAET());
             if (sourceAE != null)
                 queryParam.setDefaultIssuer(sourceAE.getDevice());
@@ -112,26 +120,42 @@ public class CFindSCP extends BasicCFindSCP {
             IDWithIssuer[] pids = pid != null 
                     ? new IDWithIssuer[]{ pid }
                     : IDWithIssuer.EMPTY;
-            Query query = queryService.createQuery(qrlevel, pids, keys, queryParam);
-            try {
-                query.executeQuery();
-            } catch (Exception e) {
-                query.close();
-                throw e;
-            }
-            return new QueryTaskImpl(as, pc, rq, keys, pids, queryParam,
-                    rootLevel == QueryRetrieveLevel.PATIENT, query,
-                    patientService);
-        } catch (DicomServiceException e) {
-            throw e;
+            List<InstanceLocator> matches =
+                    retrieveService.calculateMatches(pids, keys, queryParam);
+            RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(C_MOVE, as,
+                    pc, rq, matches, pids, patientService, false) {
+    
+                @Override
+                protected Association getStoreAssociation() throws DicomServiceException {
+                    try {
+                        return as.getApplicationEntity().connect(destAE, makeAAssociateRQ());
+                    } catch (IOException e) {
+                        throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
+                    } catch (InterruptedException e) {
+                        throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
+                    } catch (IncompatibleConnectionException e) {
+                        throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
+                    } catch (GeneralSecurityException e) {
+                        throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
+                    }
+                }
+    
+            };
+            retrieveTask.setDestinationDevice(destAE.getDevice());
+            retrieveTask.setSendPendingRSPInterval(aeExt.getSendPendingCMoveInterval());
+            retrieveTask.setReturnOtherPatientIDs(aeExt.isReturnOtherPatientIDs());
+            retrieveTask.setReturnOtherPatientNames(aeExt.isReturnOtherPatientNames());
+            return retrieveTask;
+        } catch (ConfigurationNotFoundException e) {
+            throw new DicomServiceException(Status.MoveDestinationUnknown,
+                    "Unknown Move Destination: " + dest);
         } catch (Exception e) {
-            throw new DicomServiceException(Status.UnableToProcess, e);
+            throw new DicomServiceException(Status.UnableToCalculateNumberOfMatches, e);
         }
     }
 
-    private String[] accessControlID(Association as) {
+    private String[] accessControlIDs() {
         // TODO Auto-generated method stub
         return null;
     }
-
 }

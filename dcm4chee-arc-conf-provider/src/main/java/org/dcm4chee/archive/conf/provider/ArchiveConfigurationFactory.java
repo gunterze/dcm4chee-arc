@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Disposes;
 import javax.enterprise.inject.Produces;
 
@@ -72,13 +73,16 @@ import org.dcm4chee.archive.conf.prefs.PreferencesArchiveConfiguration;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
+@Dependent // bean defining annotation
 public class ArchiveConfigurationFactory {
 
     private static final String LDAP_PROPERTIES_URL_PROPERTY =
             "org.dcm4chee.archive.ldapPropertiesURL";
 
+    private ArchiveConfigurationFactory() {}
+
     @Produces @ApplicationScoped
-    public DicomConfiguration createDicomConfiguration()
+    public static DicomConfiguration createDicomConfiguration()
             throws ConfigurationException {
         Properties ldapEnv = ldapEnv();
         return ldapEnv != null
@@ -86,22 +90,22 @@ public class ArchiveConfigurationFactory {
                 : configure(new PreferencesDicomConfiguration());
         }
 
-    public void disposeDicomConfiguration(@Disposes DicomConfiguration conf) {
+    public static  void disposeDicomConfiguration(@Disposes DicomConfiguration conf) {
         conf.close();
     }
 
     @Produces @ApplicationScoped
-    public IApplicationEntityCache getApplicationEntityCache(DicomConfiguration conf) {
+    public static  IApplicationEntityCache getApplicationEntityCache(DicomConfiguration conf) {
         return new ApplicationEntityCache(conf);
     }
 
     @Produces @ApplicationScoped
-    public IHL7ApplicationCache getHL7ApplicationCache(DicomConfiguration conf) {
+    public static  IHL7ApplicationCache getHL7ApplicationCache(DicomConfiguration conf) {
         return new HL7ApplicationCache(
                 conf.getDicomConfigurationExtension(HL7Configuration.class));
     }
 
-    private Properties ldapEnv() throws ConfigurationException {
+    private static  Properties ldapEnv() throws ConfigurationException {
         String ldapPropertiesURL = System.getProperty(
                 LDAP_PROPERTIES_URL_PROPERTY);
         if (ldapPropertiesURL == null) {
@@ -116,7 +120,7 @@ public class ArchiveConfigurationFactory {
         return p;
     }
 
-    private DicomConfiguration configure(LdapDicomConfiguration ldapConfig) {
+    private static  DicomConfiguration configure(LdapDicomConfiguration ldapConfig) {
         LdapHL7Configuration hl7Config = new LdapHL7Configuration();
         ldapConfig.addDicomConfigurationExtension(hl7Config);
         LdapArchiveConfiguration arcConfig = new LdapArchiveConfiguration();
@@ -133,7 +137,7 @@ public class ArchiveConfigurationFactory {
         return ldapConfig;
     }
 
-    private DicomConfiguration configure(PreferencesDicomConfiguration prefsConfig) {
+    private static  DicomConfiguration configure(PreferencesDicomConfiguration prefsConfig) {
         PreferencesHL7Configuration hl7Config = new PreferencesHL7Configuration();
         prefsConfig.addDicomConfigurationExtension(hl7Config);
         PreferencesArchiveConfiguration arcConfig = new PreferencesArchiveConfiguration();

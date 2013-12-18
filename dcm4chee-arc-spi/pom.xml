@@ -30,6 +30,10 @@
       <classifier>${db}</classifier>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.mysema.querydsl</groupId>
+      <artifactId>querydsl-core</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
