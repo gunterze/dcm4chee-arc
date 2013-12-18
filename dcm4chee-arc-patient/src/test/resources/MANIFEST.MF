@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Archiver-Version: Plexus Archiver
+Created-By: Apache Maven
+Built-By: umberto
+Build-Jdk: 1.7.0_25
+Dependencies: org.dcm4che.core,org.dcm4che.soundex,com.mysema.querydsl

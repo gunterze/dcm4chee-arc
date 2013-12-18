@@ -1,4 +1,7 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.dcm4che.dcm4chee-arc</groupId>
@@ -7,10 +10,36 @@
   </parent>
   <artifactId>dcm4chee-arc-patient</artifactId>
   <packaging>ejb</packaging>
+  <dependencyManagement>
+    <dependencies>
+      <!-- Override dependency resolver with test version. This must go *BEFORE* 
+        the Arquillian BOM. -->
+      <dependency>
+        <groupId>org.jboss.shrinkwrap.resolver</groupId>
+        <artifactId>shrinkwrap-resolver-bom</artifactId>
+        <version>2.0.1</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+      <!-- Now pull in our server-based unit testing framework -->
+      <dependency>
+        <groupId>org.jboss.arquillian</groupId>
+        <artifactId>arquillian-bom</artifactId>
+        <version>1.1.2.Final</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
   <dependencies>
     <dependency>
       <groupId>org.dcm4che.dcm4chee-arc</groupId>
       <artifactId>dcm4chee-arc-spi</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.dcm4che.dcm4chee-arc</groupId>
+      <artifactId>dcm4chee-arc-issuer</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -45,8 +74,42 @@
       <artifactId>querydsl-core</artifactId>
     </dependency>
     <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.8.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>com.mysema.querydsl</groupId>
       <artifactId>querydsl-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.arquillian</groupId>
+      <artifactId>arquillian-bom</artifactId>
+      <version>1.1.2.Final</version>
+      <scope>import</scope>
+      <type>pom</type>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.arquillian.junit</groupId>
+      <artifactId>arquillian-junit-container</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.wildfly</groupId>
+      <artifactId>wildfly-arquillian-container-remote</artifactId>
+      <version>8.0.0.Beta1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.arquillian.protocol</groupId>
+      <artifactId>arquillian-protocol-servlet</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.shrinkwrap.resolver</groupId>
+      <artifactId>shrinkwrap-resolver-impl-maven</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
@@ -63,6 +126,10 @@
             </manifestEntries>
           </archive>
         </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.16</version>
       </plugin>
     </plugins>
   </build>
