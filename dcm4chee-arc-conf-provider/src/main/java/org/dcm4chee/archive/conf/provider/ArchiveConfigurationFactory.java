@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Disposes;
 import javax.enterprise.inject.Produces;
 
@@ -72,11 +73,13 @@ import org.dcm4chee.archive.conf.prefs.PreferencesArchiveConfiguration;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-@ApplicationScoped
+@Dependent // bean defining annotation
 public class ArchiveConfigurationFactory {
 
     private static final String LDAP_PROPERTIES_URL_PROPERTY =
             "org.dcm4chee.archive.ldapPropertiesURL";
+
+    private ArchiveConfigurationFactory() {}
 
     @Produces @ApplicationScoped
     public static DicomConfiguration createDicomConfiguration()
