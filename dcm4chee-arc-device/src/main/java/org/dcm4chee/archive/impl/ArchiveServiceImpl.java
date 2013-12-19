@@ -152,6 +152,16 @@ public class ArchiveServiceImpl extends DeviceService implements ArchiveService 
     }
 
     @Override
+    public void start() throws Exception {
+        super.start();
+    }
+
+    @Override
+    public void stop() {
+        super.stop();
+    }
+
+    @Override
     public void reload() throws Exception {
         device.reconfigure(conf.findDevice(deviceName));
         device.rebindConnections();

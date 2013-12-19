@@ -96,12 +96,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.wildfly</groupId>
-      <artifactId>wildfly-arquillian-container-remote</artifactId>
-      <version>8.0.0.Beta1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.jboss.arquillian.protocol</groupId>
       <artifactId>arquillian-protocol-servlet</artifactId>
       <scope>test</scope>
@@ -130,7 +124,36 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.16</version>
+        <configuration>
+          <skipTests>${skipTests}</skipTests>
+        </configuration>
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>default</id>
+      <activation><activeByDefault>true</activeByDefault></activation>
+      <properties>
+        <skipTests>true</skipTests>
+      </properties>
+    </profile>
+    <profile>
+       <!-- An optional Arquillian testing profile that 
+          executes tests in a remote JBoss AS instance -->
+       <!-- Run with: mvn clean test -Parq-jbossas-remote -->
+       <id>arq-wildfly-remote</id>
+       <properties>
+         <skipTests>false</skipTests>
+       </properties>
+       <dependencies>
+          <dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-arquillian-container-remote</artifactId>
+            <version>8.0.0.Beta1</version>
+            <scope>test</scope>
+          </dependency>
+       </dependencies>
+    </profile>
+  </profiles>
 </project>
