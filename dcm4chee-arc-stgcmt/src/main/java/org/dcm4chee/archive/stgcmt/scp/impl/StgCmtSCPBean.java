@@ -40,22 +40,17 @@ package org.dcm4chee.archive.stgcmt.scp.impl;
 
 import java.io.IOException;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Typed;
 import javax.inject.Inject;
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
+import javax.jms.JMSConnectionFactory;
+import javax.jms.JMSContext;
 import javax.jms.JMSException;
+import javax.jms.JMSProducer;
 import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
 import javax.jms.Queue;
-import javax.jms.Session;
 
 import org.dcm4che.conf.api.ConfigurationNotFoundException;
 import org.dcm4che.conf.api.IApplicationEntityCache;
@@ -86,13 +81,14 @@ import org.slf4j.LoggerFactory;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @ApplicationScoped
-@Typed(DicomService.class)
-public class StgCmtSCP extends AbstractDicomService implements MessageListener {
+@Typed({DicomService.class,StgCmtSCP.class})
+public class StgCmtSCPBean extends AbstractDicomService implements StgCmtSCP {
 
-    private static final Logger LOG = LoggerFactory.getLogger(StgCmtSCP.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StgCmtSCPBean.class);
 
-    @Resource(mappedName="java:/ConnectionFactory")
-    private ConnectionFactory jmsConnFactory;
+    @Inject
+    @JMSConnectionFactory("ConnectionFactory")
+    private JMSContext jmsContext;
 
     @Resource(mappedName="java:/queue/stgcmtscp")
     private Queue stgcmtSCPQueue;
@@ -106,33 +102,8 @@ public class StgCmtSCP extends AbstractDicomService implements MessageListener {
     @Inject
     private IApplicationEntityCache aeCache;
 
-    private Connection jmsConn;
-
-    private Session jmsSession;
-
-    public StgCmtSCP() {
+    public StgCmtSCPBean() {
         super(UID.StorageCommitmentPushModelSOPClass);
-    }
-
-    @PostConstruct
-    public void init() {
-        try {
-            jmsConn = jmsConnFactory.createConnection();
-            jmsSession = jmsConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            jmsSession.createConsumer(stgcmtSCPQueue).setMessageListener(this);
-            jmsConn.start();
-        } catch (JMSException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @PreDestroy
-    public void destroy() {
-        try {
-            jmsConn.close();
-        } catch (JMSException e) {
-            LOG.warn("Failed to close JMS Connection", e);
-        }
     }
 
     @Override
@@ -170,20 +141,33 @@ public class StgCmtSCP extends AbstractDicomService implements MessageListener {
         as.tryWriteDimseRSP(pc, rsp, null);
     }
 
-    @Override
-    public void onMessage(Message msg) {
-        try {
-            process((ObjectMessage) msg);
-        } catch (Throwable th) {
-            LOG.warn("Failed to process " + msg, th);
-        }
+    private int eventTypeId(Attributes eventInfo) {
+        return eventInfo.containsValue(Tag.FailedSOPSequence) ? 2 : 1;
     }
 
-    private void process(ObjectMessage msg) throws JMSException {
-        String remoteAET = msg.getStringProperty("RemoteAET");
-        String localAET = msg.getStringProperty("LocalAET");
-        int retries = msg.getIntProperty("Retries");
-        Attributes eventInfo = (Attributes) msg.getObject();
+    private void scheduleNEventReport(final String localAET, final String remoteAET,
+            final Attributes eventInfo, final int retries, long delay)
+                    throws JMSException {
+        Message msg = jmsContext.createObjectMessage(eventInfo);
+        msg.setStringProperty("LocalAET", localAET);
+        msg.setStringProperty("RemoteAET", remoteAET);
+        msg.setIntProperty("Retries", retries);
+        JMSProducer producer = jmsContext.createProducer();
+        producer.setDeliveryDelay(delay);
+        producer.send(stgcmtSCPQueue, msg);
+    }
+
+    @Override
+    public void sendNEventReport(Message msg) throws JMSException {
+        sendNEventReport(
+            msg.getStringProperty("LocalAET"),
+            msg.getStringProperty("RemoteAET"),
+            msg.getBody(Attributes.class),
+            msg.getIntProperty("Retries"));
+    }
+
+    private void sendNEventReport(String localAET, String remoteAET,
+            Attributes eventInfo, int retries) throws JMSException {
         ApplicationEntity localAE = archiveService.getDevice()
                 .getApplicationEntity(localAET);
         if (localAE == null) {
@@ -233,23 +217,6 @@ public class StgCmtSCP extends AbstractDicomService implements MessageListener {
                 LOG.warn("Failed to return Storage Commitment Result to {}: {}",
                         remoteAET, e);
             }
-        }
-    }
-
-    private int eventTypeId(Attributes eventInfo) {
-        return eventInfo.containsValue(Tag.FailedSOPSequence) ? 2 : 1;
-    }
-
-    private void scheduleNEventReport(final String localAET, final String remoteAET,
-            final Attributes eventInfo, final int retries, long delay)
-                    throws JMSException {
-        Message msg = jmsSession.createObjectMessage(eventInfo);
-        msg.setStringProperty("LocalAET", localAET);
-        msg.setStringProperty("RemoteAET", remoteAET);
-        msg.setIntProperty("Retries", retries);
-        try ( MessageProducer producer = jmsSession.createProducer(stgcmtSCPQueue) ) {
-            producer.setDeliveryDelay(delay);
-            producer.send(msg);
         }
     }
 
