@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.stgcmt.impl;
+package org.dcm4chee.archive.stgcmt.scp.impl;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -54,7 +54,7 @@ import org.dcm4che.net.Status;
 import org.dcm4chee.archive.entity.Utils;
 import org.dcm4chee.archive.entity.QInstance;
 import org.dcm4chee.archive.query.builder.QueryBuilder;
-import org.dcm4chee.archive.stgcmt.StgCmtService;
+import org.dcm4chee.archive.stgcmt.scp.StgCmtService;
 import org.hibernate.Session;
 
 import com.mysema.query.BooleanBuilder;

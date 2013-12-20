@@ -45,6 +45,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Initialized;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Instance;
+import javax.enterprise.inject.Typed;
 import javax.inject.Inject;
 
 import org.dcm4che.conf.api.DicomConfiguration;
@@ -63,6 +64,7 @@ import org.dcm4chee.archive.ArchiveService;
  *
  */
 @ApplicationScoped
+@Typed(ArchiveService.class)
 public class ArchiveServiceImpl extends DeviceService implements ArchiveService {
 
     private static final String DEVICE_NAME_PROPERTY =

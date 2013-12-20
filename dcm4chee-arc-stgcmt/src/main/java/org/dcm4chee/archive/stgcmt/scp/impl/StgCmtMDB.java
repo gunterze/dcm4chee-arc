@@ -62,7 +62,7 @@ public class StgCmtMDB implements MessageListener {
     private static final Logger LOG = LoggerFactory.getLogger(StgCmtMDB.class);
 
     @Inject
-    private StgCmtSCP stgCmtSCP;
+    private IStgCmtSCP stgCmtSCP;
 
     @Override
     public void onMessage(Message msg) {

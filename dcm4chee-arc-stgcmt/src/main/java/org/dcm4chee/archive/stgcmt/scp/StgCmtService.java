@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.stgcmt;
+package org.dcm4chee.archive.stgcmt.scp;
 
 import org.dcm4che.data.Attributes;
 
