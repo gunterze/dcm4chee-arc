@@ -45,7 +45,7 @@ import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Typed;
 import javax.inject.Inject;
-import javax.jms.JMSConnectionFactory;
+import javax.jms.ConnectionFactory;
 import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.JMSProducer;
@@ -86,9 +86,8 @@ public class StgCmtSCPBean extends AbstractDicomService implements StgCmtSCP {
 
     private static final Logger LOG = LoggerFactory.getLogger(StgCmtSCPBean.class);
 
-    @Inject
-    @JMSConnectionFactory("ConnectionFactory")
-    private JMSContext jmsContext;
+    @Resource(mappedName="java:/ConnectionFactory")
+    private ConnectionFactory connFactory;
 
     @Resource(mappedName="java:/queue/stgcmtscp")
     private Queue stgcmtSCPQueue;
@@ -148,13 +147,14 @@ public class StgCmtSCPBean extends AbstractDicomService implements StgCmtSCP {
     private void scheduleNEventReport(final String localAET, final String remoteAET,
             final Attributes eventInfo, final int retries, long delay)
                     throws JMSException {
-        Message msg = jmsContext.createObjectMessage(eventInfo);
-        msg.setStringProperty("LocalAET", localAET);
-        msg.setStringProperty("RemoteAET", remoteAET);
-        msg.setIntProperty("Retries", retries);
-        JMSProducer producer = jmsContext.createProducer();
-        producer.setDeliveryDelay(delay);
-        producer.send(stgcmtSCPQueue, msg);
+        try (JMSContext jmsContext = connFactory.createContext();) {
+            JMSProducer producer = jmsContext.createProducer();
+            producer.setProperty("LocalAET", localAET);
+            producer.setProperty("RemoteAET", remoteAET);
+            producer.setProperty("Retries", retries);
+            producer.setDeliveryDelay(delay);
+            producer.send(stgcmtSCPQueue, eventInfo);
+        }
     }
 
     @Override
