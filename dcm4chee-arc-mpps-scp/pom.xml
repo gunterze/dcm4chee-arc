@@ -5,7 +5,7 @@
     <artifactId>dcm4chee-arc-parent</artifactId>
     <version>4.1.0.Alpha4</version>
   </parent>
-  <artifactId>dcm4chee-arc-store-scp</artifactId>
+  <artifactId>dcm4chee-arc-mpps-scp</artifactId>
   <dependencies>
     <dependency>
       <groupId>org.dcm4che.dcm4chee-arc</groupId>
@@ -15,10 +15,6 @@
     <dependency>
       <groupId>org.dcm4che</groupId>
       <artifactId>dcm4che-conf-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dcm4che</groupId>
-      <artifactId>dcm4che-imageio</artifactId>
     </dependency>
     <dependency>
       <groupId>javax.enterprise</groupId>
@@ -39,7 +35,7 @@
         <configuration>
           <archive>
             <manifestEntries>
-              <Dependencies>org.dcm4che.net,org.dcm4che.imageio</Dependencies>
+              <Dependencies>org.dcm4che.net</Dependencies>
             </manifestEntries>
           </archive>
         </configuration>

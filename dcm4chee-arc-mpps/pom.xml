@@ -5,7 +5,8 @@
     <artifactId>dcm4chee-arc-parent</artifactId>
     <version>4.1.0.Alpha4</version>
   </parent>
-  <artifactId>dcm4chee-arc-store-scp</artifactId>
+  <artifactId>dcm4chee-arc-mpps</artifactId>
+  <packaging>ejb</packaging>
   <dependencies>
     <dependency>
       <groupId>org.dcm4che.dcm4chee-arc</groupId>
@@ -14,15 +15,15 @@
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
-      <artifactId>dcm4che-conf-api</artifactId>
+      <artifactId>dcm4che-net</artifactId>
     </dependency>
-    <dependency>
+     <dependency>
       <groupId>org.dcm4che</groupId>
-      <artifactId>dcm4che-imageio</artifactId>
+      <artifactId>dcm4che-soundex</artifactId>
     </dependency>
     <dependency>
-      <groupId>javax.enterprise</groupId>
-      <artifactId>cdi-api</artifactId>
+      <groupId>org.hibernate.javax.persistence</groupId>
+      <artifactId>hibernate-jpa-2.1-api</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -34,12 +35,14 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>2.3.2</version>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-ejb-plugin</artifactId>
+        <version>2.3</version>
         <configuration>
+          <ejbVersion>3.0</ejbVersion>
           <archive>
             <manifestEntries>
-              <Dependencies>org.dcm4che.net,org.dcm4che.imageio</Dependencies>
+              <Dependencies>org.dcm4che.core</Dependencies>
             </manifestEntries>
           </archive>
         </configuration>

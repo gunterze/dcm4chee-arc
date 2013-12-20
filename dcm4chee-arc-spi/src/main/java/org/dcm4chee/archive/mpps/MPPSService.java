@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Agfa Healthcare.
- * Portions created by the Initial Developer are Copyright (C) 2011-2013
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,64 +35,30 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+package org.dcm4chee.archive.mpps;
 
-package org.dcm4chee.archive.store.scp.impl;
+import java.util.List;
 
-import java.io.IOException;
-
-import javax.ejb.EJB;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Typed;
-import javax.inject.Inject;
-
-import org.dcm4che.conf.api.IApplicationEntityCache;
 import org.dcm4che.data.Attributes;
-import org.dcm4che.net.Association;
-import org.dcm4che.net.PDVInputStream;
-import org.dcm4che.net.pdu.PresentationContext;
-import org.dcm4che.net.service.BasicCStoreSCP;
-import org.dcm4che.net.service.DicomService;
-import org.dcm4chee.archive.compress.CompressionService;
-import org.dcm4chee.archive.store.StoreService;
+import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4chee.archive.conf.StoreParam;
+import org.dcm4chee.archive.entity.PerformedProcedureStep;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-@ApplicationScoped
-@Typed(DicomService.class)
-public class CStoreSCP extends BasicCStoreSCP{
+public interface MPPSService {
 
-    @Inject
-    private CompressionService compressionService;
+    PerformedProcedureStep createPerformedProcedureStep(String sopInstanceUID,
+            Attributes attrs, StoreParam storeParam)
+            throws DicomServiceException;
 
-    @Inject
-    private IApplicationEntityCache applicationEntityCache;
+    PerformedProcedureStep updatePerformedProcedureStep(String sopInstanceUID,
+            Attributes modified, StoreParam storeParam)
+            throws DicomServiceException;
 
-    @EJB
-    private StoreService storeService;
-
-    public StoreService getStoreService() {
-        return storeService;
-    }
-
-    public CompressionService getCompressionService() {
-        return compressionService;
-    }
-
-    public IApplicationEntityCache getApplicationEntityCache() {
-        return applicationEntityCache;
-    }
-
-    @Override
-    protected void store(Association as, PresentationContext pc,
-            Attributes rq, PDVInputStream data, Attributes rsp)
-            throws IOException {
-
-        try (StoreInstance store = new StoreInstance(this, as, pc, rq)) {
-            store.spool(data);
-            store.process(rsp);
-        }
-    }
+    List<Attributes> checkInstanceAvailability(String ppsInstanceUID,
+            Attributes attrs) throws SOPClassMismatchException;
 
 }

@@ -50,18 +50,24 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import javax.xml.transform.Templates;
+
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.BulkData;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
+import org.dcm4che.data.VR;
 import org.dcm4che.imageio.codec.CompressionRule;
 import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.io.DicomOutputStream;
+import org.dcm4che.io.SAXTransformer;
 import org.dcm4che.io.DicomInputStream.IncludeBulkData;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
+import org.dcm4che.net.Dimse;
 import org.dcm4che.net.PDVInputStream;
 import org.dcm4che.net.Status;
+import org.dcm4che.net.TransferCapability;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.util.AttributesFormat;
@@ -69,12 +75,17 @@ import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.conf.ArchiveAEExtension;
 import org.dcm4chee.archive.entity.FileRef;
 import org.dcm4chee.archive.entity.FileSystem;
+import org.dcm4chee.archive.store.Supplements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
 class StoreInstance implements Closeable {
+
+    private static Logger LOG = LoggerFactory.getLogger(StoreInstance.class);
 
     private final CStoreSCP scp;
     private final Association as;
@@ -92,6 +103,7 @@ class StoreInstance implements Closeable {
     private File spoolFile;
     private String fileDigest;
     private Attributes attrs;
+    private Attributes coercedAttrs;
     private Path storePath;
 
     public StoreInstance(CStoreSCP scp, Association as, PresentationContext pc,
@@ -182,7 +194,9 @@ class StoreInstance implements Closeable {
                 storePath = move(spoolPath, storePath);
                 spoolPath = null;
             }
+            coerceAttributes();
             updateDB();
+            checkCoercedAttributes(rsp);
         } catch (DicomServiceException e) {
             throw e;
         } catch (Exception e) {
@@ -233,12 +247,6 @@ class StoreInstance implements Closeable {
             }
             return true;
         } catch (IOException e) {
-            try {
-                Files.delete(storePath);
-            } catch (IOException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            }
             return false;
         }
     }
@@ -274,10 +282,41 @@ class StoreInstance implements Closeable {
                 fmi.getString(Tag.TransferSyntaxUID),
                 file.length(), 
                 fileDigest);
-        Attributes modified = new Attributes();
         if (scp.getStoreService().store(aeExt.getStoreParam(), 
-                sourceAET, attrs, fileRef, modified)) {
+                sourceAET, attrs, fileRef, coercedAttrs)) {
             storePath = null;
+        }
+    }
+
+    private void coerceAttributes() throws Exception {
+        Attributes modified = new Attributes();
+        Templates tpl = aeExt.getAttributeCoercionTemplates(cuid,
+                Dimse.C_STORE_RQ, TransferCapability.Role.SCP, sourceAET);
+        if (tpl != null)
+            attrs.update(SAXTransformer.transform(attrs, tpl, false, false),
+                    modified);
+        ApplicationEntity sourceAE = scp.getApplicationEntityCache()
+                    .get(sourceAET);
+        if (sourceAE != null)
+            Supplements.supplementComposite(attrs, sourceAE.getDevice());
+        coercedAttrs = modified;
+    }
+
+    private void checkCoercedAttributes(Attributes rsp) {
+        if (coercedAttrs.isEmpty())
+            return;
+
+        if (LOG.isInfoEnabled()) {
+            LOG.info("{}:Coercion of Data Elements:\n{}\nto:\n{}",
+                    new Object[] { 
+                        as,
+                        coercedAttrs,
+                        new Attributes(attrs, attrs.bigEndian(), coercedAttrs.tags())
+                    });
+        }
+        if (!aeExt.isSuppressWarningCoercionOfDataElements()) {
+            rsp.setInt(Tag.Status, VR.US, Status.CoercionOfDataElements);
+            rsp.setInt(Tag.OffendingElement, VR.AT, coercedAttrs.tags());
         }
     }
 

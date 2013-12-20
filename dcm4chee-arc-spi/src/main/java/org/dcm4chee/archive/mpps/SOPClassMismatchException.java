@@ -36,63 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.store.scp.impl;
-
-import java.io.IOException;
-
-import javax.ejb.EJB;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Typed;
-import javax.inject.Inject;
-
-import org.dcm4che.conf.api.IApplicationEntityCache;
-import org.dcm4che.data.Attributes;
-import org.dcm4che.net.Association;
-import org.dcm4che.net.PDVInputStream;
-import org.dcm4che.net.pdu.PresentationContext;
-import org.dcm4che.net.service.BasicCStoreSCP;
-import org.dcm4che.net.service.DicomService;
-import org.dcm4chee.archive.compress.CompressionService;
-import org.dcm4chee.archive.store.StoreService;
+package org.dcm4chee.archive.mpps;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  *
  */
-@ApplicationScoped
-@Typed(DicomService.class)
-public class CStoreSCP extends BasicCStoreSCP{
+public class SOPClassMismatchException extends Exception {
 
-    @Inject
-    private CompressionService compressionService;
+    private static final long serialVersionUID = -5566267223962262309L;
 
-    @Inject
-    private IApplicationEntityCache applicationEntityCache;
-
-    @EJB
-    private StoreService storeService;
-
-    public StoreService getStoreService() {
-        return storeService;
-    }
-
-    public CompressionService getCompressionService() {
-        return compressionService;
-    }
-
-    public IApplicationEntityCache getApplicationEntityCache() {
-        return applicationEntityCache;
-    }
-
-    @Override
-    protected void store(Association as, PresentationContext pc,
-            Attributes rq, PDVInputStream data, Attributes rsp)
-            throws IOException {
-
-        try (StoreInstance store = new StoreInstance(this, as, pc, rq)) {
-            store.spool(data);
-            store.process(rsp);
-        }
+    public SOPClassMismatchException(String message) {
+        super(message);
     }
 
 }
