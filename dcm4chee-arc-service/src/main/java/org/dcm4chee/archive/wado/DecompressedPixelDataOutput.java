@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 package org.dcm4chee.archive.wado;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -71,7 +72,7 @@ public class DecompressedPixelDataOutput implements StreamingOutput {
             try {
                 decompressor.writeFrameTo(iis, frameIndex, output);
             } finally {
-                SafeClose.close(iis);
+                SafeClose.close((Closeable) iis);
             }
         }
     }
