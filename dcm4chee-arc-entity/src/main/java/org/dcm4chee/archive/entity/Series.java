@@ -515,7 +515,7 @@ public class Series implements Serializable {
             performedProcedureStepInstanceUID = "*";
             performedProcedureStepClassUID = "*";
         }
-        Date dt = attrs.getDate(Tag.PerformedProcedureStepStartDateAndTime, null);
+        Date dt = attrs.getDate(Tag.PerformedProcedureStepStartDateAndTime);
         if (dt != null) {
             performedProcedureStepStartDate = DateUtils.formatDA(null, dt);
             performedProcedureStepStartTime = 
