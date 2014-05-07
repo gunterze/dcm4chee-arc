@@ -322,7 +322,8 @@ public class WadoURI extends Object  {
                 try {
                     bi = readImage(iis, attrs);
                 } finally {
-                    SafeClose.close(iis);
+                	//使用safeclose出错，所以修改为直接关闭
+                   iis.close();
                 }
                 writeJPEG(bi, new OutputStreamAdapter(out));
             }
