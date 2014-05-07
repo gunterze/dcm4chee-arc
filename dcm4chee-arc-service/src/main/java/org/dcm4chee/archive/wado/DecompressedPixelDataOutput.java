@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 package org.dcm4chee.archive.wado;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -46,7 +45,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.dcm4che.imageio.codec.Decompressor;
-import org.dcm4che.util.SafeClose;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -72,7 +70,8 @@ public class DecompressedPixelDataOutput implements StreamingOutput {
             try {
                 decompressor.writeFrameTo(iis, frameIndex, output);
             } finally {
-                SafeClose.close((Closeable) iis);
+            	//safeclose出错，故修改为基本版本
+                iis.close();
             }
         }
     }
