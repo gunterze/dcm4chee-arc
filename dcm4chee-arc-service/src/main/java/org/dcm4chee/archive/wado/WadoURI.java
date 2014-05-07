@@ -41,7 +41,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
@@ -323,7 +322,7 @@ public class WadoURI extends Object  {
                 try {
                     bi = readImage(iis, attrs);
                 } finally {
-                    SafeClose.close((Closeable) iis);
+                   iis.close();
                 }
                 writeJPEG(bi, new OutputStreamAdapter(out));
             }
