@@ -261,6 +261,26 @@ public class QidoRS {
     }
 
     @GET
+    @Path("/studies/{StudyInstanceUID}/instances")
+    @Produces("multipart/related;type=application/dicom+xml")
+    public Response searchRelationalForInstancesXML(
+            @PathParam("StudyInstanceUID") String studyInstanceUID) {
+        return search("searchForInstancesXML", QueryRetrieveLevel.IMAGE,
+                false, studyInstanceUID, null,
+                SERIES_FIELDS, Output.DICOM_XML);
+    }
+
+    @GET
+    @Path("/studies/{StudyInstanceUID}/instances")
+    @Produces("application/json")
+    public Response searchRelationalForInstancesJSON(
+            @PathParam("StudyInstanceUID") String studyInstanceUID) {
+        return search("searchForInstancesJSON", QueryRetrieveLevel.IMAGE,
+                false, studyInstanceUID, null,
+                SERIES_FIELDS, Output.JSON);
+    }
+
+    @GET
     @Path("/studies/{StudyInstanceUID}/series/{SeriesInstanceUID}/instances")
     @Produces("multipart/related;type=application/dicom+xml")
     public Response searchForInstancesXML(
