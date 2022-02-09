@@ -9,7 +9,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <dcm4che.version>3.2.1</dcm4che.version>
     <slf4j.version>1.6.1</slf4j.version>
-    <hibernate.version>4.0.1.Final</hibernate.version>
+    <hibernate.version>5.4.24.Final</hibernate.version>
     <querydsl.version>2.8.1</querydsl.version>
     <db>mysql</db>
     <ds>java:/PacsDS</ds>
